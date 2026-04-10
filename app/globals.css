@@ -68,7 +68,9 @@ h2, .headline-lg {
     gap: 0.5rem;
     background: #ccff00;
     color: #1c1c1c;
-    font-weight: 700;
+    font-family: var(--font-open-sans), 'Open Sans', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 0.9375rem;
     padding: 0.875rem 1.75rem;
     border-radius: 0.875rem;
     transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.3s ease;
