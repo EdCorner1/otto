@@ -52,8 +52,8 @@ export default function HomePage() {
               <span className="text-xs font-semibold text-white tracking-wide">🔥 Launching Soon · Limited Spots</span>
             </div>
 
-            {/* Headline */}
-            <h1 className="fade-up stagger-1 font-display text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[0.97] mb-5 text-[#1c1c1c]">
+            {/* Headline — exact match to Ed's site */}
+            <h1 className="fade-up stagger-1" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 600, fontSize: 'clamp(48px, 7vw, 84px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
               The UGC marketplace<br />
               for tech brands<br />
               &amp; creators
