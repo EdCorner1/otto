@@ -29,13 +29,13 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
 
-      {/* ─── STICKY NAV ─────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-4 bg-white/80 backdrop-blur-md border-b border-[#e8e8e4]">
+      {/* ─── FLOATING NAV ─────────────────────────────────── */}
+      <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 md:px-6 py-3.5 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl font-extrabold font-display tracking-tight text-[#1c1c1c]">Otto</span>
-          <span className="w-2.5 h-2.5 rounded-full bg-[#ccff00] animate-pulse" />
+          <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+          <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link href="/login" className="btn-ghost text-sm px-4 py-2 hidden sm:inline-flex">Sign in</Link>
           <Link href="/signup" className="btn-primary text-sm py-2 px-5">Get Started</Link>
         </div>
