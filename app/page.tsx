@@ -33,7 +33,7 @@ export default function HomePage() {
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-4 bg-white/80 backdrop-blur-md border-b border-[#e8e8e4]">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-xl font-extrabold font-display tracking-tight text-[#1c1c1c]">Otto</span>
-          <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#ccff00] animate-pulse" />
         </Link>
         <div className="flex items-center gap-3">
           <Link href="/login" className="btn-ghost text-sm px-4 py-2 hidden sm:inline-flex">Sign in</Link>
@@ -48,8 +48,8 @@ export default function HomePage() {
           {/* LEFT: Content */}
           <div>
             {/* Badge */}
-            <div className="fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#22c55e] mb-7">
-              <span className="text-xs font-semibold text-white tracking-wide">🔥 Launching Soon · Limited Spots</span>
+            <div className="fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ccff00] mb-7">
+              <span className="text-xs font-semibold text-[#1c1c1c] tracking-wide">🔥 Launching Soon · Limited Spots</span>
             </div>
 
             {/* Headline — exact match to Ed's site */}
@@ -181,8 +181,8 @@ export default function HomePage() {
             ].map(({ step, title, desc, icon }) => (
               <div key={step} className="flex items-start gap-4">
                 <div className="flex-shrink-0">
-                  <div className="text-3xl font-extrabold font-display text-[#22c55e] leading-none">{step}</div>
-                  <div className="w-8 h-8 rounded-lg bg-[#f0fbe4] flex items-center justify-center text-[#22c55e] mt-1">{icon}</div>
+                  <div className="text-3xl font-extrabold font-display text-[#ccff00] leading-none">{step}</div>
+                  <div className="w-8 h-8 rounded-lg bg-[#363535] flex items-center justify-center text-[#ccff00] mt-1">{icon}</div>
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[#1c1c1c] mb-1">{title}</h3>
@@ -218,7 +218,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-base font-extrabold font-display tracking-tight text-[#1c1c1c]">Otto</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00]" />
           </Link>
           <div className="flex items-center gap-5 text-xs text-[#9a9a9a]">
             <Link href="/about" className="hover:text-[#1c1c1c] transition-colors">About</Link>
