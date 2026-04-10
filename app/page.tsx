@@ -98,14 +98,6 @@ export default function HomePage() {
                     fill
                     className="object-cover"
                     sizes="(max-width: 640px) 100vw, 50vw"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                      const parent = target.parentElement
-                      if (parent) {
-                        parent.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-[#f0f0ec]"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 9h2"/></svg></div>'
-                      }
-                    }}
                   />
                 </div>
               </div>
@@ -118,14 +110,6 @@ export default function HomePage() {
                     fill
                     className="object-cover"
                     sizes="25vw"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                      const parent = target.parentElement
-                      if (parent) {
-                        parent.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-[#f0f0ec]"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 9h2"/></svg></div>'
-                      }
-                    }}
                   />
                 </div>
               </div>
@@ -138,14 +122,6 @@ export default function HomePage() {
                     fill
                     className="object-cover"
                     sizes="25vw"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                      const parent = target.parentElement
-                      if (parent) {
-                        parent.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-[#f0f0ec]"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 9h2"/></svg></div>'
-                      }
-                    }}
                   />
                 </div>
               </div>
