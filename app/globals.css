@@ -68,11 +68,15 @@ body::before {
   to { transform: translateX(-50%); }
 }
 
+.marquee-track {
+  animation: marquee 35s linear infinite;
+}
+
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
 
-/* Entrance */
+/* Entrance animations */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -103,6 +107,27 @@ body::before {
   opacity: 0;
 }
 
+/* Scroll-triggered fade-up */
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger delays for scroll animations */
+.stagger-1 { transition-delay: 100ms; }
+.stagger-2 { transition-delay: 200ms; }
+.stagger-3 { transition-delay: 300ms; }
+.stagger-4 { transition-delay: 400ms; }
+.stagger-5 { transition-delay: 500ms; }
+.stagger-6 { transition-delay: 600ms; }
+
+/* Static delays */
 .delay-75 { animation-delay: 75ms; }
 .delay-150 { animation-delay: 150ms; }
 .delay-250 { animation-delay: 250ms; }
@@ -170,3 +195,28 @@ body::before {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d0d0cc; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #84cc16; }
+
+/* ─── Scroll animation observer ─── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-up.stagger-1 { transition-delay: 0ms; }
+.fade-up.stagger-2 { transition-delay: 100ms; }
+.fade-up.stagger-3 { transition-delay: 200ms; }
+.fade-up.stagger-4 { transition-delay: 300ms; }
+.fade-up.stagger-5 { transition-delay: 400ms; }
+.fade-up.stagger-6 { transition-delay: 500ms; }
+
+/* YouTube embed rounded corners */
+iframe {
+  border-radius: inherit;
+}
