@@ -1,14 +1,14 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   --bg: #fafaf9;
-  --bg-alt: #0c0c0c;
+  --bg-alt: #1c1c1c;
   --surface: #ffffff;
   --border: #e8e8e4;
-  --text: #0c0c0c;
+  --text: #1c1c1c;
   --text-secondary: #6b6b6b;
-  --text-muted: #a0a09c;
+  --text-muted: #9a9a9a;
   --accent: #84cc16;
   --accent-hover: #6db80f;
   --accent-dim: #d1f97a;
@@ -28,7 +28,7 @@ body {
 }
 
 .font-display {
-  font-family: 'Syne', 'Instrument Sans', system-ui, sans-serif;
+  font-family: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
 }
 
 /* Grain texture */

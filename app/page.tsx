@@ -7,7 +7,7 @@ export default function HomePage() {
       {/* ─── NAV ─────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-5 backdrop-blur-md bg-[#fafaf9]/80 border-b border-[#e8e8e4]/60">
         <Link href="/" className="logo-mark">
-          <span className="text-xl font-extrabold font-display tracking-tight text-[#0c0c0c]">Otto</span>
+          <span className="text-xl font-extrabold font-display tracking-tight text-[#1c1c1c]">Otto</span>
           <span className="logo-dot" />
         </Link>
         <div className="flex items-center gap-2">
@@ -19,7 +19,7 @@ export default function HomePage() {
       </nav>
 
       {/* ─── MARQUEE TICKER ─────────────────────────────── */}
-      <div className="pt-20 overflow-hidden border-b border-[#e8e8e4] bg-[#0c0c0c]">
+      <div className="pt-20 overflow-hidden border-b border-[#e8e8e4] bg-[#1c1c1c]">
         <div className="flex whitespace-nowrap py-3">
           <div className="animate-marquee flex items-center gap-8 text-sm text-[#6b6b6b]">
             {Array(4).fill([
@@ -70,11 +70,11 @@ export default function HomePage() {
 
             {/* Headline */}
             <h1 className="animate-fade-up delay-150 font-display text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[0.95] mb-8">
-              <span className="text-[#0c0c0c]">The UGC marketplace</span>
+              <span className="text-[#1c1c1c]">The UGC marketplace</span>
               <br />
               <span className="text-[#84cc16]">for tech</span>
               <br />
-              <span className="text-[#0c0c0c]">brands & creators</span>
+              <span className="text-[#1c1c1c]">brands & creators</span>
             </h1>
 
             {/* Sub */}
@@ -107,8 +107,8 @@ export default function HomePage() {
                 ))}
               </div>
               <div className="text-sm text-[#6b6b6b]">
-                <span className="font-semibold text-[#0c0c0c]">500+ creators</span> and{' '}
-                <span className="font-semibold text-[#0c0c0c]">50 brands</span><br />
+                <span className="font-semibold text-[#1c1c1c]">500+ creators</span> and{' '}
+                <span className="font-semibold text-[#1c1c1c]">50 brands</span><br />
                 already on the signup
               </div>
             </div>
@@ -118,7 +118,7 @@ export default function HomePage() {
           <div className="lg:col-span-5 hidden lg:block">
             <div className="relative">
               {/* Abstract geometric composition */}
-              <div className="w-full aspect-square rounded-3xl bg-[#0c0c0c] relative overflow-hidden">
+              <div className="w-full aspect-square rounded-3xl bg-[#1c1c1c] relative overflow-hidden">
                 {/* Grid */}
                 <div className="absolute inset-0 dot-grid opacity-20" />
                 
@@ -147,7 +147,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── DARK BAND: STATS ────────────────────────────── */}
-      <section className="bg-[#0c0c0c] py-16 px-8">
+      <section className="bg-[#1c1c1c] py-16 px-8">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
@@ -172,7 +172,7 @@ export default function HomePage() {
           {/* Section header */}
           <div className="mb-16">
             <span className="section-label mb-4 block">Why Otto</span>
-            <h2 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-[#0c0c0c] max-w-xl leading-tight">
+            <h2 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-[#1c1c1c] max-w-xl leading-tight">
               Built for how tech UGC actually works
             </h2>
           </div>
@@ -231,7 +231,7 @@ export default function HomePage() {
             {/* Left: sticky header */}
             <div className="md:sticky md:top-32">
               <span className="section-label mb-4 block">How it works</span>
-              <h2 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-[#0c0c0c] leading-tight mb-6">
+              <h2 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-[#1c1c1c] leading-tight mb-6">
                 From brief to content in three steps
               </h2>
               <p className="text-[#6b6b6b] leading-relaxed mb-8">
@@ -290,7 +290,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto text-center">
           
           <span className="section-label mb-4 block">Pricing</span>
-          <h2 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-[#0c0c0c] mb-4">
+          <h2 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-[#1c1c1c] mb-4">
             Simple. Transparent.
           </h2>
           <p className="text-[#6b6b6b] text-lg font-light mb-14">
@@ -369,7 +369,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── FINAL CTA ───────────────────────────────────── */}
-      <section className="py-24 px-8 bg-[#0c0c0c]">
+      <section className="py-24 px-8 bg-[#1c1c1c]">
         <div className="max-w-3xl mx-auto text-center">
           <div className="text-5xl mb-8">🚀</div>
           <h2 className="font-display text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-6">
