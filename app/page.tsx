@@ -53,7 +53,7 @@ export default function HomePage() {
             </div>
 
             {/* Headline — exact match to Ed's site */}
-            <h1 className="fade-up stagger-1" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 600, fontSize: 'clamp(48px, 7vw, 84px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+            <h1 className="fade-up stagger-1" style={{ fontWeight: 600, fontSize: 'clamp(48px, 7vw, 84px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
               The UGC marketplace<br />
               for tech brands<br />
               &amp; creators

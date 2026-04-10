@@ -1,5 +1,20 @@
 import type { Metadata } from 'next'
+import { Bricolage_Grotesque, Open_Sans } from 'next/font/google'
 import './globals.css'
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-bricolage',
+  display: 'swap',
+})
+
+const openSans = Open_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-open-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Otto — The UGC Marketplace for Tech Brands & Creators',
@@ -12,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${bricolage.variable} ${openSans.variable}`}>
       <body>
         {children}
         <script
