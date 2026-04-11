@@ -136,7 +136,11 @@ export default function MessagesPage() {
               return (
                 <Link
                   key={deal.id}
-                  href={`/messages/${deal.id}`}
+                  href={
+                    user?.user_metadata?.role === 'brand' && deal.status === 'submitted'
+                      ? `/deals/${deal.id}/brand-review`
+                      : `/messages/${deal.id}`
+                  }
                   className={`card card-hover flex items-center gap-4 fade-up stagger-${Math.min(i + 1, 5)}`}
                 >
                   <div className="flex-1 min-w-0">
