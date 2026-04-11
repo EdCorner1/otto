@@ -1,39 +1,46 @@
 // Maton gateway client — single credential for all third-party API calls
-// Key: MATON_API_KEY from /home/node/.openclaw/.env
+// Key: OPENCLAW_GATEWAY_TOKEN from /home/node/.openclaw/.env
 // Base: https://gateway.maton.ai
+// Note: path format is /resend/<native-resend-path> — Resend send is POST /resend/emails
 
-const MATON_KEY = process.env.OPENCLAW_GATEWAY_TOKEN!
+const GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN!
 
-async function matonFetch(path: string, options: RequestInit = {}) {
+async function gateway<T = any>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`https://gateway.maton.ai${path}`, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${MATON_KEY}`,
+      'Authorization': `Bearer ${GATEWAY_TOKEN}`,
       'Content-Type': 'application/json',
       ...options.headers,
     },
   })
   if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Maton ${path} → ${res.status}: ${err}`)
+    const err = await res.json().catch(() => ({ message: res.statusText }))
+    throw new Error(`Gateway ${path} → ${res.status}: ${err.message || JSON.stringify(err)}`)
   }
   return res.json()
 }
 
 // ── Resend (email) via Maton ──────────────────────────────────────
-// Sends via Resend API key registered in Maton connections
+// Resend path: POST /resend/emails
+// From address must be a verified domain (we use noreply@totallyremote.co)
 export async function sendEmail({ to, subject, html, from }: {
   to: string; subject: string; html: string; from?: string
 }) {
-  return matonFetch('/resend/send', {
+  return gateway(`/resend/emails`, {
     method: 'POST',
-    body: JSON.stringify({ to, subject, html, from }),
+    body: JSON.stringify({
+      from: from || 'Otto <noreply@totallyremote.co>',
+      to,
+      subject,
+      html,
+    }),
   })
 }
 
 // ── Vercel env vars ──────────────────────────────────────────────
 export async function setVercelEnv(key: string, value: string, projectId = 'prj_918q78J24E76UzQR9rk39aPKDX44') {
-  return matonFetch(`/vercel/v10/projects/${projectId}/env`, {
+  return gateway(`/vercel/v10/projects/${projectId}/env`, {
     method: 'POST',
     body: JSON.stringify({ key, value, target: 'production' }),
   })
@@ -43,8 +50,14 @@ export async function setVercelEnv(key: string, value: string, projectId = 'prj_
 export async function createGitHubPR({ repo, title, body, branch, base = 'main' }: {
   repo: string; title: string; body: string; branch: string; base?: string
 }) {
-  return matonFetch('/github/repos', {
+  return gateway('/github/repos', {
     method: 'POST',
     body: JSON.stringify({ repo, title, body, branch, base }),
   })
 }
+
+// ── Supabase Management API ──────────────────────────────────────
+export const supabaseMgmt = (projectRef: string) => ({
+  projectRef,
+  headers: { Authorization: `Bearer ${GATEWAY_TOKEN}`, apikey: GATEWAY_TOKEN },
+})
