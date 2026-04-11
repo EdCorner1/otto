@@ -69,7 +69,7 @@ export default function OnboardingPage() {
           </nav>
 
           <div className="pt-24">
-            <h1 className="text-4xl font-extrabold font-display tracking-tight mb-3" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(32px, 6vw, 48px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+            <h1 className="text-4xl font-display tracking-tight mb-3" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(32px, 6vw, 48px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
               Welcome to Otto.
             </h1>
             <p className="text-[#6b6b6b] text-lg mb-10">What kind of user are you?</p>
@@ -113,7 +113,7 @@ export default function OnboardingPage() {
             <div className="pt-24">
               <StepIndicator current={1} total={2} />
               <button onClick={() => setStep(0)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-extrabold font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Tell us about your brand.
               </h1>
               <p className="text-[#6b6b6b] mb-8">This helps us match you with the right creators.</p>
@@ -189,7 +189,7 @@ export default function OnboardingPage() {
             <div className="pt-24">
               <StepIndicator current={step} total={TOTAL_STEPS} />
               <button onClick={() => setStep(0)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-extrabold font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Set up your profile.
               </h1>
               <p className="text-[#6b6b6b] mb-8">This is how brands will find you.</p>
@@ -253,7 +253,7 @@ export default function OnboardingPage() {
             <div className="pt-24">
               <StepIndicator current={step} total={TOTAL_STEPS} />
               <button onClick={() => setStep(1)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-extrabold font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Add a profile photo.
               </h1>
               <p className="text-[#6b6b6b] mb-8">Brands want to see who&apos;s behind the content. A clear photo builds trust.</p>
@@ -327,7 +327,7 @@ export default function OnboardingPage() {
             <div className="pt-24">
               <StepIndicator current={step} total={TOTAL_STEPS} />
               <button onClick={() => setStep(2)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-extrabold font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Your social links.
               </h1>
               <p className="text-[#6b6b6b] mb-2">Add at least one link so brands can see your audience.</p>
@@ -394,7 +394,7 @@ export default function OnboardingPage() {
             <div className="pt-24">
               <StepIndicator current={step} total={TOTAL_STEPS} />
               <button onClick={() => setStep(3)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-extrabold font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Your portfolio.
               </h1>
               <p className="text-[#6b6b6b] mb-2">Add at least 6 videos to publish your profile. Brands hire based on your work.</p>
@@ -577,7 +577,7 @@ export default function OnboardingPage() {
                   <polyline points="20,6 9,17 4,12" />
                 </svg>
               </div>
-              <h1 className="text-4xl font-extrabold font-display tracking-tight mb-3" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display tracking-tight mb-3" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Your profile is live.
               </h1>
               <p className="text-[#6b6b6b] text-lg mb-2">Brands can now discover you and send briefs.</p>
