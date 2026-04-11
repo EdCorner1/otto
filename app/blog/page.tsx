@@ -6,3 +6,5 @@ export const metadata: Metadata = {
 }
 
 export { default } from './BlogListingClient'
+
+export const dynamic = 'force-dynamic'

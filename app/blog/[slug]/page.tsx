@@ -41,3 +41,5 @@ export default async function BlogPostPage({ params }: Props) {
   const BlogPostClient = (await import('./BlogPostClient')).default
   return <BlogPostClient slug={slug} />
 }
+
+export const dynamic = 'force-dynamic'
