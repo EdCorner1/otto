@@ -83,7 +83,7 @@ export default function BrandProfilePage() {
   const [brand, setBrand] = useState<BrandFull | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const supabase = createClient()
 

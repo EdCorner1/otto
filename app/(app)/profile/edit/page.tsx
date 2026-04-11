@@ -10,7 +10,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 export default function ProfileEditPage() {
   const router = useRouter()
   const supabase = createClient()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, unknown> } | null>(null)
   const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -58,8 +58,8 @@ export default function ProfileEditPage() {
           setHourlyRate(c.hourly_rate || '')
           setAvailability(c.availability || 'open')
           setAvatarPreview(c.avatar_url || '')
-          const socials: any[] = (c as any).creator_socials || []
-          socials.forEach((s: any) => {
+          const socials = ((c as { creator_socials?: Array<{ platform: string; url: string }> }).creator_socials ?? [])
+          socials.forEach((s) => {
             if (s.platform === 'instagram') setInstagram(s.url)
             if (s.platform === 'tiktok') setTiktok(s.url)
             if (s.platform === 'youtube') setYoutube(s.url)
@@ -70,10 +70,10 @@ export default function ProfileEditPage() {
       } else if (r === 'brand') {
         const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).single()
         if (b) {
-          setCompanyName(b.company_name || '')
+          setCompanyName((b as { company_name?: string }).company_name ?? '')
           setWebsiteUrl(b.website || '')
           setIndustry(b.industry || '')
-          setCompanyBio(b.bio || '')
+          setCompanyBio((b as { bio?: string }).bio ?? '')
           setAvatarPreview(b.logo_url || '')
         }
       }
@@ -161,8 +161,8 @@ export default function ProfileEditPage() {
       }
 
       setMsg('Profile saved!')
-    } catch (err: any) {
-      setMsg('Error saving: ' + err.message)
+    } catch (err: unknown) {
+      setMsg(`Error saving: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
     setSaving(false)
   }

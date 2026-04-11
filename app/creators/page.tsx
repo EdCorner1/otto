@@ -10,7 +10,7 @@ type Creator = {
   headline: string | null; bio: string | null; location: string | null
   hourly_rate: string | null; availability: string; is_verified: boolean
   profile_views: number; created_at: string
-  creator_socials: { platform: string; url: string }[]
+  creator_socials: { id?: string; platform: string; url: string }[]
   portfolio_items: { id: string; type: string; thumbnail_url: string | null }[]
 }
 
@@ -86,7 +86,7 @@ function CreatorCard({ creator, userRole }: { creator: Creator; userRole: string
         {/* Social links */}
         {socials.length > 0 && (
           <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-            {socials.slice(0, 5).map((s: any) => (
+            {socials.slice(0, 5).map((s) => (
               <a key={s.id} href={s.url} target="_blank" rel="noopener noreferrer"
                 className="w-7 h-7 rounded-lg bg-[#f0f0ec] flex items-center justify-center text-xs hover:bg-[#e8e8e4] transition-colors"
                 title={s.platform}>

@@ -74,7 +74,7 @@ type Application = {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ email?: string; user_metadata?: { role?: 'brand' | 'creator'; display_name?: string } } | null>(null)
   const [role, setRole] = useState<Role>(null)
   const [loading, setLoading] = useState(true)
   const [posted, setPosted] = useState(false)
@@ -97,13 +97,13 @@ export default function DashboardPage() {
         const { data: brandData } = await supabase.from('brands').select('id').eq('user_id', user.id).single()
         if (brandData) {
           const { data: jobsData } = await supabase.from('jobs').select('*, applications(id)').eq('brand_id', brandData.id).order('created_at', { ascending: false }).limit(3)
-          setBrandJobs((jobsData as any[]) || [])
+          setBrandJobs((jobsData as Job[]) || [])
         }
       } else if (user.user_metadata?.role === 'creator') {
         const { data: creatorData } = await supabase.from('creators').select('id').eq('user_id', user.id).single()
         if (creatorData) {
           const { data: appsData } = await supabase.from('applications').select('*, jobs(id, title, brands(company_name))').eq('creator_id', creatorData.id).order('created_at', { ascending: false }).limit(3)
-          setCreatorApps((appsData as any[]) || [])
+          setCreatorApps((appsData as Application[]) || [])
         }
       }
 

@@ -12,6 +12,30 @@ type Post = {
   published_at: string; created_at: string
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function sanitizeUrl(url: string): string {
+  const trimmed = url.trim()
+  if (trimmed.startsWith('/')) return trimmed
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  return '#'
+}
+
+function formatInline(text: string): string {
+  return escapeHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, (_, label, href) => `<a href="${sanitizeUrl(href)}" target="_blank" rel="noopener noreferrer" class="text-link">${escapeHtml(label)}</a>`)
+}
+
 function calcReadingTime(text: string): number {
   if (!text) return 1
   const words = text.trim().split(/\s+/).length
@@ -46,23 +70,12 @@ function renderCallout(text: string): string {
   const icons: Record<string, string> = { tip: '💡', note: '📌', warning: '⚠️', example: '📖' }
   const icon = icons[type] || icons.note
   const title = type.charAt(0).toUpperCase() + type.slice(1)
-  const inner = stripped
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
+  const inner = formatInline(stripped)
   return `<div class="callout callout-${type}"><div class="callout-header"><span>${icon}</span><strong>${title}</strong></div><div class="callout-body">${inner}</div></div>`
 }
 
-function renderBlockquote(text: string): string {
-  const inner = text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-  return `<blockquote class="pull-quote"><p>${inner}</p></blockquote>`
-}
-
 function renderImageWithCaption(src: string, alt: string, caption: string): string {
-  return `<figure class="article-figure"><img src="${src}" alt="${alt}" loading="lazy" />${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`
+  return `<figure class="article-figure"><img src="${sanitizeUrl(src)}" alt="${escapeHtml(alt)}" loading="lazy" />${caption ? `<figcaption>${formatInline(caption)}</figcaption>` : ''}</figure>`
 }
 
 function renderInlineCTA(): string {
@@ -75,15 +88,15 @@ function renderHorizontalRule(): string {
 
 function renderSection(title: string, body: string, index: number): string {
   const anchor = title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  return `<section class="article-section" id="${anchor}"><h2 class="section-title"><span class="section-num">0${index}</span>${title}</h2>${body}</section>`
+  return `<section class="article-section" id="${anchor}"><h2 class="section-title"><span class="section-num">0${index}</span>${escapeHtml(title)}</h2>${body}</section>`
 }
 
 function renderRelated(posts: Array<{slug: string; title: string; desc: string}>): string {
   if (!posts.length) return ''
   const items = posts.map(p => `
-    <a href="/blog/${p.slug}" class="related-card">
-      <span class="related-title">${p.title}</span>
-      <span class="related-desc">${p.desc}</span>
+    <a href="/blog/${encodeURIComponent(p.slug)}" class="related-card">
+      <span class="related-title">${escapeHtml(p.title)}</span>
+      <span class="related-desc">${escapeHtml(p.desc)}</span>
       <span class="related-arrow">→</span>
     </a>
   `).join('')
@@ -142,11 +155,7 @@ function renderMarkdown(content: string): { html: string; related: Array<{slug:s
     if (line.match(/^[-*]\s/)) {
       const items: string[] = []
       while (i < lines.length && lines[i].match(/^[-*]\s/)) {
-        const itemText = lines[i].replace(/^[-*]\s/, '')
-          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.+?)\*/g, '<em>$1</em>')
-          .replace(/`(.+?)`/g, '<code>$1</code>')
-          .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-link">$1</a>')
+        const itemText = formatInline(lines[i].replace(/^[-*]\s/, ''))
         items.push(`<li>${itemText}</li>`)
         i++
       }
@@ -159,12 +168,7 @@ function renderMarkdown(content: string): { html: string; related: Array<{slug:s
         paraLines.push(lines[i])
         i++
       }
-      const text = paraLines.join(' ')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/`(.+?)`/g, '<code>$1</code>')
-        .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-link">$1</a>')
-        .replace(/\{\{CTA:.*?\}\}/g, '')
+      const text = formatInline(paraLines.join(' ')).replace(/\{\{CTA:.*?\}\}/g, '')
       if (text.trim()) blocks.push(`<p>${text}</p>`)
       continue
     }

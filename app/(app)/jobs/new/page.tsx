@@ -19,7 +19,7 @@ const DELIVERABLES = ['Demo/review', 'Unboxing', 'Tutorial/how-to', 'Comparison'
 const BUDGET_RANGES = ['£100-250', '£250-500', '£500-1,000', '£1,000-2,500', '£2,500+']
 const TIMELINES = ['Within 1 week', 'Within 2 weeks', 'Within 1 month', 'Flexible']
 
-function FloatingNav({ user, onSignOut }: { user: any; onSignOut: () => void }) {
+function FloatingNav({ user, onSignOut }: { user: { email?: string } | null; onSignOut: () => void }) {
   return (
     <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -37,8 +37,8 @@ function FloatingNav({ user, onSignOut }: { user: any; onSignOut: () => void }) 
 }
 
 export default function NewJobPage() {
-  const [user, setUser] = useState<any>(null)
-  const [brand, setBrand] = useState<any>(null)
+  const [user, setUser] = useState<{ email?: string; id: string; user_metadata?: { role?: string } } | null>(null)
+  const [brand, setBrand] = useState<{ id: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [role, setRole] = useState<string | null>(null)
@@ -84,6 +84,8 @@ export default function NewJobPage() {
     if (!title || !description || !budget || !timeline) return
 
     setSubmitting(true)
+    if (!brand) { setSubmitting(false); return }
+
     const { error } = await supabase.from('jobs').insert({
       brand_id: brand.id,
       title,

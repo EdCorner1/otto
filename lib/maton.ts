@@ -5,7 +5,7 @@
 
 const GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN!
 
-async function gateway<T = any>(path: string, options: RequestInit = {}): Promise<T> {
+async function gateway<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`https://gateway.maton.ai${path}`, {
     ...options,
     headers: {

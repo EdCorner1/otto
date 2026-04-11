@@ -42,7 +42,7 @@ function formatTime(dateStr: string) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
-function FloatingNav({ user, onSignOut }: { user: any; onSignOut: () => void }) {
+function FloatingNav({ user, onSignOut }: { user: { email?: string } | null; onSignOut: () => void }) {
   return (
     <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -76,7 +76,7 @@ type Deal = {
 }
 
 export default function MessagesPage() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ email?: string; id: string; user_metadata?: { role?: string } } | null>(null)
   const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -100,7 +100,7 @@ export default function MessagesPage() {
           .eq('brand_id', brandData.id)
           .order('created_at', { ascending: false })
 
-        setDeals((dealsData as any[]) || [])
+        setDeals((dealsData as Deal[]) || [])
       } else if (role === 'creator') {
         const { data: creatorData } = await supabase.from('creators').select('id').eq('user_id', user.id).single()
         if (!creatorData) { router.push('/dashboard'); return }
@@ -111,7 +111,7 @@ export default function MessagesPage() {
           .eq('creator_id', creatorData.id)
           .order('created_at', { ascending: false })
 
-        setDeals((dealsData as any[]) || [])
+        setDeals((dealsData as Deal[]) || [])
       }
 
       setLoading(false)
@@ -152,7 +152,7 @@ export default function MessagesPage() {
         ) : (
           <div className="space-y-3">
             {deals.map((deal, i) => {
-              const otherParty = user.user_metadata?.role === 'brand'
+              const otherParty = user?.user_metadata?.role === 'brand'
                 ? deal.creators?.display_name || 'Creator'
                 : deal.brands?.company_name || 'Brand'
 

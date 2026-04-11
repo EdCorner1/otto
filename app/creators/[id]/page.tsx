@@ -75,7 +75,7 @@ export default function CreatorProfilePage() {
   const [creator, setCreator] = useState<CreatorFull | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const supabase = createClient()
 
@@ -107,7 +107,7 @@ export default function CreatorProfilePage() {
       // Sort portfolio by sort_order, then created_at
       const sorted = {
         ...creator,
-        portfolio_items: (creator.portfolio_items || []).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)),
+        portfolio_items: (creator.portfolio_items || []).sort((a: { sort_order?: number }, b: { sort_order?: number }) => (a.sort_order || 0) - (b.sort_order || 0)),
       }
       setCreator(sorted)
       setLoading(false)

@@ -60,7 +60,7 @@ export default function SignupPage() {
           Create your account
         </h1>
         <p className="text-gray-500 text-sm mb-8">
-          Join Otto — it's free to get started
+          Join Otto — it&apos;s free to get started
         </p>
 
         {error && (

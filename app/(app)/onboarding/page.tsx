@@ -150,8 +150,8 @@ export default function OnboardingPage() {
                       // Update user role
                       await supabase.from('users').update({ role: 'brand' }).eq('id', user.id);
                       router.push('/dashboard');
-                    } catch (err: any) {
-                      setError(err.message || 'Something went wrong.');
+                    } catch (err: unknown) {
+                      setError(err instanceof Error ? err.message : 'Something went wrong.');
                     } finally { setLoading(false); }
                   }}
                   disabled={loading}
@@ -522,7 +522,7 @@ export default function OnboardingPage() {
                       const { data: creatorData } = await supabase.from('creators').select('id').eq('user_id', user.id).single();
                       if (creatorData) {
                         await supabase.from('creator_socials').insert(
-                          socialLinks.map(s => ({ creator_id: creatorData.id, platform: s.platform as any, url: s.url }))
+                          socialLinks.map(s => ({ creator_id: creatorData.id, platform: s.platform as string, url: s.url }))
                         );
                       }
                     }
@@ -541,8 +541,8 @@ export default function OnboardingPage() {
                     await supabase.from('users').update({ role: 'creator' }).eq('id', user.id);
 
                     setStep(5);
-                  } catch (err: any) {
-                    setError(err.message || 'Something went wrong.');
+                  } catch (err: unknown) {
+                    setError(err instanceof Error ? err.message : 'Something went wrong.');
                   } finally {
                     setLoading(false);
                   }

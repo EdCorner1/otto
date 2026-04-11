@@ -61,7 +61,7 @@ type Job = {
 }
 
 export default function JobsPage() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ email?: string; user_metadata?: { role?: 'brand' | 'creator' } } | null>(null)
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -85,7 +85,7 @@ export default function JobsPage() {
         .eq('status', 'open')
         .order('created_at', { ascending: false })
 
-      setJobs((jobsData as any[]) || [])
+      setJobs((jobsData as Job[]) || [])
       setLoading(false)
     }
     getUser()

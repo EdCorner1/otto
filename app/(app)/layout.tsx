@@ -1,91 +1,107 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const [user, setUser] = useState<any>(null)
+type Role = 'creator' | 'brand'
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<{
+    id: string
+    email?: string
+    user_metadata?: { role?: Role; full_name?: string }
+  } | null>(null)
+  const [role, setRole] = useState<Role | null>(null)
   const [loading, setLoading] = useState(true)
+  const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/login')
-        return
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUser(data.user)
+        setRole((data.user.user_metadata?.role as Role) ?? null)
       }
-      setUser(user)
       setLoading(false)
-    }
-    getUser()
+    })
   }, [])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
-        <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (!loading && !user) router.replace('/login')
+  }, [loading, user, router])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    window.location.href = '/'
   }
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
+      <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+
+  if (!user) return null
+
+  const isCreator = role === 'creator'
+  const isBrand = role === 'brand'
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
-      {/* Floating nav */}
-      <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          {/* Logo + home link */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-lg font-bold font-display tracking-tight text-[#363535] hover:opacity-80 transition-opacity"
-          >
+
+      {/* ── Nav ── */}
+      <header className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3.5 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
+
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2">
+          <span style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 700, fontSize: '20px', letterSpacing: '-1px', color: '#363535' }}>
             Otto
-            <span className="inline-block w-2 h-2 bg-[#ccff00] rounded-full mb-2" />
-          </Link>
+          </span>
+          <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
+        </Link>
 
-          {/* Nav links */}
-          <div className="flex items-center gap-1">
-            <Link href="/dashboard" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors">Dashboard</Link>
-            <Link href="/messages" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors">Messages</Link>
-            <Link href="/creators" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors hidden lg:block">Creators</Link>
-            <Link href="/blog" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors hidden lg:block">Blog</Link>
-            <Link href="/profile/edit" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        {/* Nav links */}
+        <nav className="hidden md:flex items-center gap-6">
+          {[
+            { href: '/dashboard', label: 'Dashboard' },
+            { href: '/jobs', label: isBrand ? 'My Briefs' : 'Find Work' },
+            { href: '/messages', label: 'Messages' },
+            ...(isCreator ? [{ href: '/creators', label: 'Discover' }] : []),
+          ].map(({ href, label }) => (
+            <Link key={href} href={href}
+              className={`text-sm font-medium transition-colors ${pathname === href ? 'text-[#363535]' : 'text-[#6b6b6b] hover:text-[#363535]'}`}>
+              {label}
             </Link>
-          </div>
+          ))}
+        </nav>
 
-          {/* Right side: email + sign out */}
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-[#6b6b6b] hidden sm:block">
-              {user?.email}
-            </span>
-            <button
-              onClick={handleSignOut}
-              className="text-sm font-medium text-[#6b6b6b] hover:text-[#363535] transition-colors"
-            >
-              Sign out
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-[#6b6b6b] hidden sm:block">{user.email}</span>
+          <div className="relative group">
+            <button className="w-8 h-8 rounded-full bg-[#1c1c1e] text-white text-sm font-bold flex items-center justify-center">
+              {user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? 'U'}
             </button>
+            {/* Dropdown */}
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-[#e8e8e4] rounded-xl shadow-lg shadow-black/[0.08] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
+              <div className="px-4 py-3 border-b border-[#f0f0ec]">
+                <p className="text-sm font-semibold text-[#363535] truncate">{user.user_metadata?.full_name ?? 'User'}</p>
+                <p className="text-xs text-[#9a9a9a] truncate">{user.email}</p>
+              </div>
+              <div className="py-1">
+                <Link href="/profile/edit" className="block px-4 py-2 text-sm text-[#6b6b6b] hover:bg-[#fafaf9] hover:text-[#363535] transition-colors">Edit profile</Link>
+                <button onClick={handleSignOut} className="w-full text-left px-4 py-2 text-sm text-[#6b6b6b] hover:bg-[#fafaf9] hover:text-[#363535] transition-colors">Sign out</button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Content */}
-      <main className="pt-28 pb-20 max-w-6xl mx-auto px-6">{children}</main>
+      {/* Page content */}
+      <main className="pt-28 pb-20">{children}</main>
     </div>
   )
 }
