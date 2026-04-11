@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
@@ -10,6 +10,12 @@ type Post = {
   cover_image_url: string; tags: string[]; author_name: string; author_avatar: string | null
   blog_categories: { name: string; slug: string } | null
   published_at: string; created_at: string
+}
+
+function calcReadingTime(text: string): number {
+  if (!text) return 1
+  const words = text.trim().split(/\s+/).length
+  return Math.max(1, Math.round(words / 200))
 }
 
 const SERIES_SLUGS = [
@@ -37,20 +43,14 @@ function renderCallout(text: string): string {
     : rawType === 'warning' ? 'warning'
     : rawType === 'example' ? 'example'
     : 'note'
-
   const icons: Record<string, string> = { tip: '💡', note: '📌', warning: '⚠️', example: '📖' }
   const icon = icons[type] || icons.note
   const title = type.charAt(0).toUpperCase() + type.slice(1)
-
   const inner = stripped
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
-
-  return `<div class="callout callout-${type}">
-    <div class="callout-header"><span>${icon}</span><strong>${title}</strong></div>
-    <div class="callout-body">${inner}</div>
-  </div>`
+  return `<div class="callout callout-${type}"><div class="callout-header"><span>${icon}</span><strong>${title}</strong></div><div class="callout-body">${inner}</div></div>`
 }
 
 function renderBlockquote(text: string): string {
@@ -58,25 +58,15 @@ function renderBlockquote(text: string): string {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
-  return `<blockquote class="pull-quote">${inner}</blockquote>`
+  return `<blockquote class="pull-quote"><p>${inner}</p></blockquote>`
 }
 
 function renderImageWithCaption(src: string, alt: string, caption: string): string {
-  return `<figure class="article-figure">
-    <img src="${src}" alt="${alt}" loading="lazy" />
-    ${caption ? `<figcaption>${caption}</figcaption>` : ''}
-  </figure>`
+  return `<figure class="article-figure"><img src="${src}" alt="${alt}" loading="lazy" />${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`
 }
 
 function renderInlineCTA(): string {
-  return `<div class="inline-cta">
-    <span>🚀</span>
-    <div>
-      <strong>Want more practical UGC insights?</strong>
-      <p>Join the Otto signup — the newsletter for tech creators who mean business.</p>
-    </div>
-    <a href="/signup" class="inline-cta-btn">Get Started →</a>
-  </div>`
+  return `<div class="inline-cta"><span>🚀</span><div><strong>Want more practical UGC insights?</strong><p>Join the Otto signup — the newsletter for tech creators who mean business.</p></div><a href="/signup" class="inline-cta-btn">Get Started →</a></div>`
 }
 
 function renderHorizontalRule(): string {
@@ -85,13 +75,7 @@ function renderHorizontalRule(): string {
 
 function renderSection(title: string, body: string, index: number): string {
   const anchor = title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  return `<section class="article-section" id="${anchor}">
-    <h2 class="section-title">
-      <span class="section-num">0${index}</span>
-      ${title}
-    </h2>
-    ${body}
-  </section>`
+  return `<section class="article-section" id="${anchor}"><h2 class="section-title"><span class="section-num">0${index}</span>${title}</h2>${body}</section>`
 }
 
 function renderRelated(posts: Array<{slug: string; title: string; desc: string}>): string {
@@ -112,7 +96,6 @@ function renderRelated(posts: Array<{slug: string; title: string; desc: string}>
 // ── Full markdown renderer ─────────────────────────────────────────────────
 
 function renderMarkdown(content: string): { html: string; related: Array<{slug:string;title:string;desc:string}> } {
-  // Extract related posts block
   const related: Array<{slug:string;title:string;desc:string}> = []
   const relatedMatch = content.match(/<!--\s*RELATED:?\n([\s\S]*?)-->/i)
   if (relatedMatch) {
@@ -123,7 +106,6 @@ function renderMarkdown(content: string): { html: string; related: Array<{slug:s
     content = content.replace(/<!--\s*RELATED:?\n[\s\S]*?-->/gi, '')
   }
 
-  // Strip image-caption lines (rendered separately below if needed)
   const lines = content.split('\n')
   const blocks: string[] = []
   let i = 0
@@ -131,13 +113,7 @@ function renderMarkdown(content: string): { html: string; related: Array<{slug:s
   while (i < lines.length) {
     const line = lines[i]
 
-    // Horizontal rule
-    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
-      blocks.push('__HR__')
-      i++; continue
-    }
-
-    // Callout block
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) { blocks.push('__HR__'); i++; continue }
     if (line.startsWith('> ')) {
       const rawLines: string[] = []
       while (i < lines.length && (lines[i].startsWith('>') || lines[i].trim() === '')) {
@@ -147,19 +123,6 @@ function renderMarkdown(content: string): { html: string; related: Array<{slug:s
       blocks.push(renderCallout(rawLines.join(' ')))
       continue
     }
-
-    // Pull-quote (blockquote without callout prefix)
-    if (line.startsWith('>')) {
-      const rawLines: string[] = []
-      while (i < lines.length && lines[i].startsWith('>')) {
-        rawLines.push(lines[i].replace(/^>\s?/, ''))
-        i++
-      }
-      blocks.push(renderBlockquote(rawLines.join(' ')))
-      continue
-    }
-
-    // Image with caption (markdown image followed by ^ caption line)
     if (line.match(/^!\[\[(.+?)\]\((.+?)\)\]/) || line.match(/^!\[(.*?)\]\((.+?)\)$/)) {
       const imgMatch = line.match(/^!\[(.*?)\]\((.+?)\)$/)
       const alt = imgMatch ? imgMatch[1] : ''
@@ -173,27 +136,9 @@ function renderMarkdown(content: string): { html: string; related: Array<{slug:s
       blocks.push(renderImageWithCaption(src, alt, captionLines.join(' ')))
       continue
     }
-
-    // Inline CTA marker
-    if (line.includes('{{CTA:')) {
-      const ctaMatch = line.match(/\{\{CTA:\s*(.+?)\s*\}\}/)
-      blocks.push(renderInlineCTA())
-      i++; continue
-    }
-
-    // H2
-    if (line.startsWith('## ')) {
-      blocks.push(`__H2__${line.slice(3).trim()}__`)
-      i++; continue
-    }
-
-    // H3
-    if (line.startsWith('### ')) {
-      blocks.push(`__H3__${line.slice(4).trim()}__`)
-      i++; continue
-    }
-
-    // Unordered list
+    if (line.includes('{{CTA:')) { blocks.push(renderInlineCTA()); i++; continue }
+    if (line.startsWith('## ')) { blocks.push(`__H2__${line.slice(3).trim()}__`); i++; continue }
+    if (line.startsWith('### ')) { blocks.push(`__H3__${line.slice(4).trim()}__`); i++; continue }
     if (line.match(/^[-*]\s/)) {
       const items: string[] = []
       while (i < lines.length && lines[i].match(/^[-*]\s/)) {
@@ -208,8 +153,6 @@ function renderMarkdown(content: string): { html: string; related: Array<{slug:s
       blocks.push(`<ul class="article-list">${items.join('')}</ul>`)
       continue
     }
-
-    // Paragraph
     if (line.trim()) {
       const paraLines: string[] = []
       while (i < lines.length && lines[i].trim() && !lines[i].match(/^(##|###|>|\*|--|!\[)/) && !lines[i].startsWith('{{')) {
@@ -225,34 +168,22 @@ function renderMarkdown(content: string): { html: string; related: Array<{slug:s
       if (text.trim()) blocks.push(`<p>${text}</p>`)
       continue
     }
-
     i++
   }
 
-  // Build final HTML — group consecutive paragraphs into sections after H2s
   const htmlParts: string[] = []
   let sectionCount = 0
   let currentSectionContent = ''
 
   for (const block of blocks) {
     if (block === '__HR__') {
-      if (currentSectionContent) {
-        sectionCount++
-        htmlParts.push(renderSection(`Section ${sectionCount}`, currentSectionContent.trim(), sectionCount))
-        currentSectionContent = ''
-      }
+      if (currentSectionContent.trim()) { sectionCount++; htmlParts.push(renderSection(`Section ${sectionCount}`, currentSectionContent.trim(), sectionCount)); currentSectionContent = '' }
       htmlParts.push(renderHorizontalRule())
       continue
     }
     if (block.startsWith('__H2__')) {
-      if (currentSectionContent) {
-        sectionCount++
-        htmlParts.push(renderSection(`Section ${sectionCount}`, currentSectionContent.trim(), sectionCount))
-        currentSectionContent = ''
-      }
+      if (currentSectionContent.trim()) { sectionCount++; htmlParts.push(renderSection(`Section ${sectionCount}`, currentSectionContent.trim(), sectionCount)); currentSectionContent = '' }
       sectionCount++
-      const title = block.replace('__H2__', '').replace('__', '')
-      // Collect body until next H2
       continue
     }
     if (block.startsWith('__H3__')) {
@@ -260,20 +191,9 @@ function renderMarkdown(content: string): { html: string; related: Array<{slug:s
       currentSectionContent += `<h3>${h3}</h3>`
       continue
     }
-    if (block.startsWith('__H2__')) {
-      const title = block.replace('__H2__', '').replace('__', '')
-      htmlParts.push(renderSection(title, currentSectionContent.trim(), sectionCount))
-      currentSectionContent = ''
-      sectionCount++
-      continue
-    }
     currentSectionContent += block
   }
-
-  if (currentSectionContent.trim()) {
-    sectionCount++
-    htmlParts.push(renderSection(`Section ${sectionCount}`, currentSectionContent.trim(), sectionCount))
-  }
+  if (currentSectionContent.trim()) { sectionCount++; htmlParts.push(renderSection(`Section ${sectionCount}`, currentSectionContent.trim(), sectionCount)) }
 
   return { html: htmlParts.join('\n'), related }
 }
@@ -287,12 +207,15 @@ export default function BlogPostPage() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [rendered, setRendered] = useState({ html: '', related: [] as Array<{slug:string;title:string;desc:string}> })
+  const [readProgress, setReadProgress] = useState(0)
+  const articleRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
   const seriesIndex = SERIES_SLUGS.indexOf(slug)
   const isInSeries = seriesIndex !== -1
   const prevSlug = seriesIndex > 0 ? SERIES_SLUGS[seriesIndex - 1] : null
   const nextSlug = seriesIndex < SERIES_SLUGS.length - 1 ? SERIES_SLUGS[seriesIndex + 1] : null
+  const readingTime = post ? calcReadingTime(post.content) : 0
 
   useEffect(() => {
     const load = async () => {
@@ -310,6 +233,23 @@ export default function BlogPostPage() {
     }
     load()
   }, [slug])
+
+  // Scroll progress tracker
+  useEffect(() => {
+    const article = articleRef.current
+    if (!article) return
+    const handleScroll = () => {
+      const rect = article.getBoundingClientRect()
+      const articleHeight = article.offsetHeight
+      const windowHeight = window.innerHeight
+      const scrolled = Math.max(0, -rect.top)
+      const total = articleHeight - windowHeight
+      const progress = total > 0 ? Math.min(100, Math.round((scrolled / total) * 100)) : 0
+      setReadProgress(progress)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [post])
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
@@ -334,6 +274,12 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
+
+      {/* Reading progress bar */}
+      <div className="fixed top-0 left-0 right-0 z-[100] h-1 bg-[#f0f0ec]">
+        <div className="h-full bg-[#ccff00] transition-all duration-100 ease-out" style={{ width: `${readProgress}%` }} />
+      </div>
+
       {/* Nav */}
       <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3.5 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
         <Link href="/" className="flex items-center gap-2">
@@ -346,7 +292,7 @@ export default function BlogPostPage() {
         </div>
       </nav>
 
-      <main className="max-w-[760px] mx-auto px-6 pt-32 pb-20">
+      <main className="max-w-[760px] mx-auto px-6 pt-32 pb-20" ref={articleRef}>
 
         {/* Article header */}
         <header className="mb-10">
@@ -392,6 +338,7 @@ export default function BlogPostPage() {
               <p className="text-xs text-[#9a9a9a]">
                 {pubDate}
                 {isInSeries ? ` · Day ${seriesIndex + 1} of 30` : ''}
+                {readingTime > 0 ? ` · ${readingTime} min read` : ''}
               </p>
             </div>
           </div>
@@ -446,7 +393,7 @@ export default function BlogPostPage() {
 
         {/* Tags */}
         {post.tags?.length > 0 && (
-          <div className="flex items-start gap-2 mt-10 pt-8 border-t border-[#e8e8e4] flex-wrap">
+          <div className="flex items-start gap-2 mt-10 pt-8 border-t border-[#f0f0ec] flex-wrap">
             <span className="text-xs text-[#9a9a9a] pt-1">Tagged:</span>
             {post.tags.map(tag => (
               <span key={tag} className="text-xs text-[#6b6b6b] bg-[#f0f0ec] px-3 py-1 rounded-full">{tag}</span>
@@ -493,8 +440,6 @@ export default function BlogPostPage() {
         .article-body a.text-link { color: #363535; text-decoration: underline; text-decoration-color: #ccff00; text-underline-offset: 3px; }
         .article-body a.text-link:hover { color: #1c1c1e; }
         .article-body code { background: #f0f0ec; padding: 2px 6px; border-radius: 4px; font-size: 14px; font-family: monospace; }
-
-        /* Callouts */
         .callout { border-radius: 12px; padding: 16px 20px; margin: 1.75em 0; border-left: 4px solid; }
         .callout-note { background: #f0f0ec; border-color: #363535; }
         .callout-tip { background: #f9ffef; border-color: #84cc16; }
@@ -506,17 +451,11 @@ export default function BlogPostPage() {
         .callout-warning .callout-header { color: #b45309; }
         .callout-example .callout-header { color: #1d4ed8; }
         .callout-body { font-size: 15px; line-height: 1.65; color: #363535; }
-
-        /* Pull quote */
         .pull-quote { border-left: 4px solid #ccff00; margin: 2em 0; padding: 8px 0 8px 24px; }
-        .pull-quote p, .pull-quote { font-family: var(--font-bricolage); font-size: 20px; font-weight: 600; letter-spacing: -0.5px; color: #1c1c1e; line-height: 1.4; font-style: italic; }
-
-        /* Image with caption */
+        .pull-quote p { font-family: var(--font-bricolage); font-size: 20px; font-weight: 600; letter-spacing: -0.5px; color: #1c1c1e; line-height: 1.4; font-style: italic; margin: 0; }
         .article-figure { margin: 2em 0; }
         .article-figure img { width: 100%; border-radius: 12px; border: 1px solid #e8e8e4; }
         .article-figure figcaption { font-size: 13px; color: #9a9a9a; text-align: center; margin-top: 8px; font-style: italic; }
-
-        /* Inline CTA */
         .inline-cta { display: flex; align-items: center; gap: 16px; background: #1c1c1e; border-radius: 16px; padding: 20px 24px; margin: 2.5em 0; }
         .inline-cta span { font-size: 28px; flex-shrink: 0; }
         .inline-cta div { flex: 1; }
@@ -524,18 +463,14 @@ export default function BlogPostPage() {
         .inline-cta p { font-size: 13px; color: rgba(255,255,255,0.5); margin: 0; }
         .inline-cta-btn { flex-shrink: 0; background: #ccff00; color: #1c1c1e; font-weight: 700; font-size: 13px; padding: 8px 16px; border-radius: 8px; text-decoration: none; transition: background 0.15s; }
         .inline-cta-btn:hover { background: #d9ff4d; }
-
-        /* Article sections */
         .article-section { margin-bottom: 3em; }
         .section-title { display: flex; align-items: center; gap: 12px; font-family: var(--font-bricolage); font-weight: 700; font-size: clamp(18px, 2.5vw, 22px); letter-spacing: -1px; color: #1c1c1e; margin-bottom: 1em; padding-bottom: 10px; border-bottom: 2px solid #f0f0ec; }
         .section-num { font-size: 11px; font-weight: 700; background: #ccff00; color: #1c1c1e; padding: 3px 8px; border-radius: 6px; letter-spacing: 0; flex-shrink: 0; }
         .hr-fade { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 3em 0; opacity: 0.2; }
         .hr-fade hr { width: 60px; border: none; border-top: 2px solid #363535; }
-
-        /* Related posts */
         .related-posts { margin-top: 3em; padding-top: 2em; border-top: 2px solid #f0f0ec; }
         .related-heading { font-family: var(--font-bricolage); font-weight: 700; font-size: 18px; letter-spacing: -0.5px; color: #363535; margin-bottom: 1em; }
-        .related-grid { display: grid; grid: auto / repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
         .related-card { display: flex; flex-direction: column; gap: 4px; padding: 16px; background: white; border: 1.5px solid #e8e8e4; border-radius: 14px; text-decoration: none; transition: all 0.15s; }
         .related-card:hover { border-color: #ccff00; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
         .related-title { font-weight: 600; font-size: 14px; color: #1c1c1e; line-height: 1.3; }
