@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase'
 
 type Post = {
   id: string; title: string; slug: string; excerpt: string; content: string
-  cover_image_url: string; tags: string[]; author_name: string
+  cover_image_url: string; tags: string[]; author_name: string; author_avatar: string | null
   blog_categories: { name: string; slug: string } | null
   published_at: string; created_at: string
 }
@@ -28,45 +28,257 @@ const SERIES_SLUGS = [
   'day-29-planning-next-90-days','day-30-where-to-go-from-here',
 ]
 
-function renderMarkdown(text: string): string {
-  if (!text) return ''
-  const blocks = text.split(/\n{2,}/)
-  return blocks.map(block => {
-    const b = block.trim()
-    if (!b) return ''
-    if (b.startsWith('## ')) {
-      const inner = b.slice(3)
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/`(.+?)`/g, '<code>$1</code>')
-      return `<h2>${inner}</h2>`
+// ── Block-level renderers ──────────────────────────────────────────────────
+
+function renderCallout(text: string): string {
+  const stripped = text.replace(/^(NOTE|TIP|WARNING|EXAMPLE):?\s*/i, '')
+  const rawType = text.match(/^(NOTE|TIP|WARNING|EXAMPLE)/i)?.[1]?.toLowerCase() || 'note'
+  const type = rawType === 'tip' ? 'tip'
+    : rawType === 'warning' ? 'warning'
+    : rawType === 'example' ? 'example'
+    : 'note'
+
+  const icons: Record<string, string> = { tip: '💡', note: '📌', warning: '⚠️', example: '📖' }
+  const icon = icons[type] || icons.note
+  const title = type.charAt(0).toUpperCase() + type.slice(1)
+
+  const inner = stripped
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+
+  return `<div class="callout callout-${type}">
+    <div class="callout-header"><span>${icon}</span><strong>${title}</strong></div>
+    <div class="callout-body">${inner}</div>
+  </div>`
+}
+
+function renderBlockquote(text: string): string {
+  const inner = text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+  return `<blockquote class="pull-quote">${inner}</blockquote>`
+}
+
+function renderImageWithCaption(src: string, alt: string, caption: string): string {
+  return `<figure class="article-figure">
+    <img src="${src}" alt="${alt}" loading="lazy" />
+    ${caption ? `<figcaption>${caption}</figcaption>` : ''}
+  </figure>`
+}
+
+function renderInlineCTA(): string {
+  return `<div class="inline-cta">
+    <span>🚀</span>
+    <div>
+      <strong>Want more practical UGC insights?</strong>
+      <p>Join the Otto signup — the newsletter for tech creators who mean business.</p>
+    </div>
+    <a href="/signup" class="inline-cta-btn">Get Started →</a>
+  </div>`
+}
+
+function renderHorizontalRule(): string {
+  return `<div class="hr-fade"><hr /><hr /><hr /></div>`
+}
+
+function renderSection(title: string, body: string, index: number): string {
+  const anchor = title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  return `<section class="article-section" id="${anchor}">
+    <h2 class="section-title">
+      <span class="section-num">0${index}</span>
+      ${title}
+    </h2>
+    ${body}
+  </section>`
+}
+
+function renderRelated(posts: Array<{slug: string; title: string; desc: string}>): string {
+  if (!posts.length) return ''
+  const items = posts.map(p => `
+    <a href="/blog/${p.slug}" class="related-card">
+      <span class="related-title">${p.title}</span>
+      <span class="related-desc">${p.desc}</span>
+      <span class="related-arrow">→</span>
+    </a>
+  `).join('')
+  return `<div class="related-posts">
+    <h3 class="related-heading">Keep Reading</h3>
+    <div class="related-grid">${items}</div>
+  </div>`
+}
+
+// ── Full markdown renderer ─────────────────────────────────────────────────
+
+function renderMarkdown(content: string): { html: string; related: Array<{slug:string;title:string;desc:string}> } {
+  // Extract related posts block
+  const related: Array<{slug:string;title:string;desc:string}> = []
+  const relatedMatch = content.match(/<!--\s*RELATED:?\n([\s\S]*?)-->/i)
+  if (relatedMatch) {
+    relatedMatch[1].split('\n').forEach(line => {
+      const m = line.match(/^\s*-\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*$/)
+      if (m) related.push({ slug: m[1].trim(), title: m[2].trim(), desc: m[3].trim() })
+    })
+    content = content.replace(/<!--\s*RELATED:?\n[\s\S]*?-->/gi, '')
+  }
+
+  // Strip image-caption lines (rendered separately below if needed)
+  const lines = content.split('\n')
+  const blocks: string[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // Horizontal rule
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+      blocks.push('__HR__')
+      i++; continue
     }
-    if (b.startsWith('### ')) {
-      const inner = b.slice(4)
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      return `<h3>${inner}</h3>`
+
+    // Callout block
+    if (line.startsWith('> ')) {
+      const rawLines: string[] = []
+      while (i < lines.length && (lines[i].startsWith('>') || lines[i].trim() === '')) {
+        if (lines[i].startsWith('>')) rawLines.push(lines[i].replace(/^>\s?/, ''))
+        i++
+      }
+      blocks.push(renderCallout(rawLines.join(' ')))
+      continue
     }
-    if (b.startsWith('- ') || b.startsWith('* ')) {
-      const items = b.split('\n').filter(l => l.trim())
-      const htmlItems = items.map(l =>
-        `<li>${l.replace(/^[\-\*]\s/, '')
+
+    // Pull-quote (blockquote without callout prefix)
+    if (line.startsWith('>')) {
+      const rawLines: string[] = []
+      while (i < lines.length && lines[i].startsWith('>')) {
+        rawLines.push(lines[i].replace(/^>\s?/, ''))
+        i++
+      }
+      blocks.push(renderBlockquote(rawLines.join(' ')))
+      continue
+    }
+
+    // Image with caption (markdown image followed by ^ caption line)
+    if (line.match(/^!\[\[(.+?)\]\((.+?)\)\]/) || line.match(/^!\[(.*?)\]\((.+?)\)$/)) {
+      const imgMatch = line.match(/^!\[(.*?)\]\((.+?)\)$/)
+      const alt = imgMatch ? imgMatch[1] : ''
+      const src = imgMatch ? imgMatch[2] : ''
+      const captionLines: string[] = []
+      i++
+      while (i < lines.length && lines[i].startsWith('^')) {
+        captionLines.push(lines[i].replace(/^\^/, '').trim())
+        i++
+      }
+      blocks.push(renderImageWithCaption(src, alt, captionLines.join(' ')))
+      continue
+    }
+
+    // Inline CTA marker
+    if (line.includes('{{CTA:')) {
+      const ctaMatch = line.match(/\{\{CTA:\s*(.+?)\s*\}\}/)
+      blocks.push(renderInlineCTA())
+      i++; continue
+    }
+
+    // H2
+    if (line.startsWith('## ')) {
+      blocks.push(`__H2__${line.slice(3).trim()}__`)
+      i++; continue
+    }
+
+    // H3
+    if (line.startsWith('### ')) {
+      blocks.push(`__H3__${line.slice(4).trim()}__`)
+      i++; continue
+    }
+
+    // Unordered list
+    if (line.match(/^[-*]\s/)) {
+      const items: string[] = []
+      while (i < lines.length && lines[i].match(/^[-*]\s/)) {
+        const itemText = lines[i].replace(/^[-*]\s/, '')
           .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
           .replace(/\*(.+?)\*/g, '<em>$1</em>')
           .replace(/`(.+?)`/g, '<code>$1</code>')
-        }</li>`
-      ).join('')
-      return `<ul>${htmlItems}</ul>`
+          .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-link">$1</a>')
+        items.push(`<li>${itemText}</li>`)
+        i++
+      }
+      blocks.push(`<ul class="article-list">${items.join('')}</ul>`)
+      continue
     }
-    if (b === '---' || b === '***' || b === '___') return '<hr>'
-    const inner = b
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/`(.+?)`/g, '<code>$1</code>')
-      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-link" target="_blank" rel="noopener">$1</a>')
-    return `<p>${inner}</p>`
-  }).join('\n')
+
+    // Paragraph
+    if (line.trim()) {
+      const paraLines: string[] = []
+      while (i < lines.length && lines[i].trim() && !lines[i].match(/^(##|###|>|\*|--|!\[)/) && !lines[i].startsWith('{{')) {
+        paraLines.push(lines[i])
+        i++
+      }
+      const text = paraLines.join(' ')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+        .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-link">$1</a>')
+        .replace(/\{\{CTA:.*?\}\}/g, '')
+      if (text.trim()) blocks.push(`<p>${text}</p>`)
+      continue
+    }
+
+    i++
+  }
+
+  // Build final HTML — group consecutive paragraphs into sections after H2s
+  const htmlParts: string[] = []
+  let sectionCount = 0
+  let currentSectionContent = ''
+
+  for (const block of blocks) {
+    if (block === '__HR__') {
+      if (currentSectionContent) {
+        sectionCount++
+        htmlParts.push(renderSection(`Section ${sectionCount}`, currentSectionContent.trim(), sectionCount))
+        currentSectionContent = ''
+      }
+      htmlParts.push(renderHorizontalRule())
+      continue
+    }
+    if (block.startsWith('__H2__')) {
+      if (currentSectionContent) {
+        sectionCount++
+        htmlParts.push(renderSection(`Section ${sectionCount}`, currentSectionContent.trim(), sectionCount))
+        currentSectionContent = ''
+      }
+      sectionCount++
+      const title = block.replace('__H2__', '').replace('__', '')
+      // Collect body until next H2
+      continue
+    }
+    if (block.startsWith('__H3__')) {
+      const h3 = block.replace('__H3__', '').replace('__', '')
+      currentSectionContent += `<h3>${h3}</h3>`
+      continue
+    }
+    if (block.startsWith('__H2__')) {
+      const title = block.replace('__H2__', '').replace('__', '')
+      htmlParts.push(renderSection(title, currentSectionContent.trim(), sectionCount))
+      currentSectionContent = ''
+      sectionCount++
+      continue
+    }
+    currentSectionContent += block
+  }
+
+  if (currentSectionContent.trim()) {
+    sectionCount++
+    htmlParts.push(renderSection(`Section ${sectionCount}`, currentSectionContent.trim(), sectionCount))
+  }
+
+  return { html: htmlParts.join('\n'), related }
 }
+
+// ── Page component ─────────────────────────────────────────────────────────
 
 export default function BlogPostPage() {
   const params = useParams()
@@ -74,6 +286,7 @@ export default function BlogPostPage() {
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [rendered, setRendered] = useState({ html: '', related: [] as Array<{slug:string;title:string;desc:string}> })
   const supabase = createClient()
 
   const seriesIndex = SERIES_SLUGS.indexOf(slug)
@@ -91,6 +304,8 @@ export default function BlogPostPage() {
         .single()
       if (!p) { setNotFound(true); setLoading(false); return }
       setPost(p as Post)
+      const r = renderMarkdown((p as Post).content)
+      setRendered(r)
       setLoading(false)
     }
     load()
@@ -106,14 +321,13 @@ export default function BlogPostPage() {
     <div className="min-h-screen bg-[#fafaf9] flex flex-col items-center justify-center px-6">
       <div className="text-center">
         <div className="text-6xl mb-6">🔍</div>
-        <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }} className="mb-3">Post not found</h1>
+        <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-2.5px', color: '#363535' }}>Post not found</h1>
         <p className="text-[#6b6b6b] mb-8">This post doesn&apos;t exist or has been removed.</p>
         <Link href="/blog" className="btn-primary inline-flex items-center gap-2 px-6 py-3">← Back to Blog</Link>
       </div>
     </div>
   )
 
-  const rendered = renderMarkdown(post.content)
   const pubDate = post.published_at
     ? new Date(post.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
     : ''
@@ -123,7 +337,7 @@ export default function BlogPostPage() {
       {/* Nav */}
       <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3.5 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+          <span style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 700, fontSize: '20px', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
           <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
         </Link>
         <div className="flex items-center gap-5">
@@ -132,16 +346,16 @@ export default function BlogPostPage() {
         </div>
       </nav>
 
-      <article className="max-w-[720px] mx-auto px-6 pt-32 pb-20">
+      <main className="max-w-[760px] mx-auto px-6 pt-32 pb-20">
 
-        {/* Header */}
+        {/* Article header */}
         <header className="mb-10">
-          {/* Breadcrumb + series badge */}
           <div className="flex items-center gap-2 mb-5 flex-wrap">
             <Link href="/blog" className="text-xs text-[#9a9a9a] hover:text-[#6b6b6b] transition-colors">Blog</Link>
             <span className="text-[#d0d0cc]">/</span>
             {isInSeries && (
-              <Link href="/blog/0-to-1000-in-30-days" className="text-xs font-semibold bg-[#ccff00] text-[#1c1c1c] px-2.5 py-1 rounded-full hover:bg-[#d9ff4d] transition-colors">
+              <Link href="/blog/0-to-1000-in-30-days"
+                className="text-xs font-semibold bg-[#ccff00] text-[#1c1c1e] px-2.5 py-1 rounded-full hover:bg-[#d9ff4d] transition-colors">
                 0 to £1,000 Series
               </Link>
             )}
@@ -152,33 +366,33 @@ export default function BlogPostPage() {
             )}
           </div>
 
-          {/* Headline */}
-          <h1 style={{
+          <h1 className="mb-4" style={{
             fontFamily: 'var(--font-bricolage)',
             fontWeight: 700,
-            fontSize: 'clamp(28px, 5vw, 44px)',
-            lineHeight: 1.08,
+            fontSize: 'clamp(28px, 5vw, 46px)',
+            lineHeight: 1.06,
             letterSpacing: '-2.5px',
-            color: '#1c1c1c',
+            color: '#1c1c1e',
           }}>
             {post.title}
           </h1>
 
-          {/* Excerpt */}
           {post.excerpt && (
-            <p style={{ fontFamily: 'var(--font-open-sans)', fontSize: '18px', lineHeight: 1.6, color: '#6b6b6b', marginTop: '16px' }}>
+            <p style={{ fontFamily: 'var(--font-open-sans)', fontSize: '18px', lineHeight: 1.65, color: '#6b6b6b' }}>
               {post.excerpt}
             </p>
           )}
 
-          {/* Meta row */}
-          <div className="flex items-center gap-4 mt-6 pt-6 border-t border-[#f0f0ec]">
-            <div className="w-9 h-9 rounded-full bg-[#1c1c1c] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+          <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#f0f0ec]">
+            <div className="w-9 h-9 rounded-full bg-[#1c1c1e] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
               {post.author_name?.[0] || 'O'}
             </div>
             <div>
               <p className="text-sm font-semibold text-[#363535]">{post.author_name}</p>
-              <p className="text-xs text-[#9a9a9a]">{pubDate}{isInSeries ? ` · Day ${seriesIndex + 1} of 30` : ''}</p>
+              <p className="text-xs text-[#9a9a9a]">
+                {pubDate}
+                {isInSeries ? ` · Day ${seriesIndex + 1} of 30` : ''}
+              </p>
             </div>
           </div>
         </header>
@@ -192,38 +406,42 @@ export default function BlogPostPage() {
         )}
 
         {/* Article body */}
-        <div className="prose-blog" dangerouslySetInnerHTML={{ __html: rendered }} />
+        <div className="article-body" dangerouslySetInnerHTML={{ __html: rendered.html }} />
 
-        {/* Series CTA — only for series posts */}
+        {/* Series CTA */}
         {isInSeries && (
-          <div className="mt-12 p-7 bg-[#1c1c1c] rounded-2xl text-center">
-            <p style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '18px', letterSpacing: '-1px', color: '#fff' }} className="mb-1">
+          <div className="mt-12 p-7 bg-[#1c1c1e] rounded-2xl text-center">
+            <p className="mb-1" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '18px', letterSpacing: '-0.5px', color: '#fff' }}>
               {seriesIndex === 0 ? 'Start your journey:' : seriesIndex < 29 ? `Day ${seriesIndex + 1} of 30` : 'You finished the series!'}
             </p>
             <p className="text-white/50 text-sm mb-4">
               {seriesIndex === 0 ? 'This is part of the free £0 to £1,000 in 30 Days series.' : seriesIndex < 29 ? 'Keep going — the next step is where it clicks.' : 'Now plan your next 90 days.'}
             </p>
-            <Link
-              href={seriesIndex === 0 ? '/blog/0-to-1000-in-30-days' : nextSlug ? `/blog/${nextSlug}` : '/blog/0-to-1000-in-30-days'}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#ccff00] text-[#1c1c1c] rounded-xl text-sm font-bold hover:bg-[#d9ff4d] transition-colors"
-            >
+            <Link href={seriesIndex === 0 ? '/blog/0-to-1000-in-30-days' : nextSlug ? `/blog/${nextSlug}` : '/blog/0-to-1000-in-30-days'}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#ccff00] text-[#1c1c1e] rounded-xl text-sm font-bold hover:bg-[#d9ff4d] transition-colors">
               {seriesIndex === 0 ? 'Read the Full Series' : seriesIndex < 29 ? `Next: Day ${seriesIndex + 2} →` : 'Back to Series Overview'}
             </Link>
           </div>
         )}
 
-        {/* Regular CTA — non-series posts */}
+        {/* Regular CTA */}
         {!isInSeries && (
-          <div className="mt-12 p-7 bg-[#1c1c1c] rounded-2xl text-center">
+          <div className="mt-12 p-7 bg-[#1c1c1e] rounded-2xl text-center">
             <div className="text-2xl mb-2">🚀</div>
-            <p style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '20px', letterSpacing: '-1px', color: '#ffffff' }} className="mb-2">
+            <p className="mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '20px', letterSpacing: '-0.5px', color: '#fff' }}>
               Want more practical UGC insights?
             </p>
             <p className="text-white/50 text-sm mb-5">Join the Otto signup — the newsletter for tech creators who mean business.</p>
-            <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 bg-[#ccff00] text-[#1c1c1c] rounded-xl text-sm font-bold hover:bg-[#d9ff4d] transition-colors">
+            <Link href="/signup"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#ccff00] text-[#1c1c1e] rounded-xl text-sm font-bold hover:bg-[#d9ff4d] transition-colors">
               Get Started →
             </Link>
           </div>
+        )}
+
+        {/* Related posts */}
+        {rendered.related.length > 0 && (
+          <div className="mt-12">{renderRelated(rendered.related)}</div>
         )}
 
         {/* Tags */}
@@ -236,31 +454,94 @@ export default function BlogPostPage() {
           </div>
         )}
 
-        {/* Prev/Next navigation — series only */}
+        {/* Prev/Next */}
         {isInSeries && (
           <div className="mt-8 grid grid-cols-2 gap-3">
             {prevSlug ? (
-              <Link href={`/blog/${prevSlug}`} className="flex flex-col gap-1 p-4 bg-white border border-[#e8e8e4] rounded-xl hover:border-[#ccff00] hover:-translate-y-0.5 hover:shadow-md transition-all group">
+              <Link href={`/blog/${prevSlug}`}
+                className="flex flex-col gap-1 p-4 bg-white border border-[#e8e8e4] rounded-xl hover:border-[#ccff00] hover:-translate-y-0.5 hover:shadow-md transition-all group">
                 <span className="text-xs text-[#9a9a9a] group-hover:text-[#363535]">← Previous</span>
-                <span style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '13px', letterSpacing: '-0.5px', color: '#363535' }} className="group-hover:text-[#1c1c1e]">Day {seriesIndex} · {SERIES_SLUGS[seriesIndex - 1].replace('day-', 'Day ').replace(/-/g, ' ')}</span>
+                <span className="text-xs font-semibold text-[#363535] group-hover:text-[#1c1c1e]">Day {seriesIndex} · {SERIES_SLUGS[seriesIndex - 1].replace(/day-/i,'Day ').replace(/-/g,' ')}</span>
               </Link>
             ) : <div />}
             {nextSlug && (
-              <Link href={`/blog/${nextSlug}`} className="flex flex-col gap-1 p-4 bg-white border border-[#e8e8e4] rounded-xl hover:border-[#ccff00] hover:-translate-y-0.5 hover:shadow-md transition-all group text-right">
+              <Link href={`/blog/${nextSlug}`}
+                className="flex flex-col gap-1 p-4 bg-white border border-[#e8e8e4] rounded-xl hover:border-[#ccff00] hover:-translate-y-0.5 hover:shadow-md transition-all group text-right">
                 <span className="text-xs text-[#9a9a9a] group-hover:text-[#363535]">Next →</span>
-                <span style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '13px', letterSpacing: '-0.5px', color: '#363535' }} className="group-hover:text-[#1c1c1e]">Day {seriesIndex + 2} · {nextSlug.replace('day-', 'Day ').replace(/-/g, ' ')}</span>
+                <span className="text-xs font-semibold text-[#363535] group-hover:text-[#1c1c1e]">Day {seriesIndex + 2} · {nextSlug.replace(/day-/i,'Day ').replace(/-/g,' ')}</span>
               </Link>
             )}
           </div>
         )}
 
-        {/* Bottom nav */}
         <div className="mt-8 text-center">
-          <Link href={isInSeries ? '/blog/0-to-1000-in-30-days' : '/blog'} className="text-sm text-[#9a9a9a] hover:text-[#6b6b6b] transition-colors inline-flex items-center gap-1">
+          <Link href={isInSeries ? '/blog/0-to-1000-in-30-days' : '/blog'}
+            className="text-sm text-[#9a9a9a] hover:text-[#6b6b6b] transition-colors inline-flex items-center gap-1">
             ← {isInSeries ? 'Series Overview' : 'Back to Blog'}
           </Link>
         </div>
-      </article>
+      </main>
+
+      <style jsx global>{`
+        .article-body { font-family: var(--font-open-sans); color: #1c1c1e; }
+        .article-body p { font-size: 17px; line-height: 1.75; margin: 0 0 1.4em; color: #363535; }
+        .article-body h2 { font-family: var(--font-bricolage); font-weight: 600; font-size: 22px; letter-spacing: -1px; color: #1c1c1e; margin: 2.5em 0 0.75em; line-height: 1.2; }
+        .article-body h3 { font-family: var(--font-bricolage); font-weight: 600; font-size: 17px; letter-spacing: -0.5px; color: #363535; margin: 1.75em 0 0.5em; }
+        .article-body .article-list { margin: 0 0 1.4em; padding-left: 1.5em; }
+        .article-body .article-list li { font-size: 17px; line-height: 1.7; color: #363535; margin-bottom: 0.5em; }
+        .article-body .article-list li::marker { color: #ccff00; }
+        .article-body a.text-link { color: #363535; text-decoration: underline; text-decoration-color: #ccff00; text-underline-offset: 3px; }
+        .article-body a.text-link:hover { color: #1c1c1e; }
+        .article-body code { background: #f0f0ec; padding: 2px 6px; border-radius: 4px; font-size: 14px; font-family: monospace; }
+
+        /* Callouts */
+        .callout { border-radius: 12px; padding: 16px 20px; margin: 1.75em 0; border-left: 4px solid; }
+        .callout-note { background: #f0f0ec; border-color: #363535; }
+        .callout-tip { background: #f9ffef; border-color: #84cc16; }
+        .callout-warning { background: #fff9e6; border-color: #f59e0b; }
+        .callout-example { background: #f0f9ff; border-color: #3b82f6; }
+        .callout-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .callout-note .callout-header { color: #363535; }
+        .callout-tip .callout-header { color: #4a7c0f; }
+        .callout-warning .callout-header { color: #b45309; }
+        .callout-example .callout-header { color: #1d4ed8; }
+        .callout-body { font-size: 15px; line-height: 1.65; color: #363535; }
+
+        /* Pull quote */
+        .pull-quote { border-left: 4px solid #ccff00; margin: 2em 0; padding: 8px 0 8px 24px; }
+        .pull-quote p, .pull-quote { font-family: var(--font-bricolage); font-size: 20px; font-weight: 600; letter-spacing: -0.5px; color: #1c1c1e; line-height: 1.4; font-style: italic; }
+
+        /* Image with caption */
+        .article-figure { margin: 2em 0; }
+        .article-figure img { width: 100%; border-radius: 12px; border: 1px solid #e8e8e4; }
+        .article-figure figcaption { font-size: 13px; color: #9a9a9a; text-align: center; margin-top: 8px; font-style: italic; }
+
+        /* Inline CTA */
+        .inline-cta { display: flex; align-items: center; gap: 16px; background: #1c1c1e; border-radius: 16px; padding: 20px 24px; margin: 2.5em 0; }
+        .inline-cta span { font-size: 28px; flex-shrink: 0; }
+        .inline-cta div { flex: 1; }
+        .inline-cta strong { display: block; font-family: var(--font-bricolage); font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.3px; margin-bottom: 3px; }
+        .inline-cta p { font-size: 13px; color: rgba(255,255,255,0.5); margin: 0; }
+        .inline-cta-btn { flex-shrink: 0; background: #ccff00; color: #1c1c1e; font-weight: 700; font-size: 13px; padding: 8px 16px; border-radius: 8px; text-decoration: none; transition: background 0.15s; }
+        .inline-cta-btn:hover { background: #d9ff4d; }
+
+        /* Article sections */
+        .article-section { margin-bottom: 3em; }
+        .section-title { display: flex; align-items: center; gap: 12px; font-family: var(--font-bricolage); font-weight: 700; font-size: clamp(18px, 2.5vw, 22px); letter-spacing: -1px; color: #1c1c1e; margin-bottom: 1em; padding-bottom: 10px; border-bottom: 2px solid #f0f0ec; }
+        .section-num { font-size: 11px; font-weight: 700; background: #ccff00; color: #1c1c1e; padding: 3px 8px; border-radius: 6px; letter-spacing: 0; flex-shrink: 0; }
+        .hr-fade { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 3em 0; opacity: 0.2; }
+        .hr-fade hr { width: 60px; border: none; border-top: 2px solid #363535; }
+
+        /* Related posts */
+        .related-posts { margin-top: 3em; padding-top: 2em; border-top: 2px solid #f0f0ec; }
+        .related-heading { font-family: var(--font-bricolage); font-weight: 700; font-size: 18px; letter-spacing: -0.5px; color: #363535; margin-bottom: 1em; }
+        .related-grid { display: grid; grid: auto / repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .related-card { display: flex; flex-direction: column; gap: 4px; padding: 16px; background: white; border: 1.5px solid #e8e8e4; border-radius: 14px; text-decoration: none; transition: all 0.15s; }
+        .related-card:hover { border-color: #ccff00; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+        .related-title { font-weight: 600; font-size: 14px; color: #1c1c1e; line-height: 1.3; }
+        .related-desc { font-size: 12px; color: #9a9a9a; line-height: 1.5; flex: 1; }
+        .related-arrow { font-size: 14px; color: #ccff00; margin-top: 4px; }
+      `}</style>
     </div>
   )
 }
