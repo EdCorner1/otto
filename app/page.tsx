@@ -146,7 +146,150 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── HOW IT WORKS — short strip ────────────────────── */}
+      {/* ─── BRAND LOGO TICKER ─────────────────────────────── */}
+      <section className="py-10 px-6 border-t border-[#e8e8e4] overflow-hidden">
+        <p className="text-center text-xs font-semibold text-[#9a9a9a] uppercase tracking-widest mb-7">
+          Trusted by tech brands building with UGC
+        </p>
+        <div className="relative">
+          <div className="flex gap-12 animate-[scroll-logos_30s_linear_infinite]">
+            {[
+              { name: 'Raycon', emoji: '🔊' },
+              { name: 'Anker', emoji: '⚡' },
+              { name: 'OtterBox', emoji: '🛡️' },
+              { name: 'Wyze', emoji: '📷' },
+              { name: 'Mpow', emoji: '🎧' },
+              { name: 'TaoTronics', emoji: '🔊' },
+              { name: 'JBL', emoji: '🔉' },
+              { name: 'Samsung', emoji: '📱' },
+              { name: 'Sony', emoji: '🎮' },
+              { name: 'Bose', emoji: '🔇' },
+              { name: 'Satechi', emoji: '⚡' },
+              { name: 'Twelve South', emoji: '📐' },
+            ].map(({ name, emoji }) => (
+              <div key={name} className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 bg-white border border-[#e8e8e4] rounded-xl shadow-sm">
+                <span className="text-xl">{emoji}</span>
+                <span className="text-sm font-semibold text-[#363535] whitespace-nowrap">{name}</span>
+              </div>
+            ))}
+            {/* Duplicate for seamless loop */}
+            {[
+              { name: 'Raycon', emoji: '🔊' },
+              { name: 'Anker', emoji: '⚡' },
+              { name: 'OtterBox', emoji: '🛡️' },
+              { name: 'Wyze', emoji: '📷' },
+              { name: 'Mpow', emoji: '🎧' },
+              { name: 'TaoTronics', emoji: '🔊' },
+              { name: 'JBL', emoji: '🔉' },
+              { name: 'Samsung', emoji: '📱' },
+              { name: 'Sony', emoji: '🎮' },
+              { name: 'Bose', emoji: '🔇' },
+              { name: 'Satechi', emoji: '⚡' },
+              { name: 'Twelve South', emoji: '📐' },
+            ].map(({ name, emoji }) => (
+              <div key={`dup-${name}`} className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 bg-white border border-[#e8e8e4] rounded-xl shadow-sm">
+                <span className="text-xl">{emoji}</span>
+                <span className="text-sm font-semibold text-[#363535] whitespace-nowrap">{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <style>{`
+          @keyframes scroll-logos {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
+      </section>
+
+      {/* ─── WHY UGC — comparison section ─────────────────── */}
+      <section className="py-16 md:py-20 px-6 md:px-10 border-t border-[#e8e8e4]">
+        <div className="max-w-5xl mx-auto">
+          {/* Section header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ccff00] mb-4">
+              <span className="text-xs font-semibold text-[#1c1c1c]">Why UGC?</span>
+            </div>
+            <h2 className="font-display font-extrabold text-3xl md:text-5xl text-[#1c1c1e] tracking-tight leading-tight mb-4">
+              The difference is<br />
+              <span className="text-[#363535]">in the results</span>
+            </h2>
+            <p className="text-[#6b6b6b] text-base max-w-md mx-auto">
+              Audiences trust creators they follow 4× more than brands. UGC turns that trust into conversions.
+            </p>
+          </div>
+
+          {/* Comparison grid */}
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* Traditional */}
+            <div className="rounded-2xl border border-[#e8e8e4] overflow-hidden">
+              <div className="px-6 py-4 bg-[#f0f0ec] border-b border-[#e8e8e4]">
+                <span className="text-xs font-bold text-[#9a9a9a] uppercase tracking-widest">Traditional Ads</span>
+              </div>
+              <div className="p-6 space-y-5">
+                {[
+                  { icon: '📺', title: 'Expensive production', desc: 'Crew, equipment, studio time — £5k–£50k per spot' },
+                  { icon: '🚫', title: 'Audiences skip or block', desc: 'Ad blockers, DVR skipping, banner blindness' },
+                  { icon: '😴', title: 'Low engagement', desc: '0.5–1% average CTR on display ads' },
+                  { icon: '🧊', title: 'Feels impersonal', desc: 'Audiences know it is an ad — trust is low' },
+                  { icon: '🔄', title: 'Long turnaround', desc: '4–12 weeks from brief to final delivery' },
+                  { icon: '💸', title: 'High cost per acquisition', desc: '£15–£80 CPA through paid channels' },
+                ].map(({ icon, title, desc }) => (
+                  <div key={title} className="flex items-start gap-4">
+                    <span className="text-lg mt-0.5">{icon}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-[#363535]">{title}</p>
+                      <p className="text-xs text-[#9a9a9a] mt-0.5">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* UGC / Otto */}
+            <div className="rounded-2xl border-2 border-[#1c1c1e] overflow-hidden shadow-xl shadow-black/10">
+              <div className="px-6 py-4 bg-[#1c1c1e] border-b border-[#363535]">
+                <span className="text-xs font-bold text-[#ccff00] uppercase tracking-widest">UGC via Otto</span>
+              </div>
+              <div className="p-6 space-y-5">
+                {[
+                  { icon: '📱', title: 'Creator-ready content', desc: 'Real creators, real devices — starting from £75 per piece' },
+                  { icon: '✅', title: 'Audiences engage', desc: 'UGC gets 2× more engagement than branded content' },
+                  { icon: '🚀', title: '4× higher conversions', desc: 'Creators you trust = actions you take' },
+                  { icon: '🤝', title: 'Authentic voice', desc: 'Content that sounds like a mate, not a sales pitch' },
+                  { icon: '⚡', title: 'Ship in days', desc: 'Brief today, content in your hands within 48hrs' },
+                  { icon: '💰', title: 'Lower cost per acquisition', desc: 'Organic reach + trusted voice = better ROI' },
+                ].map(({ icon, title, desc }) => (
+                  <div key={title} className="flex items-start gap-4">
+                    <span className="text-lg mt-0.5">{icon}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-[#1c1c1e]">{title}</p>
+                      <p className="text-xs text-[#6b6b6b] mt-0.5">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom stat strip */}
+          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { stat: '4×', label: 'more trusted than branded content' },
+              { stat: '2×', label: 'engagement vs traditional ads' },
+              { stat: '48hrs', label: 'average time to first submission' },
+              { stat: '73%', label: 'of Gen Z discovers brands via creators' },
+            ].map(({ stat, label }) => (
+              <div key={label} className="text-center p-4 bg-[#fafaf9] rounded-xl border border-[#e8e8e4]">
+                <div className="text-2xl font-extrabold font-display text-[#1c1c1e] mb-1">{stat}</div>
+                <p className="text-xs text-[#6b6b6b] leading-snug">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+            {/* ─── HOW IT WORKS — short strip ────────────────────── */}
       <section className="py-12 md:py-14 px-6 md:px-10 border-t border-[#e8e8e4]">
         <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8">
