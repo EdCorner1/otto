@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 const headlineStyle: React.CSSProperties = {
   fontFamily: 'var(--font-bricolage)',
@@ -58,6 +59,7 @@ type Deal = {
 }
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [user, setUser] = useState<{
     id: string; email?: string
     user_metadata?: { role?: 'brand' | 'creator'; full_name?: string }
@@ -72,15 +74,10 @@ export default function DashboardPage() {
   const [creatorProfile, setCreatorProfile] = useState<Creator | null>(null)
   const supabase = createClient()
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('posted') === '1') setPosted(true)
-  }, [])
-
-  useEffect(() => {
+useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { window.location.href = '/login'; return }
+      if (!user) { router.replace('/login'); return }
       setUser(user)
       const userRole = (user.user_metadata?.role || null) as Role
       setRole(userRole)
