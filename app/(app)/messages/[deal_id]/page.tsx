@@ -175,17 +175,41 @@ export default function DealThreadPage() {
     setDeal(prev => prev ? { ...prev, status: newStatus } : null)
   }
 
+  const notify = async (event: string, data: object) => {
+    try {
+      await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event, data }),
+      })
+    } catch (e) { /* non-critical */ }
+  }
+
   const submitWork = async (e: React.FormEvent) => {
     e.preventDefault()
-    await supabase.from('deals').update({ status: 'submitted' }).eq('id', deal?.id)
+    await supabase.from('deals').update({ status: 'submitted', submitted_url: submissionLink || null, submitted_notes: submissionNotes || null }).eq('id', deal?.id)
     setDeal(prev => prev ? { ...prev, status: 'submitted' } : null)
     setShowSubmitForm(false)
+
+    const senderName = role === 'brand' ? (deal?.brands?.company_name || 'Brand') : (deal?.creators?.display_name || 'Creator')
     await supabase.from('messages').insert({
       deal_id: dealId,
       sender_id: user.id,
-      sender_name: role === 'brand' ? (deal?.brands?.company_name || 'Brand') : (deal?.creators?.display_name || 'Creator'),
+      sender_name: senderName,
       content: `Work submitted${submissionLink ? `: ${submissionLink}` : ''}${submissionNotes ? ` — ${submissionNotes}` : ''}`,
     })
+
+    // Notify brand that work is in
+    if (role === 'creator') {
+      notify('work_submitted', {
+        dealId,
+        brandId: deal?.brand_id,
+        creatorId: deal?.creator_id,
+        jobTitle: deal?.jobs?.title,
+        creatorName: deal?.creators?.display_name,
+      })
+    }
+
     setSubmissionLink('')
     setSubmissionNotes('')
   }
@@ -265,8 +289,16 @@ export default function DealThreadPage() {
             )}
             {deal.status === 'submitted' && role === 'brand' && (
               <div className="flex gap-2 mt-4 pt-4 border-t border-[#e8e8e4]">
-                <button onClick={() => updateDealStatus('approved')} className="btn-primary text-sm">Approve Work</button>
-                <button onClick={() => updateDealStatus('in_progress')} className="btn-ghost text-sm">Request Changes</button>
+                <button onClick={async () => {
+                  await updateDealStatus('approved')
+                  notify('deal_approved', {
+                    dealId,
+                    creatorId: deal?.creator_id,
+                    jobTitle: deal?.jobs?.title,
+                    brandName: deal?.brands?.company_name,
+                  })
+                }} className="btn-primary text-sm">Approve Work</button>
+                <Link href={`/deals/${dealId}/review`} className="btn-ghost text-sm">Request Changes</Link>
               </div>
             )}
           </div>

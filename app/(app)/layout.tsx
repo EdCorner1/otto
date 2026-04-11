@@ -58,6 +58,17 @@ export default function AppLayout({
             <span className="inline-block w-2 h-2 bg-[#ccff00] rounded-full mb-2" />
           </Link>
 
+          {/* Nav links */}
+          <div className="flex items-center gap-1">
+            <Link href="/dashboard" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors">Dashboard</Link>
+            <Link href="/messages" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors">Messages</Link>
+            <Link href="/creators" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors hidden lg:block">Creators</Link>
+            <Link href="/blog" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors hidden lg:block">Blog</Link>
+            <Link href="/profile/edit" className="px-3 py-1.5 rounded-xl text-sm font-medium text-[#6b6b6b] hover:text-[#363535] hover:bg-[#fafaf9] transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </Link>
+          </div>
+
           {/* Right side: email + sign out */}
           <div className="flex items-center gap-4">
             <span className="text-sm text-[#6b6b6b] hidden sm:block">
