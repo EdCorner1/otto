@@ -70,7 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: '/jobs', label: isBrand ? 'My Briefs' : 'Find Work' },
     ...(isBrand ? [{ href: '/jobs/templates', label: 'Brief Templates' }] : []),
     { href: '/messages', label: 'Messages' },
-    ...(isCreator ? [{ href: '/creators', label: 'Discover' }] : []),
+    ...(isCreator ? [{ href: '/explore', label: 'Discover' }] : []),
   ]
 
   return (
