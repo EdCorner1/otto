@@ -80,8 +80,7 @@ export default function ApplyPage() {
     return (
       <div className="max-w-xl mx-auto px-6 pt-10 text-center">
         <div className="text-5xl mb-6">✅</div>
-        <h1 style={{
-          fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(24px, 4vw, 36px)',
+        <h1 style={{ fontSize: 'clamp(24px, 4vw, 36px)',
           letterSpacing: '-1.5px', color: '#1c1c1e',
         }} className="mb-4">
           Application sent!
@@ -116,8 +115,7 @@ export default function ApplyPage() {
           {job.brands?.company_name}
           {job.brands?.industry && <span className="ml-2 px-2 py-0.5 bg-[#e8e8e4] rounded-full">{job.brands.industry}</span>}
         </p>
-        <h2 style={{
-          fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '22px',
+        <h2 style={{ fontSize: '22px',
           letterSpacing: '-0.5px', color: '#1c1c1e',
         }} className="mb-3">{job.title}</h2>
 
@@ -137,8 +135,7 @@ export default function ApplyPage() {
       </div>
 
       {/* Form */}
-      <h1 style={{
-        fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(24px, 4vw, 36px)',
+      <h1 style={{ fontSize: 'clamp(24px, 4vw, 36px)',
         letterSpacing: '-1.5px', color: '#1c1c1e',
       }} className="mb-1">Apply</h1>
       <p className="text-sm text-[#6b6b6b] mb-6">Tell the brand why you're the right creator for this.</p>

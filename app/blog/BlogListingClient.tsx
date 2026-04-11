@@ -58,7 +58,7 @@ export default function BlogPage() {
       <div className="max-w-[960px] mx-auto px-6 pt-32 pb-16">
         {/* Header */}
         <div className="mb-10">
-          <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(36px, 7vw, 64px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+          <h1 style={{ fontSize: 'clamp(36px, 7vw, 64px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
             Otto Blog
           </h1>
           <p className="text-[#6b6b6b] mt-3 text-lg">Practical content for tech UGC creators — and the brands who work with them.</p>
@@ -110,7 +110,7 @@ export default function BlogPage() {
                       {post.blog_categories.name}
                     </span>
                   )}
-                  <h2 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(15px, 1.8vw, 19px)', lineHeight: 1.15, letterSpacing: '-1px', color: '#1c1c1e' }}
+                  <h2 style={{ fontSize: 'clamp(15px, 1.8vw, 19px)', lineHeight: 1.15, letterSpacing: '-1px', color: '#1c1c1e' }}
                     className="mb-2 group-hover:text-[#363535]">
                     {post.title}
                   </h2>

@@ -105,9 +105,7 @@ export default function BrandDealReviewPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
-            <h1 style={{
-              fontFamily: 'var(--font-bricolage)',
-              fontWeight: 600, fontSize: 'clamp(22px, 4vw, 32px)',
+            <h1 style={{ fontSize: 'clamp(22px, 4vw, 32px)',
               letterSpacing: '-1.5px', color: '#1c1c1e',
             }} className="mb-1">{deal.jobs?.title}</h1>
             <div className="flex items-center gap-3 text-xs text-[#9a9a9a]">
@@ -171,9 +169,7 @@ export default function BrandDealReviewPage() {
         <div className="card mb-6">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xl">📦</span>
-            <h2 style={{
-              fontFamily: 'var(--font-bricolage)',
-              fontWeight: 600, fontSize: '18px', letterSpacing: '-0.5px', color: '#1c1c1e',
+            <h2 style={{ fontSize: '18px', letterSpacing: '-0.5px', color: '#1c1c1e',
             }}>
               Submitted work
             </h2>
@@ -228,9 +224,7 @@ export default function BrandDealReviewPage() {
       {deal.status === 'approved' && (
         <div className="card text-center py-8">
           <div className="text-4xl mb-3">✅</div>
-          <h2 style={{
-            fontFamily: 'var(--font-bricolage)',
-            fontWeight: 600, fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
+          <h2 style={{ fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-2">Work approved!</h2>
           <p className="text-sm text-[#6b6b6b] mb-6">Payment has been released to the creator.</p>
           <Link href="/messages" className="btn-ghost">← Back to messages</Link>
@@ -241,9 +235,7 @@ export default function BrandDealReviewPage() {
       {deal.status === 'revision_requested' && (
         <div className="card text-center py-8">
           <div className="text-4xl mb-3">🔁</div>
-          <h2 style={{
-            fontFamily: 'var(--font-bricolage)',
-            fontWeight: 600, fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
+          <h2 style={{ fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-2">Revision requested</h2>
           <p className="text-sm text-[#6b6b6b] mb-6">The creator has been notified. Check messages for updates.</p>
           <Link href={`/messages/${deal.id}`} className="btn-primary">Message creator</Link>
@@ -254,9 +246,7 @@ export default function BrandDealReviewPage() {
       {!['submitted', 'approved', 'revision_requested'].includes(deal.status) && (
         <div className="card text-center py-8">
           <div className="text-4xl mb-3">⏳</div>
-          <h2 style={{
-            fontFamily: 'var(--font-bricolage)',
-            fontWeight: 600, fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
+          <h2 style={{ fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-2">Work in progress</h2>
           <p className="text-sm text-[#6b6b6b] mb-6">The creator is still working on this. You'll be notified when it's submitted.</p>
           <Link href={`/messages/${deal.id}`} className="btn-ghost">Message creator</Link>

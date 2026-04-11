@@ -136,9 +136,7 @@ export default function JobManagePage() {
       <div className="card mb-8">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
-            <h1 style={{
-              fontFamily: 'var(--font-bricolage)',
-              fontWeight: 600, fontSize: 'clamp(22px, 4vw, 32px)',
+            <h1 style={{ fontSize: 'clamp(22px, 4vw, 32px)',
               letterSpacing: '-1.5px', color: '#1c1c1e',
             }} className="mb-1">{job.title}</h1>
             <div className="flex items-center gap-3 text-xs text-[#9a9a9a]">
@@ -199,8 +197,7 @@ export default function JobManagePage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <h2 style={{
-            fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '18px', letterSpacing: '-0.5px', color: '#1c1c1e',
+          <h2 style={{ fontSize: '18px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-4">
             Proposals ({pendingApps.length})
           </h2>
@@ -223,8 +220,7 @@ export default function JobManagePage() {
       {/* Other applications */}
       {otherApps.length > 0 && (
         <div className="mt-10">
-          <h2 style={{
-            fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '16px', letterSpacing: '-0.5px', color: '#9a9a9a',
+          <h2 style={{ fontSize: '16px', letterSpacing: '-0.5px', color: '#9a9a9a',
           }} className="mb-4">
             Declined ({otherApps.length})
           </h2>
@@ -285,7 +281,7 @@ function ApplicationCard({
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '16px', color: '#1c1c1e' }}>
+            <p style={{ fontSize: '16px', color: '#1c1c1e' }}>
               {creator?.display_name || 'Creator'}
             </p>
             {creator?.availability === 'open' && (

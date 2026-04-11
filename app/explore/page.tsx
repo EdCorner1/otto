@@ -191,7 +191,7 @@ export default function CreatorsPage() {
       <div className="max-w-6xl mx-auto px-6 pt-28 pb-16">
         {/* Header */}
         <div className="mb-8">
-          <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }} className="mb-2">
+          <h1 style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }} className="mb-2">
             Discover Creators
           </h1>
           <p className="text-[#6b6b6b]">Find tech creators ready to work with your brand.</p>

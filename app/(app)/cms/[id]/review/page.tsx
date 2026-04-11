@@ -150,7 +150,7 @@ export default function ReviewPostPage() {
                 <span key={tag} className="text-xs text-[#9a9a9a] bg-[#f0f0ec] px-2 py-0.5 rounded-full">{tag}</span>
               ))}
             </div>
-            <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(24px, 4vw, 40px)', lineHeight: 1.05, letterSpacing: '-3px', color: '#363535' }} className="mb-4">
+            <h1 style={{ fontSize: 'clamp(24px, 4vw, 40px)', lineHeight: 1.05, letterSpacing: '-3px', color: '#363535' }} className="mb-4">
               {post.title}
             </h1>
             {post.excerpt && (
@@ -168,7 +168,7 @@ export default function ReviewPostPage() {
         {/* Rejection form */}
         {showReject && (
           <div className="bg-white rounded-2xl border border-red-200 p-6 mb-8">
-            <h3 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '20px', letterSpacing: '-1px', color: '#363535' }} className="mb-2">Request Changes</h3>
+            <h3 style={{ fontSize: '20px', letterSpacing: '-1px', color: '#363535' }} className="mb-2">Request Changes</h3>
             <p className="text-sm text-[#6b6b6b] mb-4">Tell Otto what needs to change before this can be published.</p>
             <textarea value={rejectionNote} onChange={e => setRejectionNote(e.target.value)} rows={4}
               placeholder="Example: The intro needs a stronger hook, and the conclusion should include a clear call-to-action..."

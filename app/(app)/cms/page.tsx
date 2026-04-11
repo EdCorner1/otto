@@ -90,7 +90,7 @@ export default function CMSPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-8">
           <div>
-            <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }}>
+            <h1 style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }}>
               Blog CMS
             </h1>
             <p className="text-sm text-[#6b6b6b] mt-1">Manage Otto&apos;s content. Posts start as drafts — you approve before they go live.</p>

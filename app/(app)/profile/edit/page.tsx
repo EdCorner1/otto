@@ -197,7 +197,7 @@ export default function ProfileEditPage() {
 
       <div className="max-w-2xl mx-auto px-6 pt-28 pb-16">
         <div className="flex items-center justify-between mb-8">
-          <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(24px, 4vw, 36px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }}>
+          <h1 style={{ fontSize: 'clamp(24px, 4vw, 36px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }}>
             Edit Profile
           </h1>
           {role === 'creator' && (

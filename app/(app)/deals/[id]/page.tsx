@@ -117,9 +117,7 @@ export default function DealOverviewPage() {
       <div className="card mb-5">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1 min-w-0">
-            <h1 style={{
-              fontFamily: 'var(--font-bricolage)',
-              fontWeight: 600, fontSize: 'clamp(22px, 4vw, 32px)',
+            <h1 style={{ fontSize: 'clamp(22px, 4vw, 32px)',
               letterSpacing: '-1.5px', color: '#1c1c1e',
             }} className="mb-2">{deal.jobs?.title}</h1>
             <div className="flex items-center gap-2 flex-wrap">
@@ -161,9 +159,7 @@ export default function DealOverviewPage() {
       {/* Brief */}
       {deal.jobs && (
         <div className="card mb-5">
-          <h2 style={{
-            fontFamily: 'var(--font-bricolage)',
-            fontWeight: 600, fontSize: '16px', letterSpacing: '-0.5px', color: '#1c1c1e',
+          <h2 style={{ fontSize: '16px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-3">The brief</h2>
 
           {deal.jobs.platforms && deal.jobs.platforms.length > 0 && (
@@ -212,9 +208,7 @@ export default function DealOverviewPage() {
       {/* Submitted work */}
       {deal.submitted_url || deal.submitted_notes ? (
         <div className="card mb-5">
-          <h2 style={{
-            fontFamily: 'var(--font-bricolage)',
-            fontWeight: 600, fontSize: '16px', letterSpacing: '-0.5px', color: '#1c1c1e',
+          <h2 style={{ fontSize: '16px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-3">📦 Submitted work</h2>
 
           {deal.submitted_url && (
@@ -240,9 +234,7 @@ export default function DealOverviewPage() {
 
       {/* Status timeline */}
       <div className="card mb-5">
-        <h2 style={{
-          fontFamily: 'var(--font-bricolage)',
-          fontWeight: 600, fontSize: '16px', letterSpacing: '-0.5px', color: '#1c1c1e',
+        <h2 style={{ fontSize: '16px', letterSpacing: '-0.5px', color: '#1c1c1e',
         }} className="mb-4">Deal status</h2>
 
         <DealTimeline status={deal.status} />

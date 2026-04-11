@@ -132,7 +132,7 @@ export default function BrandProfilePage() {
       <div className="min-h-screen bg-[#fafaf9] flex flex-col items-center justify-center px-6">
         <div className="text-center">
           <div className="text-6xl mb-6">🏢</div>
-          <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }} className="mb-3">
+          <h1 style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }} className="mb-3">
             Brand not found
           </h1>
           <p className="text-[#6b6b6b] mb-8">This brand profile doesn&apos;t exist or has been removed.</p>
@@ -189,7 +189,7 @@ export default function BrandProfilePage() {
             {/* Info */}
             <div className="flex-1 min-w-0">
               <h1
-                style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(24px, 4vw, 32px)', lineHeight: 1.0, letterSpacing: '-2px', color: '#363535' }}
+                style={{ fontSize: 'clamp(24px, 4vw, 32px)', lineHeight: 1.0, letterSpacing: '-2px', color: '#363535' }}
                 className="truncate"
               >
                 {brand.company_name}
@@ -264,7 +264,7 @@ export default function BrandProfilePage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2
-                style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(18px, 3vw, 22px)', lineHeight: 1.0, letterSpacing: '-1.5px', color: '#363535' }}
+                style={{ fontSize: 'clamp(18px, 3vw, 22px)', lineHeight: 1.0, letterSpacing: '-1.5px', color: '#363535' }}
               >
                 Open Briefs
               </h2>

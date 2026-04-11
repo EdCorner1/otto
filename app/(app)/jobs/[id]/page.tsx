@@ -114,9 +114,7 @@ export default function JobDetailPage() {
       <div className="card mb-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1 min-w-0">
-            <h1 style={{
-              fontFamily: 'var(--font-bricolage)',
-              fontWeight: 600, fontSize: 'clamp(22px, 4vw, 32px)',
+            <h1 style={{ fontSize: 'clamp(22px, 4vw, 32px)',
               lineHeight: 1.1, letterSpacing: '-1.5px', color: '#1c1c1e',
             }} className="mb-2">
               {job.title}

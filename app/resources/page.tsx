@@ -81,7 +81,7 @@ export default function ResourcesPage() {
         {/* Header */}
         <div className="mb-12">
           <p className="text-xs font-semibold uppercase tracking-widest text-[#ccff00] mb-3">Resources</p>
-          <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(32px, 6vw, 52px)', lineHeight: 1.0, letterSpacing: '-4px', color: '#363535' }} className="mb-4">
+          <h1 style={{ fontSize: 'clamp(32px, 6vw, 52px)', lineHeight: 1.0, letterSpacing: '-4px', color: '#363535' }} className="mb-4">
             Built for creators who mean business.
           </h1>
           <p className="text-[#6b6b6b] text-lg max-w-xl leading-relaxed">
@@ -97,7 +97,7 @@ export default function ResourcesPage() {
                 <span className="text-2xl">{section.icon}</span>
                 <div className="flex-1">
                   <div className="flex items-center justify-between flex-wrap gap-3">
-                    <h2 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '22px', letterSpacing: '-1.5px', color: '#363535' }}>
+                    <h2 style={{ fontSize: '22px', letterSpacing: '-1.5px', color: '#363535' }}>
                       {section.category}
                     </h2>
                     {section.href && !section.coming && (
@@ -132,7 +132,7 @@ export default function ResourcesPage() {
 
         {/* CTA */}
         <div className="bg-[#363535] rounded-2xl p-8 text-center">
-          <h2 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(22px, 4vw, 32px)', letterSpacing: '-2px', color: '#ffffff' }} className="mb-3">
+          <h2 style={{ fontSize: 'clamp(22px, 4vw, 32px)', letterSpacing: '-2px', color: '#ffffff' }} className="mb-3">
             Want early access to everything?
           </h2>
           <p className="text-white/60 text-sm mb-6">Join the Otto signup and get notified as resources drop — before anyone else.</p>
