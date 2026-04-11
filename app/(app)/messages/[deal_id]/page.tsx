@@ -38,23 +38,6 @@ function formatTimestamp(dateStr: string) {
     ' · ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
-function FloatingNav({ user, onSignOut }: { user: { email?: string } | null; onSignOut: () => void }) {
-  return (
-    <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold font-display tracking-tight text-[#363535] hover:opacity-80 transition-opacity">
-          Otto
-          <span className="inline-block w-2 h-2 bg-[#ccff00] rounded-full mb-2" />
-        </Link>
-        <div className="flex items-center gap-4">
-          <Link href="/messages" className="text-sm font-medium text-[#6b6b6b] hover:text-[#363535] transition-colors">← Messages</Link>
-          <button onClick={onSignOut} className="text-sm font-medium text-[#6b6b6b] hover:text-[#363535] transition-colors">Sign out</button>
-        </div>
-      </div>
-    </header>
-  )
-}
-
 type Message = {
   id: string
   sender_id: string
@@ -215,11 +198,7 @@ export default function DealThreadPage() {
     setSubmissionNotes('')
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
-  }
+  
 
   if (loading) {
     return (
@@ -237,7 +216,6 @@ export default function DealThreadPage() {
 
   return (
     <div className="min-h-screen bg-[#fafaf9] flex flex-col">
-      <FloatingNav user={user} onSignOut={handleSignOut} />
 
       {/* Header */}
       <div className="pt-28 pb-4 px-6">

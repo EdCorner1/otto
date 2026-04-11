@@ -19,23 +19,6 @@ const DELIVERABLES = ['Demo/review', 'Unboxing', 'Tutorial/how-to', 'Comparison'
 const BUDGET_RANGES = ['£100-250', '£250-500', '£500-1,000', '£1,000-2,500', '£2,500+']
 const TIMELINES = ['Within 1 week', 'Within 2 weeks', 'Within 1 month', 'Flexible']
 
-function FloatingNav({ user, onSignOut }: { user: { email?: string } | null; onSignOut: () => void }) {
-  return (
-    <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold font-display tracking-tight text-[#363535] hover:opacity-80 transition-opacity">
-          Otto
-          <span className="inline-block w-2 h-2 bg-[#ccff00] rounded-full mb-2" />
-        </Link>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-[#6b6b6b] hidden sm:block">{user?.email}</span>
-          <button onClick={onSignOut} className="text-sm font-medium text-[#6b6b6b] hover:text-[#363535] transition-colors">Sign out</button>
-        </div>
-      </div>
-    </header>
-  )
-}
-
 export default function NewJobPage() {
   const [user, setUser] = useState<{ email?: string; id: string; user_metadata?: { role?: string } } | null>(null)
   const [brand, setBrand] = useState<{ id: string } | null>(null)
@@ -100,11 +83,7 @@ export default function NewJobPage() {
     if (!error) router.push('/dashboard?posted=1')
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
-  }
+  
 
   if (loading) {
     return (
@@ -116,7 +95,6 @@ export default function NewJobPage() {
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
-      <FloatingNav user={user} onSignOut={handleSignOut} />
 
       <main className="pt-28 pb-20 max-w-2xl mx-auto px-6">
         <div className="mb-8 fade-up">
