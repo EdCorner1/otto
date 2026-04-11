@@ -68,6 +68,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/jobs', label: isBrand ? 'My Briefs' : 'Find Work' },
+    ...(isBrand ? [{ href: '/jobs/templates', label: 'Brief Templates' }] : []),
     { href: '/messages', label: 'Messages' },
     ...(isCreator ? [{ href: '/creators', label: 'Discover' }] : []),
   ]
