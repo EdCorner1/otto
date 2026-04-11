@@ -59,6 +59,7 @@ export default function HomePage() {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
     })
+    // Load 3 recent published posts
     supabase
       .from('blog_posts')
       .select('id, title, slug, excerpt, cover_image_url, published_at')
