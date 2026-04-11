@@ -55,7 +55,7 @@ export default function BlogPage() {
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto px-6 pt-32 pb-16">
+      <div className="max-w-[960px] mx-auto px-6 pt-32 pb-16">
         {/* Header */}
         <div className="mb-10">
           <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(36px, 7vw, 64px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
@@ -81,8 +81,8 @@ export default function BlogPage() {
         )}
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {[1,2,3,4].map(i => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1,2,3,4,5,6].map(i => (
               <div key={i} className="bg-white border border-[#e8e8e4] rounded-2xl h-72 animate-pulse" />
             ))}
           </div>
@@ -92,7 +92,7 @@ export default function BlogPage() {
             <p className="text-[#6b6b6b]">No posts published yet. Check back soon.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((post) => (
               <Link key={post.id} href={`/blog/${post.slug}`}
                 className="group bg-white border border-[#e8e8e4] rounded-2xl overflow-hidden hover:-translate-y-1 hover:shadow-xl transition-all">
@@ -104,24 +104,24 @@ export default function BlogPage() {
                   </div>
                 )}
 
-                <div className="p-5">
+                <div className="p-5 flex flex-col flex-1">
                   {post.blog_categories && (
-                    <span className="text-xs font-semibold text-[#ccff00]">{post.blog_categories.name}</span>
+                    <span className="inline-block text-xs font-semibold text-[#363535] bg-[#f0f0ec] px-2.5 py-0.5 rounded-full self-start mb-2">
+                      {post.blog_categories.name}
+                    </span>
                   )}
-                  <h2 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(16px, 2vw, 20px)', lineHeight: 1.1, letterSpacing: '-1px', color: '#363535' }}
-                    className="mt-2 mb-2 group-hover:text-[#1c1c1c]">
+                  <h2 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(15px, 1.8vw, 19px)', lineHeight: 1.15, letterSpacing: '-1px', color: '#1c1c1e' }}
+                    className="mb-2 group-hover:text-[#363535]">
                     {post.title}
                   </h2>
                   {post.excerpt && (
-                    <p className="text-xs text-[#6b6b6b] line-clamp-2 leading-relaxed">{post.excerpt}</p>
+                    <p className="text-xs text-[#6b6b6b] leading-relaxed mb-4 line-clamp-2 flex-1">{post.excerpt}</p>
                   )}
-                  <div className="flex items-center justify-between mt-4">
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#f0f0ec]">
                     <span className="text-xs text-[#9a9a9a]">
-                      {post.published_at ? new Date(post.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                      {post.published_at ? new Date(post.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}
                     </span>
-                    {post.tags?.[0] && (
-                      <span className="text-xs text-[#9a9a9a] bg-[#f0f0ec] px-2 py-0.5 rounded-full">{post.tags[0]}</span>
-                    )}
+                    <span className="text-xs text-[#9a9a9a] group-hover:text-[#ccff00] transition-colors">Read →</span>
                   </div>
                 </div>
               </Link>
