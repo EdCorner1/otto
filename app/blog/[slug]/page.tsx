@@ -12,19 +12,65 @@ type Post = {
   published_at: string; created_at: string
 }
 
+// Converts markdown → HTML with proper semantic markup
 function renderMarkdown(text: string): string {
   if (!text) return ''
-  const lines = text.split('\n')
-  let html = ''
-  let inUl = false
-  for (const line of lines) {
-    if (line.startsWith('## ')) { if (inUl) { html += '</ul>'; inUl = false } html += `<h2>${line.slice(3)}</h2>` }
-    else if (line.startsWith('# ')) { if (inUl) { html += '</ul>'; inUl = false } html += `<h1>${line.slice(2)}</h1>` }
-    else if (line.startsWith('- ')) { if (!inUl) { html += '<ul>'; inUl = true } html += `<li>${line.slice(2)}</li>` }
-    else if (line.trim()) { if (inUl) { html += '</ul>'; inUl = false } html += `<p>${line}</p>` }
-  }
-  if (inUl) html += '</ul>'
-  return html
+
+  // Split on newlines but preserve double blank lines as paragraph breaks
+  const blocks = text.split(/\n{2,}/)
+
+  return blocks.map(block => {
+    const b = block.trim()
+    if (!b) return ''
+
+    // H2
+    if (b.startsWith('## ')) {
+      const inner = b.slice(3)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+      return `<h2>${inner}</h2>`
+    }
+
+    // H3
+    if (b.startsWith('### ')) {
+      const inner = b.slice(4)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      return `<h3>${inner}</h3>`
+    }
+
+    // Unordered list
+    if (b.startsWith('- ') || b.startsWith('* ')) {
+      const items = b.split('\n').filter(l => l.trim())
+      const htmlItems = items.map(l =>
+        `<li>${l.replace(/^[\-\*]\s/, '')
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          .replace(/`(.+?)`/g, '<code>$1</code>')
+        }</li>`
+      ).join('')
+      return `<ul>${htmlItems}</ul>`
+    }
+
+    // Horizontal rule
+    if (b === '---' || b === '***' || b === '___') {
+      return '<hr>'
+    }
+
+    // Paragraph — process inline markdown
+    const inner = b
+      // Bold
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      // Inline code
+      .replace(/`(.+?)`/g, '<code>$1</code>')
+      // Links [text](url)
+      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-link" target="_blank" rel="noopener">$1</a>')
+
+    return `<p>${inner}</p>`
+  }).join('\n')
 }
 
 export default function BlogPostPage() {
@@ -76,66 +122,107 @@ export default function BlogPostPage() {
   return (
     <div className="min-h-screen bg-[#fafaf9]">
       {/* Nav */}
-      <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
+      <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3.5 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
           <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
         </Link>
-        <div className="flex items-center gap-3">
-          <Link href="/blog" className="text-sm font-medium text-[#6b6b6b] hover:text-[#363535]">← Blog</Link>
+        <div className="flex items-center gap-5">
+          <Link href="/blog" className="text-sm font-medium text-[#6b6b6b] hover:text-[#363535] transition-colors">← Blog</Link>
           <Link href="/signup" className="btn-primary text-sm py-2 px-5">Get Started</Link>
         </div>
       </nav>
 
-      <article className="max-w-2xl mx-auto px-6 pt-32 pb-20">
+      <article className="max-w-[720px] mx-auto px-6 pt-32 pb-20">
+
         {/* Header */}
-        <div className="mb-8">
-          {post.blog_categories && (
-            <span className="text-xs font-semibold text-[#ccff00] bg-[#ccff00]/10 px-2.5 py-1 rounded-full">
-              {post.blog_categories.name}
-            </span>
-          )}
-          <h1 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: 'clamp(28px, 6vw, 48px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }}
-            className="mt-4 mb-4">
+        <header className="mb-10">
+          {/* Breadcrumb + category */}
+          <div className="flex items-center gap-2 mb-5">
+            <Link href="/blog" className="text-xs text-[#9a9a9a] hover:text-[#6b6b6b] transition-colors">Blog</Link>
+            <span className="text-[#d0d0cc]">/</span>
+            {post.blog_categories && (
+              <span className="text-xs font-semibold text-[#363535] bg-[#f0f0ec] px-2.5 py-1 rounded-full">
+                {post.blog_categories.name}
+              </span>
+            )}
+          </div>
+
+          {/* Headline */}
+          <h1 style={{
+            fontFamily: 'var(--font-bricolage)',
+            fontWeight: 700,
+            fontSize: 'clamp(28px, 5vw, 44px)',
+            lineHeight: 1.08,
+            letterSpacing: '-2.5px',
+            color: '#1c1c1c',
+          }}>
             {post.title}
           </h1>
+
+          {/* Excerpt */}
           {post.excerpt && (
-            <p className="text-lg text-[#6b6b6b] leading-relaxed mb-4">{post.excerpt}</p>
+            <p style={{
+              fontFamily: 'var(--font-open-sans)',
+              fontSize: '18px',
+              lineHeight: 1.6,
+              color: '#6b6b6b',
+              marginTop: '16px',
+            }}>
+              {post.excerpt}
+            </p>
           )}
-          <div className="flex items-center gap-3 text-sm text-[#9a9a9a]">
-            <span>{post.author_name}</span>
-            {pubDate && <><span>·</span><span>{pubDate}</span></>}
+
+          {/* Meta row */}
+          <div className="flex items-center gap-4 mt-6 pt-6 border-t border-[#f0f0ec]">
+            {/* Author avatar */}
+            <div className="w-9 h-9 rounded-full bg-[#1c1c1c] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+              {post.author_name?.[0] || 'O'}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#363535]">{post.author_name}</p>
+              <p className="text-xs text-[#9a9a9a]">{pubDate}</p>
+            </div>
           </div>
-        </div>
+        </header>
 
         {/* Cover image */}
         {post.cover_image_url && (
-          <div className="rounded-2xl overflow-hidden mb-10 border border-[#e8e8e4] aspect-video">
+          <div className="rounded-2xl overflow-hidden mb-10 border border-[#e8e8e4] aspect-video bg-[#f0f0ec]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={post.cover_image_url} alt="" className="w-full h-full object-cover" />
           </div>
         )}
 
-        {/* Content */}
-        <div className="text-[#363535] leading-relaxed" style={{ fontSize: '16px', lineHeight: '1.75' }}>
-          <div dangerouslySetInnerHTML={{ __html: rendered }} />
-        </div>
+        {/* Article body */}
+        <div className="prose-blog" dangerouslySetInnerHTML={{ __html: rendered }} />
 
         {/* Tags */}
         {post.tags?.length > 0 && (
-          <div className="flex items-center gap-2 mt-10 pt-8 border-t border-[#e8e8e4] flex-wrap">
+          <div className="flex items-start gap-2 mt-12 pt-8 border-t border-[#e8e8e4] flex-wrap">
+            <span className="text-xs text-[#9a9a9a] pt-1">Tagged:</span>
             {post.tags.map(tag => (
-              <span key={tag} className="text-xs text-[#6b6b6b] bg-[#f0f0ec] px-3 py-1 rounded-full">{tag}</span>
+              <span key={tag} className="text-xs text-[#6b6b6b] bg-[#f0f0ec] hover:bg-[#e8e8e4] px-3 py-1 rounded-full transition-colors cursor-default">{tag}</span>
             ))}
           </div>
         )}
 
         {/* CTA */}
-        <div className="mt-12 p-6 bg-[#363535] rounded-2xl text-center">
-          <p className="text-white text-sm font-semibold mb-2">Want more like this?</p>
-          <p className="text-white/60 text-xs mb-4">Join the Otto signup for early access to the UGC marketplace.</p>
-          <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#ccff00] text-[#1c1c1c] rounded-xl text-sm font-bold hover:bg-[#d9ff4d] transition-colors">
+        <div className="mt-12 p-7 bg-[#1c1c1c] rounded-2xl text-center">
+          <div className="text-2xl mb-2">🚀</div>
+          <p style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '20px', letterSpacing: '-1px', color: '#ffffff' }} className="mb-2">
+            Want more practical UGC insights?
+          </p>
+          <p className="text-white/50 text-sm mb-5">Join the Otto signup — the newsletter for tech creators who mean business.</p>
+          <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 bg-[#ccff00] text-[#1c1c1c] rounded-xl text-sm font-bold hover:bg-[#d9ff4d] transition-colors">
             Get Started →
+          </Link>
+        </div>
+
+        {/* Navigation */}
+        <div className="mt-8 text-center">
+          <Link href="/blog" className="text-sm text-[#9a9a9a] hover:text-[#6b6b6b] transition-colors inline-flex items-center gap-1">
+            ← Back to Blog
           </Link>
         </div>
       </article>
