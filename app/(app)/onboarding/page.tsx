@@ -30,9 +30,11 @@ export default function OnboardingPage() {
   const [error, setError] = useState('')
 
   // ─── BRAND FORM STATE ───────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [brand, setBrand] = useState({ company_name: '', website: '', industry: 'Tech', description: '' })
 
   // ─── CREATOR FORM STATE ────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [creator, setCreator] = useState({
     display_name: '',
     headline: '',
