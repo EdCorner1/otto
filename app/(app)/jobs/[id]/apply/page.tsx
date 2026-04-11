@@ -22,7 +22,7 @@ const PLATFORM_EMOJI: Record<string, string> = {
   'LinkedIn': '💼',
 }
 
-function FloatingNav({ user, onSignOut }: { user: any; onSignOut: () => void }) {
+function FloatingNav({ user, onSignOut }: { user: { email?: string } | null; onSignOut: () => void }) {
   return (
     <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -53,7 +53,7 @@ type Job = {
 export default function ApplyPage() {
   const params = useParams()
   const jobId = params.id as string
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, unknown> } | null>(null)
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)

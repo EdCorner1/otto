@@ -39,7 +39,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function FloatingNav({ user, onSignOut }: { user: any; onSignOut: () => void }) {
+function FloatingNav({ user, onSignOut }: { user: { email?: string } | null; onSignOut: () => void }) {
   return (
     <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">

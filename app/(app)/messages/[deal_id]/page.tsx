@@ -14,6 +14,7 @@ const headlineStyle: React.CSSProperties = {
   color: '#363535',
 }
 
+interface UserState { id: string; email?: string; user_metadata?: Record<string, unknown> }
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     proposed: 'bg-blue-50 text-blue-600',
@@ -37,7 +38,7 @@ function formatTimestamp(dateStr: string) {
     ' · ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
-function FloatingNav({ user, onSignOut }: { user: any; onSignOut: () => void }) {
+function FloatingNav({ user, onSignOut }: { user: { email?: string } | null; onSignOut: () => void }) {
   return (
     <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -77,7 +78,7 @@ type Deal = {
 export default function DealThreadPage() {
   const params = useParams()
   const dealId = params.deal_id as string
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<UserState | null>(null)
   const [role, setRole] = useState<string | null>(null)
   const [deal, setDeal] = useState<Deal | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -113,7 +114,7 @@ export default function DealThreadPage() {
 
         const { data: msgs } = await supabase.from('messages').select('*').eq('deal_id', dealId).order('created_at', { ascending: true }).limit(100)
         setDeal(dealData as Deal)
-        setMessages((msgs as any[]) || [])
+        setMessages((msgs as Message[]) || [])
       } else {
         const { data: creatorData } = await supabase.from('creators').select('id').eq('user_id', user.id).single()
         if (!creatorData) { router.push('/dashboard'); return }
@@ -124,7 +125,7 @@ export default function DealThreadPage() {
 
         const { data: msgs } = await supabase.from('messages').select('*').eq('deal_id', dealId).order('created_at', { ascending: true }).limit(100)
         setDeal(dealData as Deal)
-        setMessages((msgs as any[]) || [])
+        setMessages((msgs as Message[]) || [])
       }
 
       setLoading(false)
@@ -138,7 +139,7 @@ export default function DealThreadPage() {
     const channel = supabase.channel(`deal-${dealId}`).on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'messages', filter: `deal_id=eq.${dealId}` },
-      (payload: any) => {
+      (payload: { new: Message }) => {
         setMessages(prev => [...prev, payload.new as Message])
       }
     ).subscribe()
@@ -159,7 +160,7 @@ export default function DealThreadPage() {
 
     await supabase.from('messages').insert({
       deal_id: dealId,
-      sender_id: user.id,
+      sender_id: user!.id,
       sender_name: senderName,
       content: newMessage.trim(),
     })
@@ -194,7 +195,7 @@ export default function DealThreadPage() {
     const senderName = role === 'brand' ? (deal?.brands?.company_name || 'Brand') : (deal?.creators?.display_name || 'Creator')
     await supabase.from('messages').insert({
       deal_id: dealId,
-      sender_id: user.id,
+      sender_id: user!.id,
       sender_name: senderName,
       content: `Work submitted${submissionLink ? `: ${submissionLink}` : ''}${submissionNotes ? ` — ${submissionNotes}` : ''}`,
     })
@@ -310,7 +311,7 @@ export default function DealThreadPage() {
         <div className="max-w-2xl mx-auto">
           <div className="space-y-3 pb-4">
             {messages.map((msg) => {
-              const isOwn = msg.sender_id === user.id
+              const isOwn = msg.sender_id === user!.id
               return (
                 <div key={msg.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                   <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${isOwn

@@ -7,10 +7,11 @@ import { createClient } from '@/lib/supabase'
 
 type Category = { id: string; name: string; slug: string }
 
+interface UserState { id: string; email?: string; user_metadata?: Record<string, unknown> }
 export default function NewPostPage() {
   const router = useRouter()
   const supabase = createClient()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<UserState | null>(null)
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [excerpt, setExcerpt] = useState('')

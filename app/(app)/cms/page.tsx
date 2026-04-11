@@ -23,12 +23,13 @@ const STYLES = {
   }[s] || 'bg-gray-100 text-gray-600'),
 }
 
+interface UserState { id: string; email?: string; user_metadata?: Record<string, unknown> }
 export default function CMSPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [filter, setFilter] = useState<string>('all')
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<UserState | null>(null)
   const router = useRouter()
   const supabase = createClient()
 

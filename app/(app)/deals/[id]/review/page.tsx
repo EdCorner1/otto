@@ -26,13 +26,14 @@ const headlineStyle: React.CSSProperties = {
   color: '#363535',
 }
 
+interface UserState { id: string; email?: string; user_metadata?: Record<string, unknown> }
 export default function DealReviewPage() {
   const params = useParams()
   const dealId = params.id as string
   const router = useRouter()
   const supabase = createClient()
-  const [user, setUser] = useState<any>(null)
-  const [brand, setBrand] = useState<any>(null)
+  const [user, setUser] = useState<UserState | null>(null)
+  const [brand, setBrand] = useState<{ id: string; company_name?: string } | null>(null)
   const [deal, setDeal] = useState<Deal | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
@@ -96,7 +97,7 @@ export default function DealReviewPage() {
     if (!revisionNotes.trim() || !deal) return
     const senderName = brand?.company_name || 'Brand'
     await supabase.from('messages').insert({
-      deal_id: deal.id, sender_id: user.id, sender_name: senderName,
+      deal_id: deal.id, sender_id: user!.id, sender_name: senderName,
       content: `🔁 Revision requested: ${revisionNotes.trim()}`,
     })
     await updateDeal('in_progress')
@@ -109,7 +110,7 @@ export default function DealReviewPage() {
     if (deal) {
       const senderName = brand?.company_name || 'Brand'
       await supabase.from('messages').insert({
-        deal_id: deal.id, sender_id: user.id, sender_name: senderName,
+        deal_id: deal.id, sender_id: user!.id, sender_name: senderName,
         content: '✅ Work approved! Payment will be released shortly.',
       })
     }
