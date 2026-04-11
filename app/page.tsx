@@ -52,13 +52,13 @@ export default function HomePage() {
   const [faqOpen, setFaqOpen] = useState<number | null>(null)
   const [email, setEmail] = useState('')
   const [signupSubmitted, setSignupSubmitted] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
     })
-    // Load 3 recent published posts
     supabase
       .from('blog_posts')
       .select('id, title, slug, excerpt, cover_image_url, published_at')
@@ -118,8 +118,10 @@ export default function HomePage() {
           <span style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 700, fontSize: '20px', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
           <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
         </Link>
-        <div className="flex items-center gap-4">
-          <Link href="/blog" className="text-sm font-medium text-[#6b6b6b] hover:text-[#363535] transition-colors hidden sm:block">Blog</Link>
+
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-4">
+          <Link href="/blog" className="text-sm font-medium text-[#6b6b6b] hover:text-[#363535] transition-colors">Blog</Link>
           {user ? (
             <Link href="/dashboard" className="btn-primary text-sm py-2 px-5">Dashboard</Link>
           ) : (
@@ -129,7 +131,62 @@ export default function HomePage() {
             </>
           )}
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMobileOpen(o => !o)}
+          className="md:hidden p-2 rounded-xl text-[#363535] hover:bg-[#f0f0ec] transition-colors"
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M3 6H17M3 10H17M3 14H17" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
       </header>
+
+      {/* Mobile menu overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 flex flex-col pt-24 px-6 bg-white/95 backdrop-blur-md">
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="absolute top-6 right-6 p-2 text-[#363535]"
+            aria-label="Close menu"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="flex flex-col gap-1">
+            <Link href="/blog" onClick={() => setMobileOpen(false)}
+              className="py-4 text-lg font-medium text-[#363535] border-b border-[#f0f0ec]">
+              Blog
+            </Link>
+            {user ? (
+              <Link href="/dashboard" onClick={() => setMobileOpen(false)}
+                className="py-4 text-lg font-medium text-[#363535] border-b border-[#f0f0ec]">
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" onClick={() => setMobileOpen(false)}
+                  className="py-4 text-lg font-medium text-[#363535] border-b border-[#f0f0ec]">
+                  Sign in
+                </Link>
+                <Link href="/signup" onClick={() => setMobileOpen(false)}
+                  className="mt-4 btn-primary py-3 text-center text-base">
+                  Get Started
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <main>
 
