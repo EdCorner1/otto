@@ -17,8 +17,27 @@ const openSans = Open_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Otto — The UGC Marketplace for Tech Brands & Creators',
-  description: 'Otto connects forward-thinking tech brands with vetted UGC creators. Faster briefs. Better matches. Real results.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://otto.edcorner.co.uk'),
+  title: {
+    default: 'Otto — UGC for tech brands and creators',
+    template: '%s | Otto',
+  },
+  description: 'Otto connects tech brands with UGC creators who know their audience. Post briefs, find work, get paid. No audience minimums, no commission.',
+  openGraph: {
+    type: 'website',
+    locale: 'en_GB',
+    url: 'https://otto.edcorner.co.uk',
+    siteName: 'Otto',
+    title: 'Otto — UGC for tech brands and creators',
+    description: 'Connect with UGC creators who understand your audience. Real work, fairly priced.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Otto — UGC for tech brands and creators',
+    description: 'Connect with UGC creators who understand your audience. Real work, fairly priced.',
+    creator: '@DefinitelyEd',
+  },
+  robots: { index: true, follow: true },
 }
 
 export default function RootLayout({
