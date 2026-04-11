@@ -480,6 +480,15 @@ export default function BlogPostClient({ slug }: { slug: string }) {
         .related-title { font-weight: 600; font-size: 14px; color: #1c1c1e; line-height: 1.3; }
         .related-desc { font-size: 12px; color: #9a9a9a; line-height: 1.5; flex: 1; }
         .related-arrow { font-size: 14px; color: #ccff00; margin-top: 4px; }
+        .share-bar { display: flex; align-items: center; gap: 8px; margin-top: 3em; padding-top: 2em; border-top: 2px solid #f0f0ec; flex-wrap: wrap; }
+        .share-label { font-family: var(--font-bricolage); font-weight: 700; font-size: 14px; color: #363535; }
+        .share-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s; cursor: pointer; border: none; }
+        .share-btn.twitter { background: #000; color: #fff; }
+        .share-btn.twitter:hover { background: #1a1a1a; }
+        .share-btn.linkedin { background: #0077b5; color: #fff; }
+        .share-btn.linkedin:hover { background: #006399; }
+        .share-btn.copy { background: #f0f0ec; color: #363535; }
+        .share-btn.copy:hover { background: #e8e8e4; }
       `}</style>
     </div>
   )
