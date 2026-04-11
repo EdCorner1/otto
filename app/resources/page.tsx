@@ -70,7 +70,7 @@ export default function ResourcesPage() {
           <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
         </Link>
         <div className="flex items-center gap-5">
-          <Link href="/blog" className="text-sm font-medium text-[#6b6b6b] hover:text-[#363535] transition-colors">Blog</Link>
+          
           <Link href="/resources" className="text-sm font-medium text-[#363535] transition-colors">Resources</Link>
           <Link href="/login" className="btn-ghost text-sm px-4 py-2 hidden sm:inline-flex">Sign in</Link>
           <Link href="/signup" className="btn-primary text-sm py-2 px-5">Get Started</Link>
@@ -149,7 +149,7 @@ export default function ResourcesPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00]" />
             </Link>
             <div className="flex items-center gap-5 text-xs text-[#9a9a9a]">
-              <Link href="/blog" className="hover:text-[#1c1c1c] transition-colors">Blog</Link>
+              
               <Link href="/about" className="hover:text-[#1c1c1c] transition-colors">About</Link>
               <Link href="/privacy" className="hover:text-[#1c1c1c] transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-[#1c1c1c] transition-colors">Terms</Link>

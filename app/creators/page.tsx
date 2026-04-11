@@ -181,7 +181,7 @@ export default function CreatorsPage() {
             Otto<span className="inline-block w-2 h-2 bg-[#ccff00] rounded-full mb-2" />
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/blog" className="text-sm text-[#6b6b6b] hover:text-[#363535]">Blog</Link>
+            
             <Link href="/dashboard" className="text-sm text-[#6b6b6b] hover:text-[#363535]">Dashboard</Link>
             <Link href="/login" className="btn-primary text-sm py-2 px-4">Sign in</Link>
           </div>
