@@ -149,7 +149,7 @@ export default function HomePage() {
       {/* ─── BRAND LOGO TICKER ─────────────────────────────── */}
       <section className="py-10 px-6 border-t border-[#e8e8e4] overflow-hidden">
         <p className="text-center text-xs font-semibold text-[#9a9a9a] uppercase tracking-widest mb-7">
-          Trusted by tech brands building with UGC
+          Brands building smarter with UGC
         </p>
         <div className="relative">
           <div className="flex gap-12 animate-[scroll-logos_30s_linear_infinite]">
