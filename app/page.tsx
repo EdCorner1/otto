@@ -36,7 +36,6 @@ export default function HomePage() {
           <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
         </Link>
         <div className="flex items-center gap-5">
-          <!-- Blog link removed -->
           <Link href="/login" className="btn-ghost text-sm px-4 py-2 hidden sm:inline-flex">Sign in</Link>
           <Link href="/signup" className="btn-primary text-sm py-2 px-5">Get Started</Link>
         </div>
