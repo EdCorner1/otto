@@ -489,6 +489,17 @@ export default function BlogPostClient({ slug }: { slug: string }) {
         .share-btn.linkedin:hover { background: #006399; }
         .share-btn.copy { background: #f0f0ec; color: #363535; }
         .share-btn.copy:hover { background: #e8e8e4; }
+        .newsletter-cta { background: #1c1c1e; border-radius: 20px; padding: 40px; margin-top: 4em; text-align: center; }
+        .newsletter-eyebrow { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+        .newsletter-heading { font-family: var(--font-bricolage); font-weight: 700; font-size: 28px; color: #fff; letter-spacing: -1.5px; margin-bottom: 12px; }
+        .newsletter-sub { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.6; max-width: 400px; margin: 0 auto 24px; }
+        .newsletter-form { display: flex; gap: 8px; max-width: 400px; margin: 0 auto; }
+        .newsletter-input { flex: 1; padding: 12px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; font-size: 14px; color: #fff; outline: none; }
+        .newsletter-input::placeholder { color: rgba(255,255,255,0.3); }
+        .newsletter-input:focus { border-color: #ccff00; }
+        .newsletter-btn { padding: 12px 20px; background: #ccff00; color: #1c1c1e; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; white-space: nowrap; }
+        .newsletter-btn:hover { background: #b8e600; }
+        .newsletter-success { font-size: 13px; color: #ccff00; margin-top: 12px; font-weight: 600; }
       `}</style>
     </div>
   )
