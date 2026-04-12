@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
+// Emails that skip the onboarding check
+const ONBOARDING_BYPASS_EMAILS = ['edcorner1@gmail.com']
+
 type Role = 'creator' | 'brand'
 
 function HamburgerIcon({ open }: { open: boolean }) {
@@ -70,11 +73,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       }
 
       const onboardingComplete =
-        resolvedRole === 'brand'
-          ? !!brandRow
-          : resolvedRole === 'creator'
-            ? !!creatorRow
-            : false
+        ONBOARDING_BYPASS_EMAILS.includes(user.email ?? '')
+          ? true
+          : resolvedRole === 'brand'
+            ? !!brandRow
+            : resolvedRole === 'creator'
+              ? !!creatorRow
+              : false
 
       if (cancelled) return
 
