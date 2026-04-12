@@ -15,9 +15,10 @@ const headlineStyle: React.CSSProperties = {
 }
 
 const PLATFORMS = ['TikTok', 'YouTube Shorts', 'Instagram Reels', 'Twitter/X', 'LinkedIn']
-const DELIVERABLES = ['Demo/review', 'Unboxing', 'Tutorial/how-to', 'Comparison', 'Sponsored post']
-const BUDGET_RANGES = ['£100-250', '£250-500', '£500-1,000', '£1,000-2,500', '£2,500+']
+const DELIVERABLES = ['Demo/review', 'Unboxing', 'Tutorial/how-to', 'Comparison', 'Sponsored post', 'Day-in-the-life', 'Testimonial']
+const BUDGET_RANGES = ['£100–250', '£250–500', '£500–1,000', '£1,000–2,500', '£2,500+']
 const TIMELINES = ['Within 1 week', 'Within 2 weeks', 'Within 1 month', 'Flexible']
+const CATEGORIES = ['Tech & Gadgets', 'Fitness & Health', 'Travel & Lifestyle', 'Language Learning', 'AI & Productivity', 'Gaming', 'Food & Drink', 'Fashion & Beauty', 'Finance & SaaS', 'Other']
 
 export default function NewJobPage() {
   const [user, setUser] = useState<{ email?: string; id: string; user_metadata?: { role?: string } } | null>(null)
@@ -30,6 +31,7 @@ export default function NewJobPage() {
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [category, setCategory] = useState('')
   const [platforms, setPlatforms] = useState<string[]>([])
   const [deliverables, setDeliverables] = useState<string[]>([])
   const [budget, setBudget] = useState('')
@@ -73,6 +75,7 @@ export default function NewJobPage() {
       brand_id: brand.id,
       title,
       description,
+      category,
       platforms,
       deliverables,
       budget_range: budget,
@@ -131,6 +134,19 @@ export default function NewJobPage() {
               rows={5}
               className="w-full bg-white border border-[#e8e8e4] rounded-xl px-4 py-3 text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00] transition-shadow resize-none"
             />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block section-label mb-2">Category</label>
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              className="w-full bg-white border border-[#e8e8e4] rounded-xl px-4 py-3 text-sm text-[#363535] focus:outline-none focus:ring-2 focus:ring-[#ccff00] transition-shadow appearance-none cursor-pointer"
+            >
+              <option value="">All categories</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
 
           {/* Platforms */}

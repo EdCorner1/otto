@@ -33,6 +33,7 @@ type DbJob = {
   platforms: string[]
   budget_range: string
   created_at: string
+  category?: string
   brands: { company_name: string; industry: string }
 }
 
@@ -43,13 +44,41 @@ type DisplayJob = {
   platforms: string[]
   budget_range: string
   created_at: string
+  category?: string
   brands: { company_name: string; industry: string }
   isDemo?: boolean
+}
+
+const FILTERS = ['All', 'Tech & Gadgets', 'Fitness & Health', 'Travel & Lifestyle', 'Language Learning', 'AI & Productivity', 'Gaming', 'Food & Drink', 'Fashion & Beauty', 'Finance & SaaS']
+
+const JOB_CATEGORIES: Record<string, string> = {
+  'demo-raycon-earbuds-1': 'Tech & Gadgets',
+  'demo-pingo-smart-2': 'Tech & Gadgets',
+  'demo-detris-fitness-3': 'Fitness & Health',
+  'demo-lingika-app-4': 'Language Learning',
+  'demo-airalo-travel-5': 'Travel & Lifestyle',
+  'demo-pipo-ai-6': 'AI & Productivity',
+  'demo-clawbite-7': 'AI & Productivity',
+  'demo-nomad-protein-8': 'Fitness & Health',
+  'demo-stackra-saas-9': 'Finance & SaaS',
+  'demo-wyze-cam-10': 'Tech & Gadgets',
+  'demo-12south-11': 'Tech & Gadgets',
+  'demo-raycon-work-12': 'Tech & Gadgets',
+  'demo-pingo-night-13': 'Travel & Lifestyle',
+  'demo-detris-weight-14': 'Fitness & Health',
+  'demo-otto-launch-15': 'AI & Productivity',
+  'demo-otto-howto-16': 'AI & Productivity',
+  'demo-airalo-esim-17': 'Travel & Lifestyle',
+  'demo-pipo-reminder-18': 'AI & Productivity',
+  'demo-clawbite-deal-19': 'AI & Productivity',
+  'demo-nomad-supps-20': 'Fitness & Health',
+  'demo-stackra-pro-21': 'Finance & SaaS',
 }
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<DisplayJob[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeFilter, setActiveFilter] = useState('All')
   const router = useRouter()
   const supabase = createClient()
 
@@ -67,8 +96,18 @@ export default function JobsPage() {
         .eq('status', 'open')
         .order('created_at', { ascending: false })
 
-      const liveJobs = ((jobsData as DbJob[]) || []).map((j) => ({
-        ...j,
+      const liveJobs: DisplayJob[] = ((jobsData as DbJob[]) || []).map((j) => ({
+        id: j.id,
+        title: j.title,
+        description: j.description,
+        platforms: j.platforms,
+        budget_range: j.budget_range,
+        created_at: j.created_at,
+        category: j.category ?? undefined,
+        brands: {
+          company_name: j.brands?.company_name ?? 'Brand',
+          industry: j.brands?.industry ?? '',
+        },
         isDemo: false,
       }))
 
@@ -85,6 +124,7 @@ export default function JobsPage() {
         platforms: j.platforms,
         budget_range: j.budget_range,
         created_at: j.created_at,
+        category: JOB_CATEGORIES[j.id] ?? 'Other',
         brands: {
           company_name: j.brand.company_name,
           industry: j.brand.industry,
@@ -101,6 +141,11 @@ export default function JobsPage() {
 
   const liveCount = useMemo(() => jobs.filter((j) => !j.isDemo).length, [jobs])
 
+  const filteredJobs = useMemo(() => {
+    if (activeFilter === 'All') return jobs
+    return jobs.filter(j => j.category === activeFilter)
+  }, [jobs, activeFilter])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
@@ -112,33 +157,58 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[#fafaf9]">
       <main className="pt-28 pb-20 max-w-3xl mx-auto px-6">
-        <div className="mb-8 fade-up">
+        <div className="mb-6 fade-up">
           <div className="flex items-center justify-between mb-1 gap-3">
             <h1 style={headlineStyle}>Open Briefs</h1>
-            <span className="section-label">{jobs.length} available</span>
+            <span className="section-label">{filteredJobs.length} available</span>
           </div>
           <p className="text-xs text-[#9a9a9a]">
             {liveCount} live brief{liveCount !== 1 ? 's' : ''} + curated Otto opportunities to keep your pipeline moving.
           </p>
         </div>
 
-        {jobs.length === 0 ? (
+        {/* Category filter tabs */}
+        <div className="mb-6 fade-up stagger-1">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {FILTERS.map(filter => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+                  activeFilter === filter
+                    ? 'bg-[#1c1c1e] text-white'
+                    : 'bg-white border border-[#e8e8e4] text-[#6b6b6b] hover:border-[#363535]'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredJobs.length === 0 ? (
           <div className="text-center py-20 fade-up">
             <div className="text-4xl mb-4">📋</div>
-            <h2 className="font-display text-xl font-semibold text-[#363535] mb-2">No briefs yet</h2>
-            <p className="text-sm text-[#6b6b6b]">Check back soon — new briefs are posted daily.</p>
+            <h2 className="font-display text-xl font-semibold text-[#363535] mb-2">No briefs in this category</h2>
+            <p className="text-sm text-[#6b6b6b]">Try a different filter or check back later.</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {jobs.map((job, i) => (
+            {filteredJobs.map((job, i) => (
               <div key={job.id} className={`card card-hover space-y-3 fade-up stagger-${Math.min(i + 1, 5)}`}>
-                {/* Company + date */}
+                {/* Company + date + category */}
                 <div className="flex items-center gap-2 text-xs text-[#6b6b6b] flex-wrap">
                   <span className="font-semibold text-[#363535]">{job.brands?.company_name || 'Brand'}</span>
                   {job.brands?.industry && (
                     <>
                       <span>·</span>
                       <span className="px-2 py-0.5 bg-[#e8e8e4] rounded-full text-[#6b6b6b]">{job.brands.industry}</span>
+                    </>
+                  )}
+                  {job.category && !job.isDemo && (
+                    <>
+                      <span>·</span>
+                      <span className="px-2 py-0.5 bg-[#ccff00]/20 rounded-full text-[#363535] font-semibold">{job.category}</span>
                     </>
                   )}
                   {job.isDemo && (
