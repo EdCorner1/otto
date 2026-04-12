@@ -13,8 +13,11 @@ type Creator = {
   availability: string; is_verified: boolean; is_pro: boolean; profile_views: number;
   headline?: string; website?: string; created_at: string; updated_at: string;
 }
+type CreatorTag = { id: string; creator_id: string; tag: string }
+
 type CreatorFull = Creator & {
   creator_socials: Social[]
+  creator_tags: CreatorTag[]
   portfolio_items: PortfolioItem[]
 }
 
@@ -93,6 +96,7 @@ export default function CreatorProfilePage() {
         .select(`
           *,
           creator_socials(*),
+          creator_tags(*),
           portfolio_items(*)
         `)
         .eq('id', creatorId)
@@ -142,6 +146,21 @@ export default function CreatorProfilePage() {
 
   const socials = creator.creator_socials || []
   const portfolio = creator.portfolio_items || []
+  const tags = creator.creator_tags || []
+  const skills = tags
+    .map(t => t.tag)
+    .filter(tag => tag.startsWith('skill:'))
+    .map(tag => tag.replace('skill:', '').trim())
+  const experience = tags
+    .map(t => t.tag)
+    .find(tag => tag.startsWith('exp:'))
+    ?.replace('exp:', '')
+    .trim()
+  const hobbies = tags
+    .map(t => t.tag)
+    .filter(tag => tag.startsWith('hobby:'))
+    .map(tag => tag.replace('hobby:', '').trim())
+
   const isCurrentUser = currentUser?.id === creator.user_id
 
   return (
@@ -241,6 +260,40 @@ export default function CreatorProfilePage() {
             <p className="mt-5 text-sm text-[#6b6b6b] leading-relaxed border-t border-[#e8e8e4] pt-4">
               {creator.bio}
             </p>
+          )}
+
+          {/* Skills / experience / hobbies */}
+          {(skills.length > 0 || experience || hobbies.length > 0) && (
+            <div className="mt-4 pt-4 border-t border-[#e8e8e4] space-y-3">
+              {skills.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-[#6b6b6b] mb-1.5">Skills</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {skills.map((s) => (
+                      <span key={s} className="text-xs px-2 py-0.5 bg-[#f0f0ec] rounded-full text-[#6b6b6b]">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {experience && (
+                <div>
+                  <p className="text-xs font-semibold text-[#6b6b6b] mb-1.5">Experience</p>
+                  <p className="text-sm text-[#6b6b6b] leading-relaxed">{experience}</p>
+                </div>
+              )}
+
+              {hobbies.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-[#6b6b6b] mb-1.5">Hobbies & Interests</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {hobbies.map((h) => (
+                      <span key={h} className="text-xs px-2 py-0.5 bg-[#f0f0ec] rounded-full text-[#6b6b6b]">{h}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Social links */}

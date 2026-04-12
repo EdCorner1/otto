@@ -9,6 +9,7 @@ type Creator = {
   id: string; display_name: string; headline: string; bio: string
   skills: string[]; location: string; availability: string
   avatar_url: string; creator_socials: { platform: string; url: string }[]
+  creator_tags?: { tag: string }[]
   hourly_rate: string; user_id: string
 }
 
@@ -25,8 +26,23 @@ export default function CreatorsDiscoverPage() {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
       const { data } = await supabase
-        .from('creators').select('*').order('created_at', { ascending: false })
-      setCreators((data as Creator[]) || [])
+        .from('creators')
+        .select('*, creator_socials(*), creator_tags(*)')
+        .order('created_at', { ascending: false })
+
+      const normalized = ((data as Creator[]) || []).map((c) => {
+        const skillTags = (c.creator_tags || [])
+          .map(t => t.tag)
+          .filter(tag => tag.startsWith('skill:'))
+          .map(tag => tag.replace('skill:', '').trim())
+
+        return {
+          ...c,
+          skills: c.skills?.length ? c.skills : skillTags,
+        }
+      })
+
+      setCreators(normalized)
       setLoading(false)
     }
     getUser()

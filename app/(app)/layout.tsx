@@ -33,18 +33,69 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        setUser(data.user)
-        setRole((data.user.user_metadata?.role as Role) ?? null)
-      }
-      setLoading(false)
-    })
-  }, [])
+    let cancelled = false
 
-  useEffect(() => {
-    if (!loading && !user) router.replace('/login')
-  }, [loading, user, router])
+    const bootstrap = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        if (!cancelled) {
+          setUser(null)
+          setRole(null)
+          setLoading(false)
+          router.replace('/login')
+        }
+        return
+      }
+
+      let resolvedRole: Role = (user.user_metadata?.role as Role) ?? null
+
+      if (!resolvedRole) {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+        resolvedRole = (userRow?.role as Role) ?? null
+      }
+
+      const [{ data: brandRow }, { data: creatorRow }] = await Promise.all([
+        supabase.from('brands').select('id').eq('user_id', user.id).maybeSingle(),
+        supabase.from('creators').select('id').eq('user_id', user.id).maybeSingle(),
+      ])
+
+      if (!resolvedRole) {
+        if (brandRow && !creatorRow) resolvedRole = 'brand'
+        else if (creatorRow && !brandRow) resolvedRole = 'creator'
+      }
+
+      const onboardingComplete =
+        resolvedRole === 'brand'
+          ? !!brandRow
+          : resolvedRole === 'creator'
+            ? !!creatorRow
+            : false
+
+      if (cancelled) return
+
+      setUser(user)
+      setRole(resolvedRole)
+      setLoading(false)
+
+      if (!onboardingComplete && pathname !== '/onboarding') {
+        router.replace('/onboarding')
+        return
+      }
+
+      if (onboardingComplete && pathname === '/onboarding') {
+        router.replace('/dashboard')
+      }
+    }
+
+    bootstrap()
+
+    return () => { cancelled = true }
+  }, [pathname, router])
 
   // Close mobile menu on route change
   useEffect(() => { queueMicrotask(() => setMobileOpen(false)) }, [pathname])
@@ -73,12 +124,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     ...(isCreator ? [{ href: '/explore', label: 'Discover' }] : []),
   ]
 
+  const isOnboardingRoute = pathname === '/onboarding'
+
+  if (isOnboardingRoute) {
+    return <div className="min-h-screen bg-[#fafaf9]">{children}</div>
+  }
+
   return (
     <div className="min-h-screen bg-[#fafaf9]">
 
       {/* Nav */}
       <header className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3.5 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2">
           <span style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 700, fontSize: '20px', letterSpacing: '-1px', color: '#363535' }}>
             Otto
           </span>

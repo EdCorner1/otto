@@ -31,6 +31,9 @@ export default function ProfileEditPage() {
   const [youtube, setYoutube] = useState('')
   const [twitter, setTwitter] = useState('')
   const [website, setWebsite] = useState('')
+  const [skills, setSkills] = useState('')
+  const [experience, setExperience] = useState('')
+  const [hobbiesInterests, setHobbiesInterests] = useState('')
 
   // Brand fields
   const [companyName, setCompanyName] = useState('')
@@ -48,7 +51,7 @@ export default function ProfileEditPage() {
 
       if (r === 'creator') {
         const { data: c } = await supabase
-          .from('creators').select('*, creator_socials(*)')
+          .from('creators').select('*, creator_socials(*), creator_tags(*)')
           .eq('user_id', user.id).single()
         if (c) {
           setDisplayName(c.display_name || '')
@@ -66,6 +69,23 @@ export default function ProfileEditPage() {
             if (s.platform === 'twitter') setTwitter(s.url)
             if (s.platform === 'website') setWebsite(s.url)
           })
+
+          const tags = ((c as { creator_tags?: Array<{ tag: string }> }).creator_tags ?? [])
+          const skillTags = tags
+            .map(t => t.tag)
+            .filter(tag => tag.startsWith('skill:'))
+            .map(tag => tag.replace('skill:', '').trim())
+          const expTag = tags
+            .map(t => t.tag)
+            .find(tag => tag.startsWith('exp:'))
+          const hobbyTags = tags
+            .map(t => t.tag)
+            .filter(tag => tag.startsWith('hobby:'))
+            .map(tag => tag.replace('hobby:', '').trim())
+
+          setSkills(skillTags.join(', '))
+          setExperience(expTag ? expTag.replace('exp:', '').trim() : '')
+          setHobbiesInterests(hobbyTags.join(', '))
         }
       } else if (r === 'brand') {
         const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).single()
@@ -110,6 +130,44 @@ export default function ProfileEditPage() {
     }
   }
 
+  const syncCreatorTags = async (creatorId: string) => {
+    const skillTags = skills
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .slice(0, 12)
+    const hobbyTags = hobbiesInterests
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .slice(0, 12)
+
+    const desiredTags = [
+      ...skillTags.map(tag => `skill:${tag}`),
+      ...(experience.trim() ? [`exp:${experience.trim()}`] : []),
+      ...hobbyTags.map(tag => `hobby:${tag}`),
+    ]
+
+    const { data: existingTags } = await supabase
+      .from('creator_tags')
+      .select('id, tag')
+      .eq('creator_id', creatorId)
+
+    const managed = (existingTags || []).filter((t: { tag: string }) =>
+      t.tag.startsWith('skill:') || t.tag.startsWith('exp:') || t.tag.startsWith('hobby:')
+    )
+
+    if (managed.length > 0) {
+      await supabase.from('creator_tags').delete().in('id', managed.map((t: { id: string }) => t.id))
+    }
+
+    if (desiredTags.length > 0) {
+      await supabase.from('creator_tags').insert(
+        desiredTags.map(tag => ({ creator_id: creatorId, tag }))
+      )
+    }
+  }
+
   const handleSave = async () => {
     if (!user) return
     setSaving(true)
@@ -142,6 +200,7 @@ export default function ProfileEditPage() {
           await upsertSocial(existing.id, 'youtube', youtube)
           await upsertSocial(existing.id, 'twitter', twitter)
           await upsertSocial(existing.id, 'website', website)
+          await syncCreatorTags(existing.id)
         }
 
         // Update auth metadata
@@ -278,6 +337,36 @@ export default function ProfileEditPage() {
                     <option value="limited">🟡 Limited availability</option>
                     <option value="unavailable">⚫ Unavailable</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-[#6b6b6b] mb-1">Skills <span className="text-[#9a9a9a]">(comma separated)</span></label>
+                  <input
+                    value={skills}
+                    onChange={e => setSkills(e.target.value)}
+                    type="text"
+                    placeholder="UGC ads, Product demos, TikTok editing"
+                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-[#6b6b6b] mb-1">Experience</label>
+                  <textarea
+                    value={experience}
+                    onChange={e => setExperience(e.target.value)}
+                    rows={3}
+                    placeholder="Short summary of your creator experience and outcomes."
+                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-[#6b6b6b] mb-1">Hobbies & Interests <span className="text-[#9a9a9a]">(comma separated)</span></label>
+                  <input
+                    value={hobbiesInterests}
+                    onChange={e => setHobbiesInterests(e.target.value)}
+                    type="text"
+                    placeholder="Fitness tech, productivity, travel"
+                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                  />
                 </div>
               </div>
             </div>

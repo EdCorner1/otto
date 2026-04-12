@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { DEMO_JOBS } from '@/lib/demo-jobs'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 const headlineStyle: React.CSSProperties = {
   fontFamily: 'var(--font-bricolage)',
@@ -50,7 +51,11 @@ type Application = {
 }
 
 type Creator = {
-  id: string; display_name: string; headline: string; skills: string[]
+  id: string
+  display_name: string
+  headline: string
+  skills: string[]
+  creator_tags?: { tag: string }[]
 }
 
 type Deal = {
@@ -60,6 +65,7 @@ type Deal = {
 
 export default function DashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [user, setUser] = useState<{
     id: string; email?: string
     user_metadata?: { role?: 'brand' | 'creator'; full_name?: string }
@@ -79,10 +85,15 @@ useEffect(() => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/login'); return }
       setUser(user)
-      const userRole = (user.user_metadata?.role || null) as Role
-      setRole(userRole)
 
-      if (userRole === 'brand') {
+      let resolvedRole = (user.user_metadata?.role || null) as Role
+      if (!resolvedRole) {
+        const { data: userRow } = await supabase.from('users').select('role').eq('id', user.id).single()
+        resolvedRole = ((userRow?.role as Role) || null)
+      }
+      setRole(resolvedRole)
+
+      if (resolvedRole === 'brand') {
         const { data: brandData } = await supabase
           .from('brands').select('id').eq('user_id', user.id).single()
         if (brandData) {
@@ -95,11 +106,19 @@ useEffect(() => {
           setBrandJobs((jobsData as Job[]) || [])
           setBrandDeals((dealsData as Deal[]) || [])
         }
-      } else if (userRole === 'creator') {
+      } else if (resolvedRole === 'creator') {
         const { data: creatorData } = await supabase
-          .from('creators').select('*').eq('user_id', user.id).single()
+          .from('creators').select('*, creator_tags(tag)').eq('user_id', user.id).single()
         if (creatorData) {
-          setCreatorProfile(creatorData as Creator)
+          const skillTags = ((creatorData as Creator).creator_tags || [])
+            .map(t => t.tag)
+            .filter(tag => tag.startsWith('skill:'))
+            .map(tag => tag.replace('skill:', '').trim())
+
+          setCreatorProfile({
+            ...(creatorData as Creator),
+            skills: (creatorData as Creator).skills?.length ? (creatorData as Creator).skills : skillTags,
+          })
           const [{ data: appsData }, { data: dealsData }] = await Promise.all([
             supabase.from('applications').select('*, jobs(id, title, brands(company_name))')
               .eq('creator_id', creatorData.id).order('created_at', { ascending: false }).limit(5),
@@ -116,6 +135,12 @@ useEffect(() => {
     getUser()
   }, [])
 
+  useEffect(() => {
+    if (searchParams.get('posted') === '1') {
+      setPosted(true)
+    }
+  }, [searchParams])
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
       <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
@@ -123,6 +148,68 @@ useEffect(() => {
   )
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there'
+  const featuredJobs = DEMO_JOBS.slice(0, 5)
+
+  let nextAction: { title: string; description: string; cta: string; href: string } | null = null
+
+  if (role === 'brand') {
+    if (brandJobs.length === 0) {
+      nextAction = {
+        title: 'Post your first brief',
+        description: 'Get creator proposals by publishing a short, clear brief in under 5 minutes.',
+        cta: 'Post Brief',
+        href: '/jobs/new',
+      }
+    } else if (brandDeals.length === 0) {
+      nextAction = {
+        title: 'Review incoming proposals',
+        description: 'You have live briefs. Shortlist creators and move one opportunity into an active deal.',
+        cta: 'View My Briefs',
+        href: '/jobs',
+      }
+    } else {
+      nextAction = {
+        title: 'Keep momentum in active deals',
+        description: 'Reply quickly in messages to reduce cycle time and close campaigns faster.',
+        cta: 'Open Messages',
+        href: '/messages',
+      }
+    }
+  }
+
+  if (role === 'creator') {
+    if (creatorApps.length === 0) {
+      nextAction = {
+        title: 'Apply to your first brief',
+        description: 'Pick one relevant brief and send a tight proposal with your strongest portfolio example.',
+        cta: 'Browse Briefs',
+        href: '/jobs',
+      }
+    } else if (creatorDeals.length === 0) {
+      nextAction = {
+        title: 'Follow up on applications',
+        description: 'Check statuses and stay responsive so brands can move you into paid work quickly.',
+        cta: 'View Applications',
+        href: '/jobs',
+      }
+    } else {
+      nextAction = {
+        title: 'Advance your active work',
+        description: 'Share updates in deal messages and submit quickly to unlock approvals and payouts.',
+        cta: 'Open Messages',
+        href: '/messages',
+      }
+    }
+  }
+
+  if (!role) {
+    nextAction = {
+      title: 'Finish onboarding',
+      description: 'Complete onboarding to unlock full dashboard actions and matched opportunities.',
+      cta: 'Continue Onboarding',
+      href: '/onboarding',
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6">
@@ -143,8 +230,22 @@ useEffect(() => {
         </p>
       </div>
 
+      {/* Next best action */}
+      {nextAction && (
+        <section className="card mb-6 fade-up stagger-1">
+          <p className="section-label mb-2">Next Best Action</p>
+          <h2 className="text-xl font-semibold text-[#363535] mb-1" style={{ fontFamily: 'var(--font-bricolage)' }}>
+            {nextAction.title}
+          </h2>
+          <p className="text-sm text-[#6b6b6b] mb-4">{nextAction.description}</p>
+          <Link href={nextAction.href} className="btn-primary text-sm px-4 py-2">
+            {nextAction.cta} →
+          </Link>
+        </section>
+      )}
+
       {/* Quick actions */}
-      <div className="flex flex-wrap gap-3 mb-10 fade-up stagger-1">
+      <div className="flex flex-wrap gap-3 mb-6 fade-up stagger-1">
         {role === 'brand' && (
           <Link href="/jobs/new" className="btn-primary">Post a New Brief</Link>
         )}
@@ -153,9 +254,44 @@ useEffect(() => {
         )}
         <Link href="/messages" className="btn-ghost">Messages</Link>
         {role === 'creator' && (
-          <Link href={`/creators/${user?.id}`} className="btn-ghost">View my profile</Link>
+          <Link href="/profile/edit" className="btn-ghost">View my profile</Link>
         )}
       </div>
+
+      {/* KPI cards */}
+      {role === 'brand' && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 fade-up stagger-1">
+          <div className="card">
+            <p className="text-xs text-[#9a9a9a]">Open Briefs</p>
+            <p className="text-2xl font-semibold text-[#363535] mt-1">{brandJobs.filter(j => j.status === 'open').length}</p>
+          </div>
+          <div className="card">
+            <p className="text-xs text-[#9a9a9a]">Total Proposals</p>
+            <p className="text-2xl font-semibold text-[#363535] mt-1">{brandJobs.reduce((n, j) => n + (j.applications?.length || 0), 0)}</p>
+          </div>
+          <div className="card">
+            <p className="text-xs text-[#9a9a9a]">Active Deals</p>
+            <p className="text-2xl font-semibold text-[#363535] mt-1">{brandDeals.length}</p>
+          </div>
+        </div>
+      )}
+
+      {role === 'creator' && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 fade-up stagger-1">
+          <div className="card">
+            <p className="text-xs text-[#9a9a9a]">Applications Sent</p>
+            <p className="text-2xl font-semibold text-[#363535] mt-1">{creatorApps.length}</p>
+          </div>
+          <div className="card">
+            <p className="text-xs text-[#9a9a9a]">Active Deals</p>
+            <p className="text-2xl font-semibold text-[#363535] mt-1">{creatorDeals.length}</p>
+          </div>
+          <div className="card">
+            <p className="text-xs text-[#9a9a9a]">Featured Opportunities</p>
+            <p className="text-2xl font-semibold text-[#363535] mt-1">{featuredJobs.length}</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Brand Dashboard ── */}
       {role === 'brand' && (
@@ -214,6 +350,23 @@ useEffect(() => {
                 ))}
               </div>
             )}
+          </section>
+
+          {/* Otto UGC campaign ideas */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="section-label mb-0">Otto UGC Campaign Ideas</h2>
+              <Link href="/jobs/new" className="text-xs text-[#6b6b6b] hover:text-[#363535]">Post one now →</Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {featuredJobs.slice(0, 4).map((job) => (
+                <div key={job.id} className="card card-hover">
+                  <p className="text-xs text-[#9a9a9a] mb-1">{job.budget_range} · {job.timeline}</p>
+                  <p className="font-semibold text-[#363535] text-sm leading-snug mb-2">{job.title}</p>
+                  <p className="text-xs text-[#6b6b6b] line-clamp-2">{job.description}</p>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
       )}
@@ -297,6 +450,59 @@ useEffect(() => {
                 ))}
               </div>
             )}
+          </section>
+
+          {/* Otto featured opportunities */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="section-label mb-0">Otto UGC Opportunities</h2>
+              <Link href="/jobs" className="text-xs text-[#6b6b6b] hover:text-[#363535]">Browse all →</Link>
+            </div>
+            <div className="space-y-3">
+              {featuredJobs.map((job) => (
+                <div key={job.id} className="card card-hover flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[#363535] truncate">{job.title}</p>
+                    <p className="text-xs text-[#9a9a9a] mt-0.5">{job.budget_range} · {job.timeline}</p>
+                  </div>
+                  <Link href={`/jobs/${job.id}`} className="btn-ghost text-xs py-1.5 px-3">View →</Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* ── Fallback dashboard when role metadata is missing ── */}
+      {!role && (
+        <div className="space-y-6 fade-up stagger-2">
+          <section className="card">
+            <h2 className="section-label mb-2">Finish setup</h2>
+            <p className="text-sm text-[#6b6b6b] mb-4">
+              Your account is signed in, but role setup isn’t complete yet. You can still browse opportunities now.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/jobs" className="btn-primary">Find Work</Link>
+              <Link href="/onboarding" className="btn-ghost">Complete profile</Link>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="section-label mb-0">Otto UGC Opportunities</h2>
+              <Link href="/jobs" className="text-xs text-[#6b6b6b] hover:text-[#363535]">Browse all →</Link>
+            </div>
+            <div className="space-y-3">
+              {featuredJobs.map((job) => (
+                <div key={job.id} className="card card-hover flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[#363535] truncate">{job.title}</p>
+                    <p className="text-xs text-[#9a9a9a] mt-0.5">{job.budget_range} · {job.timeline}</p>
+                  </div>
+                  <Link href={`/jobs/${job.id}`} className="btn-ghost text-xs py-1.5 px-3">View →</Link>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
       )}

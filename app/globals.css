@@ -146,17 +146,28 @@ h2, .headline-lg {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/*
+  Default to visible so pages never render as blank if animations are
+  disabled (reduced-motion, strict browser settings, extensions, etc.).
+*/
 .fade-up {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeUp 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.fade-up.stagger-1 { animation-delay: 80ms; }
-.fade-up.stagger-2 { animation-delay: 180ms; }
-.fade-up.stagger-3 { animation-delay: 280ms; }
-.fade-up.stagger-4 { animation-delay: 380ms; }
-.fade-up.stagger-5 { animation-delay: 480ms; }
+@media (prefers-reduced-motion: no-preference) {
+  .fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  .fade-up.stagger-1 { animation-delay: 80ms; }
+  .fade-up.stagger-2 { animation-delay: 180ms; }
+  .fade-up.stagger-3 { animation-delay: 280ms; }
+  .fade-up.stagger-4 { animation-delay: 380ms; }
+  .fade-up.stagger-5 { animation-delay: 480ms; }
+}
 
 /* ── Blog prose ───────────────────────────────────────────────── */
 .prose-blog h1,

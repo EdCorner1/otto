@@ -43,6 +43,9 @@ export default function OnboardingPage() {
     hourly_rate: '',
     website: '',
   })
+  const [skillsCsv, setSkillsCsv] = useState('')
+  const [experienceSummary, setExperienceSummary] = useState('')
+  const [hobbiesCsv, setHobbiesCsv] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarUrl, setAvatarUrl] = useState('')
   const [socials, setSocials] = useState([
@@ -62,7 +65,7 @@ export default function OnboardingPage() {
         <div className="w-full max-w-lg">
           {/* Floating nav */}
           <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex items-center gap-2">
               <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
               <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
             </Link>
@@ -105,7 +108,7 @@ export default function OnboardingPage() {
         <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/dashboard" className="flex items-center gap-2">
                 <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
@@ -181,7 +184,7 @@ export default function OnboardingPage() {
         <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/dashboard" className="flex items-center gap-2">
                 <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
@@ -219,10 +222,44 @@ export default function OnboardingPage() {
                     <input type="number" value={creator.hourly_rate} onChange={e => setCreator({ ...creator, hourly_rate: e.target.value })} placeholder="150" min="0" className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07]" />
                   </div>
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#363535] mb-1.5">Skills * <span className="font-normal text-[#9a9a9a]">(comma separated)</span></label>
+                  <input
+                    type="text"
+                    value={skillsCsv}
+                    onChange={e => setSkillsCsv(e.target.value)}
+                    placeholder="UGC ads, Product demos, TikTok editing, AI tools"
+                    className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#363535] mb-1.5">Experience * <span className="font-normal text-[#9a9a9a]">(short summary)</span></label>
+                  <textarea
+                    value={experienceSummary}
+                    onChange={e => setExperienceSummary(e.target.value)}
+                    rows={3}
+                    placeholder="2 years creating short-form UGC for SaaS and AI brands. Delivered 120+ assets across TikTok and Reels."
+                    className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#363535] mb-1.5">Hobbies & Interests * <span className="font-normal text-[#9a9a9a]">(comma separated)</span></label>
+                  <input
+                    type="text"
+                    value={hobbiesCsv}
+                    onChange={e => setHobbiesCsv(e.target.value)}
+                    placeholder="Fitness tech, productivity, travel"
+                    className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07]"
+                  />
+                </div>
                 <button
                   onClick={() => {
                     if (!creator.display_name.trim() || !creator.headline.trim() || !creator.bio.trim()) {
                       setError('Display name, headline, and bio are all required.');
+                      return;
+                    }
+                    if (!skillsCsv.trim() || !experienceSummary.trim() || !hobbiesCsv.trim()) {
+                      setError('Skills, experience, and hobbies/interests are required.');
                       return;
                     }
                     setError('');
@@ -245,7 +282,7 @@ export default function OnboardingPage() {
         <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/dashboard" className="flex items-center gap-2">
                 <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
@@ -319,7 +356,7 @@ export default function OnboardingPage() {
         <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/dashboard" className="flex items-center gap-2">
                 <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
@@ -379,13 +416,13 @@ export default function OnboardingPage() {
       )
     }
 
-    // Step 4: Portfolio (videos REQUIRED — minimum 6 to publish)
+    // Step 4: Portfolio (videos REQUIRED — 3 to 6 videos)
     if (step === 4) {
       return (
         <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/dashboard" className="flex items-center gap-2">
                 <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
@@ -396,7 +433,7 @@ export default function OnboardingPage() {
               <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Your portfolio.
               </h1>
-              <p className="text-[#6b6b6b] mb-2">Add at least 6 videos to publish your profile. Brands hire based on your work.</p>
+              <p className="text-[#6b6b6b] mb-2">Add 3–6 videos to publish your profile. Brands hire based on your work.</p>
               <p className="text-xs font-semibold text-[#ccff00] mb-6">🎬 Video content gets 3x more proposals than image-only portfolios.</p>
 
               {/* Portfolio grid */}
@@ -443,37 +480,35 @@ export default function OnboardingPage() {
                   <button
                     onClick={() => {
                       if (!newPortfolioUrl.trim()) return;
+                      if (portfolioItems.length >= 6) {
+                        setError('Maximum reached: add up to 6 videos.');
+                        return;
+                      }
                       setPortfolioItems([...portfolioItems, { type: 'video', url: newPortfolioUrl, caption: newPortfolioCaption }]);
                       setNewPortfolioUrl('');
                       setNewPortfolioCaption('');
+                      setError('');
                     }}
-                    disabled={!newPortfolioUrl.trim()}
+                    disabled={!newPortfolioUrl.trim() || portfolioItems.length >= 6}
                     className="btn-primary text-sm py-2 px-4 disabled:opacity-50"
                   >+ Add Video</button>
-                  <button
-                    onClick={() => {
-                      if (!newPortfolioUrl.trim()) return;
-                      setPortfolioItems([...portfolioItems, { type: 'image', url: newPortfolioUrl, caption: newPortfolioCaption }]);
-                      setNewPortfolioUrl('');
-                      setNewPortfolioCaption('');
-                    }}
-                    disabled={!newPortfolioUrl.trim()}
-                    className="btn-ghost text-sm py-2 px-4 border border-[#e8e8e4] disabled:opacity-50"
-                  >+ Add Image</button>
                 </div>
               </div>
 
               {/* Progress */}
               <div className="mb-6 p-4 bg-white border border-[#e8e8e4] rounded-xl">
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-[#6b6b6b]">Portfolio items</span>
-                  <span className="font-semibold text-[#363535]">{portfolioItems.length} / 6 minimum</span>
+                  <span className="text-[#6b6b6b]">Portfolio videos</span>
+                  <span className="font-semibold text-[#363535]">{portfolioItems.length} / 3-6 required</span>
                 </div>
                 <div className="w-full h-1.5 bg-[#f0f0ec] rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${portfolioItems.length >= 6 ? 'bg-[#ccff00]' : 'bg-[#6b6b6b]'}`} style={{ width: `${Math.min((portfolioItems.length / 6) * 100, 100)}%` }} />
+                  <div className={`h-full rounded-full transition-all ${portfolioItems.length >= 3 ? 'bg-[#ccff00]' : 'bg-[#6b6b6b]'}`} style={{ width: `${Math.min((portfolioItems.length / 3) * 100, 100)}%` }} />
                 </div>
-                {portfolioItems.length < 6 && (
-                  <p className="text-xs text-[#9a9a9a] mt-2">Add {6 - portfolioItems.length} more to publish your profile.</p>
+                {portfolioItems.length < 3 && (
+                  <p className="text-xs text-[#9a9a9a] mt-2">Add {3 - portfolioItems.length} more to publish your profile.</p>
+                )}
+                {portfolioItems.length >= 6 && (
+                  <p className="text-xs text-[#9a9a9a] mt-2">You reached the max of 6 videos.</p>
                 )}
               </div>
 
@@ -481,8 +516,8 @@ export default function OnboardingPage() {
 
               <button
                 onClick={async () => {
-                  if (portfolioItems.length < 6) {
-                    setError('You need at least 6 portfolio items to publish your profile.');
+                  if (portfolioItems.length < 3 || portfolioItems.length > 6) {
+                    setError('Add between 3 and 6 videos to publish your profile.');
                     return;
                   }
                   setLoading(true);
@@ -517,28 +552,53 @@ export default function OnboardingPage() {
                     }]);
                     if (creatorError) throw creatorError;
 
-                    // 3. Insert social links
-                    const socialLinks = socials.filter(s => s.url.trim());
-                    if (socialLinks.length > 0) {
-                      const { data: creatorData } = await supabase.from('creators').select('id').eq('user_id', user.id).single();
-                      if (creatorData) {
+                    const { data: creatorData } = await supabase
+                      .from('creators')
+                      .select('id')
+                      .eq('user_id', user.id)
+                      .single();
+
+                    if (creatorData) {
+                      // 3. Insert profile tags (skills / experience / hobbies)
+                      const skills = skillsCsv
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean)
+                        .slice(0, 12)
+
+                      const hobbies = hobbiesCsv
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(Boolean)
+                        .slice(0, 12)
+
+                      const tagsPayload = [
+                        ...skills.map(tag => ({ creator_id: creatorData.id, tag: `skill:${tag}` })),
+                        ...(experienceSummary.trim() ? [{ creator_id: creatorData.id, tag: `exp:${experienceSummary.trim()}` }] : []),
+                        ...hobbies.map(tag => ({ creator_id: creatorData.id, tag: `hobby:${tag}` })),
+                      ]
+
+                      if (tagsPayload.length > 0) {
+                        await supabase.from('creator_tags').insert(tagsPayload)
+                      }
+
+                      // 4. Insert social links
+                      const socialLinks = socials.filter(s => s.url.trim());
+                      if (socialLinks.length > 0) {
                         await supabase.from('creator_socials').insert(
                           socialLinks.map(s => ({ creator_id: creatorData.id, platform: s.platform as string, url: s.url }))
                         );
                       }
-                    }
 
-                    // 4. Insert portfolio items
-                    if (portfolioItems.length > 0) {
-                      const { data: creatorData } = await supabase.from('creators').select('id').eq('user_id', user.id).single();
-                      if (creatorData) {
+                      // 5. Insert portfolio items
+                      if (portfolioItems.length > 0) {
                         await supabase.from('portfolio_items').insert(
                           portfolioItems.map(p => ({ creator_id: creatorData.id, type: p.type, url: p.url, caption: p.caption || null }))
                         );
                       }
                     }
 
-                    // 5. Update user role
+                    // 6. Update user role
                     await supabase.from('users').update({ role: 'creator' }).eq('id', user.id);
 
                     setStep(5);
@@ -551,7 +611,7 @@ export default function OnboardingPage() {
                 disabled={loading}
                 className="btn-primary w-full py-4 text-base disabled:opacity-60"
               >
-                {loading ? 'Publishing...' : portfolioItems.length >= 6 ? 'Publish Profile →' : `Add ${6 - portfolioItems.length} more →`}
+                {loading ? 'Publishing...' : (portfolioItems.length >= 3 && portfolioItems.length <= 6) ? 'Publish Profile →' : `Add ${Math.max(0, 3 - portfolioItems.length)} more →`}
               </button>
             </div>
           </div>
@@ -565,7 +625,7 @@ export default function OnboardingPage() {
         <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
           <div className="w-full max-w-lg text-center">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
-              <Link href="/" className="flex items-center gap-2">
+              <Link href="/dashboard" className="flex items-center gap-2">
                 <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
