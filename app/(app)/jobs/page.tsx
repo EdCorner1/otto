@@ -72,9 +72,13 @@ export default function JobsPage() {
         isDemo: false,
       }))
 
+      // Always show a small set of Otto Featured demos so the feed never looks empty/stale.
+      const minDemoCount = 4
       const targetCount = 14
-      const needed = Math.max(0, targetCount - liveJobs.length)
-      const demoJobs: DisplayJob[] = DEMO_JOBS.slice(0, needed).map((j) => ({
+      const neededToReachTarget = Math.max(0, targetCount - liveJobs.length)
+      const demoCount = Math.max(minDemoCount, neededToReachTarget)
+
+      const demoJobs: DisplayJob[] = DEMO_JOBS.slice(0, demoCount).map((j) => ({
         id: j.id,
         title: j.title,
         description: j.description,
