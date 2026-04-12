@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const upload = await mux.video.uploads.create({
       new_asset_settings: {
         playback_policy: ['public'],
-        mp4_support: 'capped_1080p',
+        mp4_support: 'capped-1080p',
       },
       cors_origin: '*',
     })

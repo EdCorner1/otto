@@ -1,7 +1,8 @@
 'use client'
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore – MuxPlayer className prop conflicts with its own type def
 import MuxPlayer from '@mux/mux-player-react'
-import { useState } from 'react'
 
 interface VideoItemProps {
   url: string
@@ -10,35 +11,27 @@ interface VideoItemProps {
   onRemove?: () => void
 }
 
-/**
- * Renders a portfolio video item.
- * - If url looks like a Mux playback ID (no slashes, alphanumeric), use MuxPlayer.
- * - Otherwise fall back to a plain <video> tag for legacy URLs.
- */
-export default function VideoItem({ url, caption, className = '', onRemove }: VideoItemProps) {
-  const [playing, setPlaying] = useState(false)
-  const isMuxId = url && !url.includes('/') && !url.startsWith('http')
+/** Mux playback IDs look like alphanumeric strings with no slashes or http */
+function isMuxId(url: string): boolean {
+  return Boolean(url) && !url.includes('/') && !url.startsWith('http')
+}
 
+export default function VideoItem({ url, caption, className = '', onRemove }: VideoItemProps) {
   return (
     <div className={`relative group rounded-xl overflow-hidden bg-black ${className}`}>
-      {isMuxId ? (
+      {isMuxId(url) ? (
         <MuxPlayer
           streamType="on-demand"
           playbackId={url}
-          autoPlay={playing}
           muted
           loop
-          onClick={() => setPlaying(p => !p)}
-          className="w-full aspect-video cursor-pointer"
-          style={{ '--controls': playing ? 'visible' : 'hidden' } as React.CSSProperties}
+          className="w-full h-full object-cover"
         />
       ) : (
         <video
           src={url}
           controls
           className="w-full aspect-video"
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
         />
       )}
 

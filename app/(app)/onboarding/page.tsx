@@ -741,12 +741,6 @@ export default function OnboardingPage() {
                         }
                         if (!playbackId) throw new Error('Timed out waiting for video to process')
 
-                        // Store playback ID in Supabase as portfolio item
-                        const { error: insertErr } = await supabase
-                          .from('portfolio_items')
-                          .insert({ creator_id: creatorId, type: 'video', url: playbackId, caption: '' })
-                        if (insertErr) throw insertErr
-
                         setPortfolioItems(prev => [
                           ...prev,
                           { type: 'video', url: playbackId!, caption: '' },
