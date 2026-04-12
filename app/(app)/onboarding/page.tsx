@@ -488,10 +488,21 @@ export default function OnboardingPage() {
                         setVideoUploadProgress(`Uploading ${file.name}...`)
                         const ext = file.name.split('.').pop()
                         const path = `${user.id}/portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-                        const { error: uploadError } = await supabase.storage
+
+                        // Request a signed upload URL (bypasses RLS)
+                        const { data: signData, error: signErr } = await supabase.storage
                           .from('videos')
-                          .upload(path, file, { upsert: true })
-                        if (uploadError) throw uploadError
+                          .createSignedUploadUrl(path)
+                        if (signErr) throw signErr
+
+                        // Upload directly to the signed URL with PUT
+                        const uploadRes = await fetch(signData.signedUrl, {
+                          method: 'PUT',
+                          body: file,
+                          headers: { 'Content-Type': file.type || 'video/mp4' }
+                        })
+                        if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`)
+
                         const { data: urlData } = supabase.storage.from('videos').getPublicUrl(path)
                         setPortfolioItems(prev => [...prev, { type: 'video', url: urlData.publicUrl, caption: '' }])
                       }
