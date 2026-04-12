@@ -149,6 +149,128 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── FEATURED BRIEFS — logged-out preview ─────────────────── */}
+      <section className="py-12 md:py-16 px-6 md:px-10 border-t border-[#e8e8e4]">
+        <div className="max-w-5xl mx-auto">
+
+          {/* Header */}
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ccff00] mb-4">
+                <span className="text-xs font-semibold text-[#1c1c1c]">Open briefs</span>
+              </div>
+              <h2 className="font-display font-extrabold text-3xl md:text-4xl text-[#1c1c1e] tracking-tight leading-tight">
+                Featured briefs
+              </h2>
+              <p className="text-sm text-[#9a9a9a] mt-1">Join to apply — new briefs posted daily</p>
+            </div>
+            <Link
+              href="/signup"
+              className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-[#363535] hover:text-[#1c1c1e] transition-colors"
+            >
+              Join Otto
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+          </div>
+
+          {/* Job cards */}
+          <div className="space-y-3">
+            {[
+              {
+                brand: 'Raycon',
+                initials: 'R',
+                industry: 'Consumer Electronics',
+                title: 'Raycon Everyday Earbuds — 3 Video Testimonials',
+                desc: 'Authentic testimonial videos from everyday people sharing how Raycon fits into their commute, gym, or WFH routine.',
+                platforms: ['TikTok', 'Instagram'],
+                budget: '£200–400',
+                time: '1d ago',
+              },
+              {
+                brand: 'Airalo',
+                initials: 'A',
+                industry: 'Travel Tech',
+                title: '"I used Airalo instead of roaming" Reel',
+                desc: 'Share your honest experience using Airalo eSIM on a trip. Show setup vs. traditional roaming. Focus on convenience and savings.',
+                platforms: ['TikTok', 'Instagram'],
+                budget: '£200–500',
+                time: '2d ago',
+              },
+              {
+                brand: 'Pipo AI',
+                initials: 'P',
+                industry: 'AI Productivity',
+                title: '"My most productive day using Pipo" Video',
+                desc: 'Document a full workday using Pipo AI. Show the tool in action and your honest productivity win. Screen recording + camera overlay.',
+                platforms: ['TikTok', 'YouTube'],
+                budget: '£400–700',
+                time: '3d ago',
+              },
+              {
+                brand: 'Detris',
+                initials: 'D',
+                industry: 'Fitness Tech',
+                title: 'Detris Fitness Tracker — 5-Day Challenge Series',
+                desc: 'Film yourself using Detris over 5 days. Show the tracker in action, steps, heart rate, and sleep. Give honest mini-reviews each day.',
+                platforms: ['TikTok', 'Instagram'],
+                budget: '£500–1,000',
+                time: '1d ago',
+              },
+              {
+                brand: 'Stackra',
+                initials: 'S',
+                industry: 'SaaS Tools',
+                title: '"Stackra replaced 3 tools I was paying for"',
+                desc: 'Comparison UGC showing how Stackra consolidates your workflow. Show 3 tools you used before and how Stackra replaces them.',
+                platforms: ['LinkedIn', 'TikTok'],
+                budget: '£400–600',
+                time: '4d ago',
+              },
+            ].map(({ brand, initials, industry, title, desc, platforms, budget, time }) => (
+              <div key={title} className="bg-white rounded-2xl border border-[#e8e8e4] p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+                {/* Top row: brand + time */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-lg bg-[#e8e8e4] flex items-center justify-center text-xs font-bold text-[#6b6b6b]">
+                    {initials}
+                  </div>
+                  <span className="text-xs font-semibold text-[#363535]">{brand}</span>
+                  <span className="text-xs text-[#9a9a9a]">·</span>
+                  <span className="text-xs text-[#9a9a9a]">{industry}</span>
+                  <span className="text-xs text-[#9a9a9a] ml-auto">{time}</span>
+                </div>
+
+                {/* Title + description */}
+                <h3 className="text-sm font-semibold text-[#1c1c1e] mb-1.5 leading-tight">{title}</h3>
+                <p className="text-xs text-[#6b6b6b] leading-relaxed mb-3 line-clamp-2">{desc}</p>
+
+                {/* Platforms + budget */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex gap-1.5">
+                    {platforms.map((p) => (
+                      <span key={p} className="text-[11px] text-[#9a9a9a]">● {p}</span>
+                    ))}
+                  </div>
+                  <span className="ml-auto px-2.5 py-1 bg-[#ccff00]/20 rounded-full text-[11px] font-semibold text-[#363535]">
+                    {budget}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA strip */}
+          <div className="mt-5 text-center">
+            <p className="text-sm text-[#9a9a9a] mb-3">Login to see all briefs and apply</p>
+            <Link href="/signup" className="btn-primary text-sm px-6 py-3">
+              Join Otto — free for creators
+            </Link>
+          </div>
+
+        </div>
+      </section>
+
       {/* ─── WHY UGC — comparison section ─────────────────── */}
       <section className="py-16 md:py-20 px-6 md:px-10 border-t border-[#e8e8e4]">
         <div className="max-w-5xl mx-auto">
