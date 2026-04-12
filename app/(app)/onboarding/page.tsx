@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -54,9 +54,11 @@ export default function OnboardingPage() {
     { platform: 'instagram', url: '' },
   ])
   const [portfolioItems, setPortfolioItems] = useState<Array<{ type: 'video' | 'image'; url: string; caption: string }>>([])
-  const [newPortfolioUrl, setNewPortfolioUrl] = useState('')
+  const [uploadingVideo, setUploadingVideo] = useState(false)
+  const [videoUploadProgress, setVideoUploadProgress] = useState('')
   const [newPortfolioCaption, setNewPortfolioCaption] = useState('')
   const [addingPortfolio, setAddingPortfolio] = useState(false)
+  const videoInputRef = useRef<HTMLInputElement>(null)
 
   // ─── STEP 0: ROLE SELECTION ─────────────────────────
   if (step === 0) {
@@ -461,38 +463,98 @@ export default function OnboardingPage() {
 
               {/* Add item */}
               <div className="bg-white border border-[#e8e8e4] rounded-xl p-4 mb-4">
-                <p className="text-sm font-semibold text-[#363535] mb-3">Add a portfolio item</p>
+                <p className="text-sm font-semibold text-[#363535] mb-3">Add portfolio videos</p>
+
+                {/* Upload button */}
                 <input
-                  type="url"
-                  value={newPortfolioUrl}
-                  onChange={e => setNewPortfolioUrl(e.target.value)}
-                  placeholder="YouTube or TikTok video URL"
-                  className="w-full px-3 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-lg text-[#363535] placeholder-[#9a9a9a] text-sm mb-2 transition-all focus:outline-none focus:border-[#ccff00]"
-                />
-                <input
-                  type="text"
-                  value={newPortfolioCaption}
-                  onChange={e => setNewPortfolioCaption(e.target.value)}
-                  placeholder="Caption (e.g. 'Raycast review — 50K views')"
-                  className="w-full px-3 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-lg text-[#363535] placeholder-[#9a9a9a] text-sm mb-3 transition-all focus:outline-none focus:border-[#ccff00]"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      if (!newPortfolioUrl.trim()) return;
-                      if (portfolioItems.length >= 6) {
-                        setError('Maximum reached: add up to 6 videos.');
-                        return;
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/*"
+                  multiple
+                  onChange={async (e) => {
+                    const files = Array.from(e.target.files || [])
+                    if (!files.length) return
+                    if (portfolioItems.length + files.length > 6) {
+                      setError('Maximum 6 videos allowed.')
+                      return
+                    }
+                    setUploadingVideo(true)
+                    setError('')
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser()
+                      if (!user) return
+
+                      for (const file of files) {
+                        setVideoUploadProgress(`Uploading ${file.name}...`)
+                        const ext = file.name.split('.').pop()
+                        const path = `${user.id}/portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+                        const { error: uploadError } = await supabase.storage
+                          .from('videos')
+                          .upload(path, file, { upsert: true })
+                        if (uploadError) throw uploadError
+                        const { data: urlData } = supabase.storage.from('videos').getPublicUrl(path)
+                        setPortfolioItems(prev => [...prev, { type: 'video', url: urlData.publicUrl, caption: '' }])
                       }
-                      setPortfolioItems([...portfolioItems, { type: 'video', url: newPortfolioUrl, caption: newPortfolioCaption }]);
-                      setNewPortfolioUrl('');
-                      setNewPortfolioCaption('');
-                      setError('');
-                    }}
-                    disabled={!newPortfolioUrl.trim() || portfolioItems.length >= 6}
-                    className="btn-primary text-sm py-2 px-4 disabled:opacity-50"
-                  >+ Add Video</button>
-                </div>
+                    } catch (err: unknown) {
+                      const msg = err instanceof Error ? err.message : 'Upload failed'
+                      setError(msg.includes('not found') ? 'Video storage bucket not found — please contact support.' : msg)
+                    } finally {
+                      setUploadingVideo(false)
+                      setVideoUploadProgress('')
+                      if (videoInputRef.current) videoInputRef.current.value = ''
+                    }
+                  }}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => videoInputRef.current?.click()}
+                  disabled={uploadingVideo || portfolioItems.length >= 6}
+                  className="w-full py-4 border-2 border-dashed border-[#e8e8e4] rounded-xl text-[#6b6b6b] hover:border-[#ccff00] hover:text-[#363535] transition-all flex flex-col items-center gap-2 disabled:opacity-50"
+                >
+                  <span className="text-2xl">📤</span>
+                  <span className="text-sm font-semibold">
+                    {uploadingVideo ? (videoUploadProgress || 'Uploading...') : 'Click to upload videos'}
+                  </span>
+                  <span className="text-xs text-[#9a9a9a]">MP4, MOV, WebM · Max 6 videos</span>
+                </button>
+
+                {/* Link option (collapsed, for TikTok/YT links) */}
+                {portfolioItems.length < 6 && (
+                  <button
+                    onClick={() => setAddingPortfolio(true)}
+                    className="mt-2 text-xs text-[#9a9a9a] hover:text-[#363535] underline"
+                  >
+                    Or add a video link instead
+                  </button>
+                )}
+                {addingPortfolio && (
+                  <div className="mt-3 space-y-2">
+                    <input
+                      type="url"
+                      onChange={e => setAddingPortfolio(e.target.value !== '')}
+                      placeholder="YouTube or TikTok video URL"
+                      className="w-full px-3 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-lg text-[#363535] placeholder-[#9a9a9a] text-sm transition-all focus:outline-none focus:border-[#ccff00]"
+                    />
+                    <button
+                      onClick={() => {
+                        const input = document.querySelector<HTMLInputElement>('input[placeholder="YouTube or TikTok video URL"]')
+                        const url = input?.value || ''
+                        if (!url.trim() || portfolioItems.length >= 6) return
+                        setPortfolioItems([...portfolioItems, { type: 'video', url, caption: '' }])
+                        setAddingPortfolio(false)
+                        if (input) input.value = ''
+                      }}
+                      className="btn-primary text-sm py-2 px-4"
+                    >Add link</button>
+                  </div>
+                )}
+
+                {error && !error.includes('bucket') && (
+                  <p className="text-xs text-red-500 mt-2">{error}</p>
+                )}
+                {error && error.includes('bucket') && (
+                  <p className="text-xs text-red-500 mt-2">⚠️ {error}</p>
+                )}
               </div>
 
               {/* Progress */}
