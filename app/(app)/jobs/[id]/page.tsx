@@ -190,7 +190,7 @@ export default function JobDetailPage() {
           <p className="text-sm text-[#9a9a9a] text-center py-2">This brief is no longer open.</p>
         ) : alreadyApplied ? (
           <div className="text-center">
-            <p className="text-sm font-semibold text-[#363535] mb-2">You've applied to this brief.</p>
+            <p className="text-sm font-semibold text-[#363535] mb-2">You&apos;ve applied to this brief.</p>
             <p className="text-xs text-[#9a9a9a]">Check your messages for updates.</p>
             <Link href="/messages" className="btn-ghost mt-4 text-sm">Go to messages</Link>
           </div>
@@ -201,7 +201,7 @@ export default function JobDetailPage() {
           </div>
         ) : isCreator ? (
           <div className="text-center">
-            <p className="text-sm text-[#6b6b6b] mb-3">Ready to apply? Tell the brand why you're a great fit.</p>
+            <p className="text-sm text-[#6b6b6b] mb-3">Ready to apply? Tell the brand why you&apos;re a great fit.</p>
             <Link href={`/jobs/${job.id}/apply`} className="btn-primary">
               Apply for this brief →
             </Link>

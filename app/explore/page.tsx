@@ -157,7 +157,7 @@ export default function CreatorsPage() {
   }, [debouncedSearch, availability])
 
   useEffect(() => {
-    loadCreators()
+    queueMicrotask(() => loadCreators())
   }, [loadCreators])
 
   // Get user role

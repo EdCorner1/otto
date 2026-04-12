@@ -248,7 +248,7 @@ export default function BrandDealReviewPage() {
           <div className="text-4xl mb-3">⏳</div>
           <h2 style={{ fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-2">Work in progress</h2>
-          <p className="text-sm text-[#6b6b6b] mb-6">The creator is still working on this. You'll be notified when it's submitted.</p>
+          <p className="text-sm text-[#6b6b6b] mb-6">The creator is still working on this. You&apos;ll be notified when it&apos;s submitted.</p>
           <Link href={`/messages/${deal.id}`} className="btn-ghost">Message creator</Link>
         </div>
       )}

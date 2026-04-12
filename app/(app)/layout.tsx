@@ -47,7 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [loading, user, router])
 
   // Close mobile menu on route change
-  useEffect(() => { setMobileOpen(false) }, [pathname])
+  useEffect(() => { queueMicrotask(() => setMobileOpen(false)) }, [pathname])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()

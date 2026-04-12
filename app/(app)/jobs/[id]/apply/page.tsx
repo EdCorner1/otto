@@ -86,7 +86,7 @@ export default function ApplyPage() {
           Application sent!
         </h1>
         <p className="text-[#6b6b6b] mb-8">
-          The brand will review your application and message you if they're interested.
+          The brand will review your application and message you if they&apos;re interested.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/dashboard" className="btn-primary">Back to dashboard</Link>
@@ -138,7 +138,7 @@ export default function ApplyPage() {
       <h1 style={{ fontSize: 'clamp(24px, 4vw, 36px)',
         letterSpacing: '-1.5px', color: '#1c1c1e',
       }} className="mb-1">Apply</h1>
-      <p className="text-sm text-[#6b6b6b] mb-6">Tell the brand why you're the right creator for this.</p>
+      <p className="text-sm text-[#6b6b6b] mb-6">Tell the brand why you&apos;re the right creator for this.</p>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
