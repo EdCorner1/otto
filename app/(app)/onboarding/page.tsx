@@ -31,7 +31,14 @@ export default function OnboardingPage() {
 
   // ─── BRAND FORM STATE ───────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [brand, setBrand] = useState({ company_name: '', website: '', industry: 'Tech', description: '' })
+  const [brand, setBrand] = useState({ company_name: '', website: '', industry: 'Tech', description: '', audience: '', content_types: [] as string[], budget_range: '£250–500', platforms: [] as string[] })
+
+  const brandContentTypes = ['UGC Ads', 'Product Reviews', 'Tutorials', 'Unboxing', 'Brand Awareness', 'Testimonials']
+  const brandPlatforms = ['TikTok', 'Instagram Reels', 'YouTube Shorts', 'YouTube', 'Twitter/X', 'Other']
+  const brandBudgetRanges = ['£100–250', '£250–500', '£500–1,000', '£1,000–2,500', '£2,500–5,000', '£5,000+']
+  const brandStepTotal = 4
+  const toggleArrayItem = (arr: string[], item: string) =>
+    arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item]
 
   // ─── CREATOR FORM STATE ────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -105,6 +112,7 @@ export default function OnboardingPage() {
 
   // ─── BRAND ONBOARDING ──────────────────────────────
   if (role === 'brand') {
+    // Step 1: Company info
     if (step === 1) {
       return (
         <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
@@ -116,12 +124,12 @@ export default function OnboardingPage() {
               </Link>
             </nav>
             <div className="pt-24">
-              <StepIndicator current={1} total={2} />
-              <button onClick={() => setStep(0)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
+              <StepIndicator current={0} total={brandStepTotal} />
+              <button onClick={() => { setRole(null); setStep(0); }} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
               <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
-                Tell us about your brand.
+                What brand are you?
               </h1>
-              <p className="text-[#6b6b6b] mb-8">This helps us match you with the right creators.</p>
+              <p className="text-[#6b6b6b] mb-8">Let&apos;s start with the basics.</p>
 
               {error && <div className="mb-5 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">{error}</div>}
 
@@ -137,7 +145,7 @@ export default function OnboardingPage() {
                 <div>
                   <label className="block text-sm font-semibold text-[#363535] mb-1.5">Industry *</label>
                   <select value={brand.industry} onChange={e => setBrand({ ...brand, industry: e.target.value })} className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07]">
-                    <option>Tech</option><option>SaaS</option><option>AI Tools</option><option>Gadgets</option><option>Gaming</option><option>Other</option>
+                    <option>Tech</option><option>SaaS</option><option>AI Tools</option><option>Gadgets</option><option>Gaming</option><option>Finance</option><option>Health & Fitness</option><option>Travel</option><option>Other</option>
                   </select>
                 </div>
                 <div>
@@ -145,28 +153,229 @@ export default function OnboardingPage() {
                   <textarea value={brand.description} onChange={e => setBrand({ ...brand, description: e.target.value })} placeholder="A fast, keyboard-first launcher for macOS..." rows={3} className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07] resize-none" />
                 </div>
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     if (!brand.company_name.trim()) { setError('Company name is required.'); return; }
-                    setLoading(true); setError('');
-                    try {
-                      const { data: { user } } = await supabase.auth.getUser();
-                      if (!user) { router.push('/login'); return; }
-                      // Insert into brands table
-                      const { error } = await supabase.from('brands').insert([{ user_id: user.id, company_name: brand.company_name, website: brand.website || null, industry: brand.industry, bio: brand.description || null }]);
-                      if (error) throw error;
-                      // Update user role
-                      await supabase.from('users').update({ role: 'brand' }).eq('id', user.id);
-                      router.push('/dashboard');
-                    } catch (err: unknown) {
-                      setError(err instanceof Error ? err.message : 'Something went wrong.');
-                    } finally { setLoading(false); }
+                    setError(''); setStep(2);
                   }}
-                  disabled={loading}
                   className="btn-primary w-full py-4 text-base disabled:opacity-60 mt-2"
                 >
-                  {loading ? 'Setting up...' : 'Continue →'}
+                  Continue →
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Step 2: Content types & platforms
+    if (step === 2) {
+      return (
+        <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
+          <div className="w-full max-w-lg">
+            <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
+              </Link>
+            </nav>
+            <div className="pt-24">
+              <StepIndicator current={1} total={brandStepTotal} />
+              <button onClick={() => setStep(1)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
+              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+                How do you want to create?
+              </h1>
+              <p className="text-[#6b6b6b] mb-6">Pick the content formats you work with.</p>
+
+              {error && <div className="mb-5 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">{error}</div>}
+
+              <div className="mb-5">
+                <label className="block text-sm font-semibold text-[#363535] mb-2">Content types * <span className="font-normal text-[#9a9a9a]">(select all that apply)</span></label>
+                <div className="flex flex-wrap gap-2">
+                  {brandContentTypes.map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setBrand({ ...brand, content_types: toggleArrayItem(brand.content_types, type) })}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${brand.content_types.includes(type) ? 'bg-[#ccff00] border-[#ccff00] text-[#1c1c1c]' : 'bg-white border-[#e8e8e4] text-[#6b6b6b] hover:border-[#363535]'}`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <label className="block text-sm font-semibold text-[#363535] mb-2">Platforms * <span className="font-normal text-[#9a9a9a]">(select all that apply)</span></label>
+                <div className="flex flex-wrap gap-2">
+                  {brandPlatforms.map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setBrand({ ...brand, platforms: toggleArrayItem(brand.platforms, p) })}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${brand.platforms.includes(p) ? 'bg-[#ccff00] border-[#ccff00] text-[#1c1c1c]' : 'bg-white border-[#e8e8e4] text-[#6b6b6b] hover:border-[#363535]'}`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-[#363535] mb-1.5">Typical budget range</label>
+                <div className="flex flex-wrap gap-2">
+                  {brandBudgetRanges.map(range => (
+                    <button
+                      key={range}
+                      onClick={() => setBrand({ ...brand, budget_range: range })}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${brand.budget_range === range ? 'bg-[#ccff00] border-[#ccff00] text-[#1c1c1c]' : 'bg-white border-[#e8e8e4] text-[#6b6b6b] hover:border-[#363535]'}`}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (brand.content_types.length === 0 || brand.platforms.length === 0) {
+                    setError('Please select at least one content type and one platform.');
+                    return;
+                  }
+                  setError(''); setStep(3);
+                }}
+                className="btn-primary w-full py-4 text-base"
+              >
+                Continue →
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Step 3: Audience & posting schedule
+    if (step === 3) {
+      return (
+        <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
+          <div className="w-full max-w-lg">
+            <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
+              </Link>
+            </nav>
+            <div className="pt-24">
+              <StepIndicator current={2} total={brandStepTotal} />
+              <button onClick={() => setStep(2)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
+              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+                Who are you reaching?
+              </h1>
+              <p className="text-[#6b6b6b] mb-8">This helps us match you with the right creators.</p>
+
+              {error && <div className="mb-5 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">{error}</div>}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[#363535] mb-1.5">Target audience</label>
+                  <input type="text" value={brand.audience} onChange={e => setBrand({ ...brand, audience: e.target.value })} placeholder="e.g. Developers and designers aged 20–35 who love productivity tools" className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07]" />
+                </div>
+                <button
+                  onClick={() => { setError(''); setStep(4); }}
+                  className="btn-primary w-full py-4 text-base"
+                >
+                  Continue →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Step 4: Review & complete
+    if (step === 4) {
+      return (
+        <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-6">
+          <div className="w-full max-w-lg">
+            <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
+              </Link>
+            </nav>
+            <div className="pt-24">
+              <StepIndicator current={3} total={brandStepTotal} />
+              <button onClick={() => setStep(3)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
+              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+                You&apos;re all set.
+              </h1>
+              <p className="text-[#6b6b6b] mb-8">Review your brand profile before we get started.</p>
+
+              {error && <div className="mb-5 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">{error}</div>}
+
+              <div className="bg-white border border-[#e8e8e4] rounded-xl p-5 mb-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#6b6b6b]">Company</span>
+                  <span className="text-sm font-semibold text-[#363535]">{brand.company_name}</span>
+                </div>
+                {brand.website && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#6b6b6b]">Website</span>
+                    <span className="text-sm text-[#363535]">{brand.website}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#6b6b6b]">Industry</span>
+                  <span className="text-sm text-[#363535]">{brand.industry}</span>
+                </div>
+                {brand.description && (
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-sm text-[#6b6b6b]">About</span>
+                    <span className="text-sm text-[#363535] text-right">{brand.description}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#6b6b6b]">Content types</span>
+                  <div className="flex flex-wrap gap-1 justify-end">{brand.content_types.map(t => <span key={t} className="text-xs px-2 py-0.5 bg-[#f0f0ec] rounded-full text-[#6b6b6b]">{t}</span>)}</div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#6b6b6b]">Platforms</span>
+                  <div className="flex flex-wrap gap-1 justify-end">{brand.platforms.map(p => <span key={p} className="text-xs px-2 py-0.5 bg-[#f0f0ec] rounded-full text-[#6b6b6b]">{p}</span>)}</div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#6b6b6b]">Budget range</span>
+                  <span className="text-sm text-[#363535]">{brand.budget_range}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  setLoading(true); setError('');
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) { router.push('/login'); return; }
+                    const { error: brandError } = await supabase.from('brands').insert([{
+                      user_id: user.id,
+                      company_name: brand.company_name,
+                      website: brand.website || null,
+                      industry: brand.industry,
+                      bio: brand.description || null,
+                      audience: brand.audience || null,
+                      content_types: brand.content_types,
+                      platforms: brand.platforms,
+                      budget_range: brand.budget_range,
+                    }]);
+                    if (brandError) throw brandError;
+                    await supabase.from('users').update({ role: 'brand' }).eq('id', user.id);
+                    router.push('/dashboard');
+                  } catch (err: unknown) {
+                    setError(err instanceof Error ? err.message : 'Something went wrong.');
+                  } finally { setLoading(false); }
+                }}
+                disabled={loading}
+                className="btn-primary w-full py-4 text-base disabled:opacity-60"
+              >
+                {loading ? 'Setting up...' : 'Launch brand profile →'}
+              </button>
             </div>
           </div>
         </div>
