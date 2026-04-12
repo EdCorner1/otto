@@ -695,25 +695,63 @@ export default function OnboardingPage() {
 
                       for (const file of files) {
                         setVideoUploadProgress(`Uploading ${file.name}...`)
-                        const ext = file.name.split('.').pop()
-                        const path = `${user.id}/portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+                        const userId = user.id
 
-                        // Request a signed upload URL (bypasses RLS)
-                        const { data: signData, error: signErr } = await supabase.storage
-                          .from('videos')
-                          .createSignedUploadUrl(path)
-                        if (signErr) throw signErr
-
-                        // Upload directly to the signed URL with PUT
-                        const uploadRes = await fetch(signData.signedUrl, {
-                          method: 'PUT',
-                          body: file,
-                          headers: { 'Content-Type': file.type || 'video/mp4' }
+                        // Request a Mux direct upload URL
+                        const signRes = await fetch('/api/mux/upload-url', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ filename: file.name, userId }),
                         })
-                        if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`)
+                        if (!signRes.ok) {
+                          const err = await signRes.json().catch(() => ({ error: 'Failed to get upload URL' }))
+                          throw new Error(err.error || `Upload URL error: ${signRes.status}`)
+                        }
+                        const { uploadUrl, uploadId } = await signRes.json()
 
-                        const { data: urlData } = supabase.storage.from('videos').getPublicUrl(path)
-                        setPortfolioItems(prev => [...prev, { type: 'video', url: urlData.publicUrl, caption: '' }])
+                        // PUT directly to Mux (no Supabase Storage involved)
+                        await new Promise<void>((resolve, reject) => {
+                          const xhr = new XMLHttpRequest()
+                          xhr.upload.addEventListener('progress', (e) => {
+                            if (e.lengthComputable) {
+                              setVideoUploadProgress(`Uploading ${file.name} — ${Math.round((e.loaded / e.total) * 100)}%`)
+                            }
+                          })
+                          xhr.addEventListener('load', () => {
+                            if (xhr.status >= 200 && xhr.status < 300) resolve()
+                            else reject(new Error(`Upload failed: ${xhr.status}`))
+                          })
+                          xhr.addEventListener('error', () => reject(new Error('Network error during upload')))
+                          xhr.open('PUT', uploadUrl)
+                          xhr.setRequestHeader('Content-Type', file.type || 'video/mp4')
+                          xhr.send(file)
+                        })
+
+                        // Poll for the playbackId
+                        setVideoUploadProgress(`Processing ${file.name}...`)
+                        let playbackId: string | null = null
+                        for (let attempt = 0; attempt < 30; attempt++) {
+                          await new Promise(r => setTimeout(r, 2000))
+                          const statusRes = await fetch(`/api/mux/upload-status?uploadId=${uploadId}`)
+                          if (statusRes.ok) {
+                            const data = await statusRes.json()
+                            if (data.playbackId) { playbackId = data.playbackId; break }
+                            if (data.status === 'errored') throw new Error('Video processing failed on Mux')
+                          }
+                        }
+                        if (!playbackId) throw new Error('Timed out waiting for video to process')
+
+                        // Store playback ID in Supabase as portfolio item
+                        const { error: insertErr } = await supabase
+                          .from('portfolio_items')
+                          .insert({ creator_id: creatorId, type: 'video', url: playbackId, caption: '' })
+                        if (insertErr) throw insertErr
+
+                        setPortfolioItems(prev => [
+                          ...prev,
+                          { type: 'video', url: playbackId!, caption: '' },
+                        ])
+                        setVideoUploadProgress('')
                       }
                     } catch (err: unknown) {
                       const msg = err instanceof Error ? err.message : 'Upload failed'
