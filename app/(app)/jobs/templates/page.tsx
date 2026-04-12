@@ -8,7 +8,6 @@ import Link from 'next/link'
 const TEMPLATES = [
   {
     id: 'product-launch',
-    emoji: '🚀',
     title: 'Product Launch',
     description: 'Announce a new product or feature. Great for building anticipation and early adoption.',
     platforms: ['TikTok', 'YouTube Shorts', 'Instagram Reels'],
@@ -27,7 +26,6 @@ const TEMPLATES = [
   },
   {
     id: 'app-walkthrough',
-    emoji: '📱',
     title: 'App Walkthrough',
     description: 'Show real users how to get the most out of your app. Builds trust and reduces churn.',
     platforms: ['YouTube Shorts', 'TikTok', 'Instagram Reels'],
@@ -46,7 +44,6 @@ const TEMPLATES = [
   },
   {
     id: 'testimonial',
-    emoji: '💬',
     title: 'Customer Testimonial',
     description: 'Real customer sharing their experience. High trust, great for landing pages and ads.',
     platforms: ['TikTok', 'Instagram Reels', 'YouTube Shorts'],
@@ -65,7 +62,6 @@ const TEMPLATES = [
   },
   {
     id: 'comparison',
-    emoji: '⚖️',
     title: 'Comparison / vs Content',
     description: 'Position your tool against a competitor. Bold, engaging, drives switching intent.',
     platforms: ['TikTok', 'YouTube Shorts'],
@@ -83,7 +79,6 @@ const TEMPLATES = [
   },
   {
     id: 'listicle',
-    emoji: '📋',
     title: 'Tool List / Recommendation',
     description: 'Creators share your tool as part of a "best of" or "my stack" style content piece.',
     platforms: ['TikTok', 'YouTube Shorts', 'Twitter/X'],
@@ -100,7 +95,6 @@ const TEMPLATES = [
   },
   {
     id: 'brand-awareness',
-    emoji: '🎯',
     title: 'Brand Awareness Series',
     description: 'Ongoing content partnership with a creator who aligns with your brand values.',
     platforms: ['TikTok', 'Instagram Reels', 'YouTube Shorts', 'Podcast'],
@@ -163,7 +157,6 @@ export default function BriefTemplatesPage() {
                 onClick={() => setSelected(t.id)}
                 className="card card-hover p-6 text-left w-full group"
               >
-                <span className="text-3xl mb-3 block">{t.emoji}</span>
                 <h3 style={{
                   fontFamily: 'var(--font-bricolage)',
                   fontWeight: 600, fontSize: '18px', letterSpacing: '-0.5px', color: '#1c1c1e',
@@ -191,7 +184,6 @@ export default function BriefTemplatesPage() {
 
           <div className="card mb-6">
             <div className="flex items-start gap-4 mb-5">
-              <span className="text-4xl">{template!.emoji}</span>
               <div>
                 <h2 style={{
                   fontFamily: 'var(--font-bricolage)',

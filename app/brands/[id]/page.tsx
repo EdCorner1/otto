@@ -18,7 +18,7 @@ type Job = {
 type BrandFull = Brand & { jobs: Job[] }
 
 const industryIcons: Record<string, string> = {
-  'Tech': '💻', 'SaaS': '☁️', 'AI Tools': '🤖', 'Gadgets': '📱',
+  'Tech': '●', 'SaaS': '●', 'AI Tools': '●', 'Gadgets': '●',
   'Gaming': '🎮', 'Other': '🔷',
 }
 
@@ -28,7 +28,7 @@ function formatDate(dateStr: string) {
 
 function JobCard({ job }: { job: Job }) {
   const platforms: Record<string, string> = {
-    tiktok: '🎵', youtube: '▶️', instagram: '📸', twitter: '🐦', other: '🔗',
+    tiktok: '●', youtube: '●', instagram: '●', twitter: '●', other: '●',
   }
   const platformList = (job.platforms as string[] || []).slice(0, 4)
 
@@ -58,7 +58,7 @@ function JobCard({ job }: { job: Job }) {
         {platformList.length > 0 && (
           <div className="flex items-center gap-1">
             {platformList.map(p => (
-              <span key={p} className="text-sm" title={p}>{platforms[p] || '🔗'}</span>
+              <span key={p} className="text-sm" title={p}>{platforms[p] || '●'}</span>
             ))}
           </div>
         )}

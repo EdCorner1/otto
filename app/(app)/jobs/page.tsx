@@ -15,11 +15,11 @@ const headlineStyle: React.CSSProperties = {
 }
 
 const PLATFORM_EMOJI: Record<string, string> = {
-  'TikTok': '📸',
-  'YouTube Shorts': '🎵',
-  'Instagram Reels': '📷',
-  'Twitter/X': '🐦',
-  'LinkedIn': '💼',
+  'TikTok': '●',
+  'YouTube Shorts': '●',
+  'Instagram Reels': '●',
+  'Twitter/X': '●',
+  'LinkedIn': '●',
 }
 
 function formatDate(dateStr: string) {
@@ -130,7 +130,7 @@ export default function JobsPage() {
                 <div className="flex flex-wrap gap-2">
                   {(job.platforms || []).map(p => (
                     <span key={p} className="text-sm text-[#363535]">
-                      {PLATFORM_EMOJI[p] || '📋'} {p}
+                      ● {p}
                     </span>
                   ))}
                 </div>

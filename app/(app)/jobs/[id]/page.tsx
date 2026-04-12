@@ -16,13 +16,13 @@ type Job = {
 
 function PlatformBadge({ platform }: { platform: string }) {
   const icons: Record<string, string> = {
-    'TikTok': '📸', 'YouTube Shorts': '🎵', 'Instagram Reels': '📷',
-    'Twitter/X': '🐦', 'LinkedIn': '💼', 'YouTube': '🎬',
-    'Instagram': '📷', 'Facebook': '👥', 'Podcast': '🎙️',
+    'TikTok': '●', 'YouTube Shorts': '●', 'Instagram Reels': '●',
+    'Twitter/X': '●', 'LinkedIn': '●', 'YouTube': '●',
+    'Instagram': '●', 'Facebook': '●', 'Podcast': '●',
   }
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8e8e4] rounded-full text-xs font-medium text-[#363535]">
-      <span>{icons[platform] ?? '📱'}</span>
+      <span>●</span>
       {platform}
     </span>
   )

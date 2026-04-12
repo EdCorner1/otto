@@ -49,7 +49,7 @@ export default function HomePage() {
           <div>
             {/* Badge */}
             <div className="fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ccff00] mb-7">
-              <span className="text-xs font-semibold text-[#1c1c1c] tracking-wide">🔥 Launching Soon · Limited Spots</span>
+              <span className="text-xs font-semibold text-[#1c1c1c] tracking-wide">For tech brands & creators</span>
             </div>
 
             {/* Headline — exact match to Ed's site */}
@@ -67,10 +67,10 @@ export default function HomePage() {
             {/* Credibility */}
             <div className="fade-up stagger-3 mb-7">
               <div className="inline-flex items-center gap-2 px-4 py-3 bg-white border border-[#e8e8e4] rounded-xl shadow-sm">
-                <span className="text-sm font-semibold text-[#1c1c1c]">500+ creators &amp; 50+ brands on the signup</span>
+                <span className="text-sm font-semibold text-[#1c1c1c]">Escrow protected payments</span>
               </div>
               <p className="mt-2 text-xs text-[#9a9a9a]">
-                Avg. brief fills in 48hrs · Escrow protected · No cold DMs
+                Avg. brief fills in 48hrs · No commission until your deal closes
               </p>
             </div>
 
@@ -130,10 +130,10 @@ export default function HomePage() {
             {/* Stats row */}
             <div className="flex justify-start gap-6 mt-5">
               {[
-                { num: '500+', label: 'Creators' },
-                { num: '50+', label: 'Brands' },
-                { num: '<5min', label: 'Briefs' },
-                { num: '10%', label: 'Fee' },
+                { num: '10%', label: 'Platform fee' },
+                { num: '48hr', label: 'Avg. brief fill' },
+                { num: 'Escrow', label: 'protected' },
+                { num: 'No CC', label: 'required' },
               ].map(({ num, label }) => (
                 <div key={label}>
                   <div className="text-lg font-extrabold font-display text-[#1c1c1c]">{num}</div>
@@ -154,41 +154,39 @@ export default function HomePage() {
         <div className="relative">
           <div className="flex gap-12 animate-[scroll-logos_30s_linear_infinite]">
             {[
-              { name: 'Raycon', emoji: '🔊' },
-              { name: 'Anker', emoji: '⚡' },
-              { name: 'OtterBox', emoji: '🛡️' },
-              { name: 'Wyze', emoji: '📷' },
-              { name: 'Mpow', emoji: '🎧' },
-              { name: 'TaoTronics', emoji: '🔊' },
-              { name: 'JBL', emoji: '🔉' },
-              { name: 'Samsung', emoji: '📱' },
-              { name: 'Sony', emoji: '🎮' },
-              { name: 'Bose', emoji: '🔇' },
-              { name: 'Satechi', emoji: '⚡' },
-              { name: 'Twelve South', emoji: '📐' },
-            ].map(({ name, emoji }) => (
+              { name: 'Raycon' },
+              { name: 'Anker' },
+              { name: 'OtterBox' },
+              { name: 'Wyze' },
+              { name: 'Mpow' },
+              { name: 'TaoTronics' },
+              { name: 'JBL' },
+              { name: 'Samsung' },
+              { name: 'Sony' },
+              { name: 'Bose' },
+              { name: 'Satechi' },
+              { name: 'Twelve South' },
+            ].map(({ name }) => (
               <div key={name} className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 bg-white border border-[#e8e8e4] rounded-xl shadow-sm">
-                <span className="text-xl">{emoji}</span>
                 <span className="text-sm font-semibold text-[#363535] whitespace-nowrap">{name}</span>
               </div>
             ))}
             {/* Duplicate for seamless loop */}
             {[
-              { name: 'Raycon', emoji: '🔊' },
-              { name: 'Anker', emoji: '⚡' },
-              { name: 'OtterBox', emoji: '🛡️' },
-              { name: 'Wyze', emoji: '📷' },
-              { name: 'Mpow', emoji: '🎧' },
-              { name: 'TaoTronics', emoji: '🔊' },
-              { name: 'JBL', emoji: '🔉' },
-              { name: 'Samsung', emoji: '📱' },
-              { name: 'Sony', emoji: '🎮' },
-              { name: 'Bose', emoji: '🔇' },
-              { name: 'Satechi', emoji: '⚡' },
-              { name: 'Twelve South', emoji: '📐' },
-            ].map(({ name, emoji }) => (
+              { name: 'Raycon' },
+              { name: 'Anker' },
+              { name: 'OtterBox' },
+              { name: 'Wyze' },
+              { name: 'Mpow' },
+              { name: 'TaoTronics' },
+              { name: 'JBL' },
+              { name: 'Samsung' },
+              { name: 'Sony' },
+              { name: 'Bose' },
+              { name: 'Satechi' },
+              { name: 'Twelve South' },
+            ].map(({ name }) => (
               <div key={`dup-${name}`} className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 bg-white border border-[#e8e8e4] rounded-xl shadow-sm">
-                <span className="text-xl">{emoji}</span>
                 <span className="text-sm font-semibold text-[#363535] whitespace-nowrap">{name}</span>
               </div>
             ))}
@@ -228,15 +226,15 @@ export default function HomePage() {
               </div>
               <div className="p-6 space-y-5">
                 {[
-                  { icon: '📺', title: 'Expensive production', desc: 'Crew, equipment, studio time — £5k–£50k per spot' },
-                  { icon: '🚫', title: 'Audiences skip or block', desc: 'Ad blockers, DVR skipping, banner blindness' },
-                  { icon: '😴', title: 'Low engagement', desc: '0.5–1% average CTR on display ads' },
-                  { icon: '🧊', title: 'Feels impersonal', desc: 'Audiences know it is an ad — trust is low' },
-                  { icon: '🔄', title: 'Long turnaround', desc: '4–12 weeks from brief to final delivery' },
-                  { icon: '💸', title: 'High cost per acquisition', desc: '£15–£80 CPA through paid channels' },
-                ].map(({ icon, title, desc }) => (
+                  { title: 'Expensive production', desc: 'Crew, equipment, studio time — £5k–£50k per spot' },
+                  { title: 'Audiences skip or block', desc: 'Ad blockers, DVR skipping, banner blindness' },
+                  { title: 'Low engagement', desc: '0.5–1% average CTR on display ads' },
+                  { title: 'Feels impersonal', desc: 'Audiences know it is an ad — trust is low' },
+                  { title: 'Long turnaround', desc: '4–12 weeks from brief to final delivery' },
+                  { title: 'High cost per acquisition', desc: '£15–£80 CPA through paid channels' },
+                ].map(({ title, desc }) => (
                   <div key={title} className="flex items-start gap-4">
-                    <span className="text-lg mt-0.5">{icon}</span>
+                    <span className="inline-block w-4 h-4 rounded-full bg-[#e8e8e4] mt-1 flex-shrink-0"></span>
                     <div>
                       <p className="text-sm font-semibold text-[#363535]">{title}</p>
                       <p className="text-xs text-[#9a9a9a] mt-0.5">{desc}</p>
@@ -253,15 +251,15 @@ export default function HomePage() {
               </div>
               <div className="p-6 space-y-5">
                 {[
-                  { icon: '📱', title: 'Creator-ready content', desc: 'Real creators, real devices — starting from £75 per piece' },
-                  { icon: '✅', title: 'Audiences engage', desc: 'UGC gets 2× more engagement than branded content' },
-                  { icon: '🚀', title: '4× higher conversions', desc: 'Creators you trust = actions you take' },
-                  { icon: '🤝', title: 'Authentic voice', desc: 'Content that sounds like a mate, not a sales pitch' },
-                  { icon: '⚡', title: 'Ship in days', desc: 'Brief today, content in your hands within 48hrs' },
-                  { icon: '💰', title: 'Lower cost per acquisition', desc: 'Organic reach + trusted voice = better ROI' },
-                ].map(({ icon, title, desc }) => (
+                  { title: 'Creator-ready content', desc: 'Real creators, real devices — starting from £75 per piece' },
+                  { title: 'Audiences engage', desc: 'UGC gets 2× more engagement than branded content' },
+                  { title: '4× higher conversions', desc: 'Creators you trust = actions you take' },
+                  { title: 'Authentic voice', desc: 'Content that sounds like a mate, not a sales pitch' },
+                  { title: 'Ship in days', desc: 'Brief today, content in your hands within 48hrs' },
+                  { title: 'Lower cost per acquisition', desc: 'Organic reach + trusted voice = better ROI' },
+                ].map(({ title, desc }) => (
                   <div key={title} className="flex items-start gap-4">
-                    <span className="text-lg mt-0.5">{icon}</span>
+                    <span className="inline-block w-4 h-4 rounded-full bg-[#ccff00] mt-1 flex-shrink-0"></span>
                     <div>
                       <p className="text-sm font-semibold text-[#1c1c1e]">{title}</p>
                       <p className="text-xs text-[#6b6b6b] mt-0.5">{desc}</p>
@@ -317,7 +315,7 @@ export default function HomePage() {
       <section className="py-16 md:py-20 px-6 md:px-10 bg-[#1c1c1c]">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-2xl md:text-4xl font-extrabold text-white tracking-tight leading-tight mb-4">
-            Ready to transform your content strategy?
+            Ready to work with UGC creators?
           </h2>
           <p className="text-[#6b6b6b] text-base mb-8">
             create your account. Be first when we open.
@@ -328,7 +326,7 @@ export default function HomePage() {
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </Link>
-          <p className="mt-4 text-sm text-[#6b6b6b]">Free for creators. No credit card required.</p>
+          
         </div>
       </section>
 

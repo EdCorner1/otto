@@ -5,10 +5,6 @@ import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 
-const PLATFORM_EMOJI: Record<string, string> = {
-  'TikTok': '📸', 'YouTube Shorts': '🎵', 'Instagram Reels': '📷',
-  'Twitter/X': '🐦', 'LinkedIn': '💼',
-}
 
 type Job = {
   id: string; title: string; description: string
@@ -122,7 +118,7 @@ export default function ApplyPage() {
         <div className="flex flex-wrap gap-2 mb-3">
           {(job.platforms || []).map(p => (
             <span key={p} className="text-sm text-[#6b6b6b]">
-              {PLATFORM_EMOJI[p] ?? '📋'} {p}
+              ● {p}
             </span>
           ))}
         </div>

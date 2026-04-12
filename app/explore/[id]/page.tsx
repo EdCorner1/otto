@@ -19,11 +19,11 @@ type CreatorFull = Creator & {
 }
 
 const platformIcons: Record<string, string> = {
-  tiktok: '🎵',
-  youtube: '▶️',
-  instagram: '📸',
-  twitter: '🐦',
-  other: '🔗',
+  tiktok: '●',
+  youtube: '●',
+  instagram: '●',
+  twitter: '●',
+  other: '●',
 }
 
 function formatDate(dateStr: string) {
@@ -255,7 +255,7 @@ export default function CreatorProfilePage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8e8e4] rounded-lg text-xs font-medium text-[#363535] hover:border-[#ccff00] hover:-translate-y-0.5 transition-all"
                   >
-                    <span>{platformIcons[social.platform] || '🔗'}</span>
+                    <span>●</span>
                     <span className="capitalize">{social.platform}</span>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </a>

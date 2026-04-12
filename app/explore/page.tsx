@@ -15,7 +15,7 @@ type Creator = {
 }
 
 const platformIcons: Record<string, string> = {
-  tiktok: '🎵', youtube: '▶️', instagram: '📸', twitter: '🐦', other: '🔗',
+  tiktok: '●', youtube: '●', instagram: '●', twitter: '●', other: '●',
 }
 
 function CreatorCard({ creator, userRole }: { creator: Creator; userRole: string | null }) {
@@ -90,7 +90,7 @@ function CreatorCard({ creator, userRole }: { creator: Creator; userRole: string
               <a key={s.id} href={s.url} target="_blank" rel="noopener noreferrer"
                 className="w-7 h-7 rounded-lg bg-[#f0f0ec] flex items-center justify-center text-xs hover:bg-[#e8e8e4] transition-colors"
                 title={s.platform}>
-                {platformIcons[s.platform] || '🔗'}
+                ●
               </a>
             ))}
           </div>

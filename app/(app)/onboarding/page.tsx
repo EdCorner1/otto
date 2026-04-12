@@ -335,16 +335,15 @@ export default function OnboardingPage() {
 
               <div className="space-y-3 mb-6">
                 {[
-                  { platform: 'TikTok', key: 'tiktok', emoji: '🎵' },
-                  { platform: 'YouTube', key: 'youtube', emoji: '▶️' },
-                  { platform: 'Instagram', key: 'instagram', emoji: '📸' },
-                  { platform: 'Twitter / X', key: 'twitter', emoji: '🐦' },
-                  { platform: 'Other', key: 'other', emoji: '🔗' },
-                ].map(({ platform, key, emoji }) => {
+                  { platform: 'TikTok', key: 'tiktok' },
+                  { platform: 'YouTube', key: 'youtube' },
+                  { platform: 'Instagram', key: 'instagram' },
+                  { platform: 'Twitter / X', key: 'twitter' },
+                  { platform: 'Other', key: 'other' },
+                ].map(({ platform, key }) => {
                   const existing = socials.find(s => s.platform === key);
                   return (
                     <div key={key} className="flex items-center gap-3">
-                      <span className="text-xl w-8 text-center">{emoji}</span>
                       <span className="text-sm font-medium text-[#363535] w-20">{platform}</span>
                       <input
                         type="url"

@@ -42,12 +42,12 @@ function StatusBadge({ status }: { status: string }) {
 
 function PlatformBadge({ platform }: { platform: string }) {
   const icons: Record<string, string> = {
-    'TikTok': '🎵', 'YouTube Shorts': '▶️', 'Instagram Reels': '📸',
-    'Twitter/X': '🐦', 'LinkedIn': '💼', 'YouTube': '🎬',
+    'TikTok': '●', 'YouTube Shorts': '●', 'Instagram Reels': '●',
+    'Twitter/X': '●', 'LinkedIn': '●', 'YouTube': '●',
   }
   return (
     <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-white border border-[#e8e8e4] rounded-full text-[#363535]">
-      <span>{icons[platform] ?? '📱'}</span>
+      <span>●</span>
       {platform}
     </span>
   )
@@ -258,9 +258,9 @@ export default function DealOverviewPage() {
 
 function DealTimeline({ status }: { status: string }) {
   const steps = [
-    { key: 'proposed', label: 'Deal proposed', icon: '🤝' },
-    { key: 'accepted', label: 'Creator accepted', icon: '✅' },
-    { key: 'in_progress', label: 'In progress', icon: '🎬' },
+    { key: 'proposed', label: 'Deal proposed' },
+    { key: 'accepted', label: 'Creator accepted' },
+    { key: 'in_progress', label: 'In progress' },
     { key: 'submitted', label: 'Work submitted', icon: '📦' },
     { key: 'approved', label: 'Approved & paid', icon: '💷' },
   ]

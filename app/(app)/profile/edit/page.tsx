@@ -286,10 +286,10 @@ export default function ProfileEditPage() {
               <p className="text-xs font-semibold text-[#6b6b6b] mb-4">Social Links</p>
               <div className="space-y-3">
                 {[
-                  { platform: 'TikTok', key: 'tiktok', icon: '🎵', value: tiktok, onChange: setTiktok, placeholder: 'https://tiktok.com/@yourhandle' },
-                  { platform: 'YouTube', key: 'youtube', icon: '▶️', value: youtube, onChange: setYoutube, placeholder: 'https://youtube.com/@yourchannel' },
-                  { platform: 'Instagram', key: 'instagram', icon: '📸', value: instagram, onChange: setInstagram, placeholder: 'https://instagram.com/yourhandle' },
-                  { platform: 'Twitter / X', key: 'twitter', icon: '🐦', value: twitter, onChange: setTwitter, placeholder: 'https://x.com/yourhandle' },
+                  { platform: 'TikTok', key: 'tiktok', value: tiktok, onChange: setTiktok, placeholder: 'https://tiktok.com/@yourhandle' },
+                  { platform: 'YouTube', key: 'youtube', value: youtube, onChange: setYoutube, placeholder: 'https://youtube.com/@yourchannel' },
+                  { platform: 'Instagram', key: 'instagram', value: instagram, onChange: setInstagram, placeholder: 'https://instagram.com/yourhandle' },
+                  { platform: 'Twitter / X', key: 'twitter', value: twitter, onChange: setTwitter, placeholder: 'https://x.com/yourhandle' },
                   { platform: 'Website', key: 'website', icon: '🌐', value: website, onChange: setWebsite, placeholder: 'https://yoursite.com' },
                 ].map(({ platform, key, icon, value, onChange, placeholder }) => (
                   <div key={key} className="flex items-center gap-3">

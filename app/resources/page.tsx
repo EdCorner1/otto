@@ -33,7 +33,7 @@ const resources = [
   {
     category: 'Templates',
     description: 'Copy-and-paste templates that close deals.',
-    icon: '📋',
+    
     href: null,
     cta: null,
     coming: true,
