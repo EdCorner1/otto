@@ -1,6 +1,20 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import HomeAuthCtas from './HomeAuthCtas'
+
+const HERO_VIDEOS = [
+  {
+    src: 'https://edcorner.co.uk/wp-content/uploads/2026/03/d7c359c0cf243f029082205768b75922-1.mp4',
+    title: 'Tech UGC',
+  },
+  {
+    src: 'https://edcorner.co.uk/wp-content/uploads/2026/02/Video-1-with-captions.mp4',
+    title: 'App Demo',
+  },
+  {
+    src: 'https://edcorner.co.uk/wp-content/uploads/2026/02/video-2-with-captions.mp4',
+    title: 'Creator Review',
+  },
+]
 
 const IconBrief = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -84,45 +98,36 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* RIGHT: Photo grid */}
+          {/* RIGHT: Hero videos */}
           <div className="fade-up stagger-2">
-            <div className="grid grid-cols-2 gap-3">
-              {/* Top-left — large */}
-              <div className="col-span-2 sm:col-span-1 sm:row-span-2">
-                <div className="relative w-full aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden shadow-xl shadow-black/8 bg-[#e8e8e4]">
-                  <Image
-                    src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600&h=400&fit=crop"
-                    alt="Content creator with tech setup"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 100vw, 50vw"
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-[520px] mx-auto lg:mx-0">
+              {HERO_VIDEOS.map((video, index) => (
+                <div
+                  key={video.src}
+                  className={[
+                    'relative aspect-[9/16] overflow-hidden bg-[#e8e8e4] shadow-xl shadow-black/8',
+                    index === 0 ? 'mt-6 rounded-[20px]' : '',
+                    index === 1 ? 'rounded-[22px]' : '',
+                    index === 2 ? 'hidden sm:block -mt-6 rounded-[20px]' : '',
+                  ].join(' ')}
+                >
+                  <video
+                    src={video.src}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full object-cover"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/90 text-[10px] font-bold tracking-wide text-[#363535] mb-2">
+                      {video.title}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              {/* Top-right */}
-              <div className="hidden sm:block">
-                <div className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-xl shadow-black/8 bg-[#e8e8e4]">
-                  <Image
-                    src="https://images.unsplash.com/photo-1536240478700-b869070f9279?w=600&h=400&fit=crop"
-                    alt="Creator filming on phone"
-                    fill
-                    className="object-cover"
-                    sizes="25vw"
-                  />
-                </div>
-              </div>
-              {/* Bottom-right */}
-              <div className="hidden sm:block">
-                <div className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-xl shadow-black/8 bg-[#e8e8e4]">
-                  <Image
-                    src="https://images.unsplash.com/photo-1492724441997-5dc865305da7?w=600&h=400&fit=crop"
-                    alt="Tech workspace"
-                    fill
-                    className="object-cover"
-                    sizes="25vw"
-                  />
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Stats row */}
@@ -144,58 +149,79 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── BRAND LOGO TICKER ─────────────────────────────── */}
-      <section className="py-10 px-6 border-t border-[#e8e8e4] overflow-hidden">
-        <p className="text-center text-xs font-semibold text-[#9a9a9a] uppercase tracking-widest mb-7">
-          Brands building smarter with UGC
-        </p>
-        <div className="relative">
-          <div className="flex gap-12 animate-[scroll-logos_30s_linear_infinite]">
-            {[
-              { name: 'Raycon' },
-              { name: 'Anker' },
-              { name: 'OtterBox' },
-              { name: 'Wyze' },
-              { name: 'Mpow' },
-              { name: 'TaoTronics' },
-              { name: 'JBL' },
-              { name: 'Samsung' },
-              { name: 'Sony' },
-              { name: 'Bose' },
-              { name: 'Satechi' },
-              { name: 'Twelve South' },
-            ].map(({ name }) => (
-              <div key={name} className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 bg-white border border-[#e8e8e4] rounded-xl shadow-sm">
-                <span className="text-sm font-semibold text-[#363535] whitespace-nowrap">{name}</span>
+      {/* ─── FEATURED WORK — video showcase ────────────────── */}
+      <section className="py-12 md:py-16 px-6 md:px-10 border-t border-[#e8e8e4]">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ccff00] mb-4">
+                <span className="text-xs font-semibold text-[#1c1c1c]">Portfolio</span>
               </div>
-            ))}
-            {/* Duplicate for seamless loop */}
+              <h2 className="font-display font-extrabold text-3xl md:text-4xl text-[#1c1c1e] tracking-tight leading-tight">
+                Featured work
+              </h2>
+            </div>
+            <Link
+              href="/explore"
+              className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-[#363535] hover:text-[#1c1c1e] transition-colors"
+            >
+              View all
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { name: 'Raycon' },
-              { name: 'Anker' },
-              { name: 'OtterBox' },
-              { name: 'Wyze' },
-              { name: 'Mpow' },
-              { name: 'TaoTronics' },
-              { name: 'JBL' },
-              { name: 'Samsung' },
-              { name: 'Sony' },
-              { name: 'Bose' },
-              { name: 'Satechi' },
-              { name: 'Twelve South' },
-            ].map(({ name }) => (
-              <div key={`dup-${name}`} className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 bg-white border border-[#e8e8e4] rounded-xl shadow-sm">
-                <span className="text-sm font-semibold text-[#363535] whitespace-nowrap">{name}</span>
-              </div>
+              { src: 'https://edcorner.co.uk/wp-content/uploads/2026/04/Airalo-Video-1-9-16.mov', title: 'Airalo · Travel eSIM', category: 'Travel' },
+              { src: 'https://edcorner.co.uk/wp-content/uploads/2026/03/7f7212ff5ed915e68d04fdd405ef064a.mp4', title: 'AI App Demo', category: 'Tech & Apps' },
+              { src: 'https://edcorner.co.uk/wp-content/uploads/2026/02/Snapchat-1274565060.mp4', title: 'Detris · Product UGC', category: 'Tech & Apps' },
+              { src: 'https://edcorner.co.uk/wp-content/uploads/2026/04/Snapchat-1202039003-1.mp4', title: 'Lingika · Lang App', category: 'Language' },
+              { src: 'https://edcorner.co.uk/wp-content/uploads/2026/01/Pipo-AI-Day-11-V2.mp4', title: 'Pipo AI · Day 11', category: 'AI' },
+              { src: 'https://edcorner.co.uk/wp-content/uploads/2026/01/Pipo-Day-7-v3.mp4', title: 'Health & Fitness UGC', category: 'Health' },
+            ].map(({ src, title, category }) => (
+              <Link
+                key={src}
+                href="/explore"
+                className="group relative aspect-[9/16] rounded-2xl overflow-hidden bg-[#e8e8e4] shadow-lg"
+              >
+                <video
+                  src={src}
+                  preload="metadata"
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/90 text-[10px] font-bold text-[#363535] mb-1.5">
+                    {category}
+                  </span>
+                  <p className="text-white text-sm font-semibold leading-tight">{title}</p>
+                </div>
+                {/* Play icon */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-[#1c1c1e] ml-0.5">
+                      <polygon points="5,3 19,12 5,21"/>
+                    </svg>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
+
+          <div className="mt-5 sm:hidden text-center">
+            <Link href="/explore" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#363535]">
+              View all work
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+          </div>
         </div>
-        <style>{`
-          @keyframes scroll-logos {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-        `}</style>
       </section>
 
       {/* ─── WHY UGC — comparison section ─────────────────── */}
