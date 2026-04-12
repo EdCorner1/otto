@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
 type BlogPost = {
@@ -27,11 +27,20 @@ interface UserState { id: string; email?: string; user_metadata?: Record<string,
 export default function CMSPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [filter, setFilter] = useState<string>('all')
+  const searchParams = useSearchParams()
+  const initialFilter = searchParams.get('filter')
+  const [filter, setFilter] = useState<string>(['all', 'draft', 'in_review', 'published', 'archived'].includes(initialFilter || '') ? (initialFilter as string) : 'all')
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<UserState | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    const next = searchParams.get('filter')
+    if (next && ['all', 'draft', 'in_review', 'published', 'archived'].includes(next)) {
+      setFilter(next)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     const load = async () => {
@@ -75,7 +84,7 @@ export default function CMSPage() {
       {/* Nav */}
       <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>
+          <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>
             Otto<span className="inline-block w-2 h-2 bg-[#ccff00] rounded-full mb-2" />
             <span className="text-xs text-[#9a9a9a] font-normal ml-1">/ CMS</span>
           </Link>

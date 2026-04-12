@@ -13,9 +13,39 @@
 const fs = require('fs');
 const path = require('path');
 
+function loadLocalEnv() {
+  const envPath = path.resolve(process.cwd(), '.env.local');
+  if (!fs.existsSync(envPath)) return;
+
+  const raw = fs.readFileSync(envPath, 'utf8');
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+
+    const idx = trimmed.indexOf('=');
+    if (idx <= 0) continue;
+
+    const key = trimmed.slice(0, idx).trim();
+    let value = trimmed.slice(idx + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+
+    if (!(key in process.env)) {
+      process.env[key] = value;
+    }
+  }
+}
+
+loadLocalEnv();
+
 // ── Config ─────────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://vcoeayvzuranirnxavwn.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SB_SERVICE_ROLE || '';
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SB_SERVICE_ROLE ||
+  '';
 const APP_URL      = process.env.NEXT_PUBLIC_APP_URL || 'https://otto.edcorner.co.uk';
 const CRON_LOG     = '/home/node/.openclaw/workspace/otto-app/.cron-log.json';
 
@@ -314,7 +344,7 @@ async function main() {
   }
 
   if (!SUPABASE_KEY && !DRY_RUN) {
-    log('ERROR: SUPABASE_SERVICE_KEY env var not set');
+    log('ERROR: Supabase service key env var not set (checked SUPABASE_SERVICE_KEY, SUPABASE_SERVICE_ROLE_KEY, SB_SERVICE_ROLE)');
     process.exit(1);
   }
 
@@ -346,6 +376,7 @@ async function main() {
   for (let i = 0; i < postsToRun.length; i++) {
     const p = postsToRun[i];
     log(`  Drafting: "${p.title}"`);
+    let insertedOk = false;
 
     if (DRY_RUN) {
       console.log(`\n=== DRY RUN: ${p.title} ===`);
@@ -372,14 +403,17 @@ async function main() {
       const inserted = Array.isArray(result) ? result[0] : result;
 
       if (inserted?.id) {
+        insertedOk = true;
         log(`  Inserted: ${inserted.id}`);
+      } else if (result?.code === '23505') {
+        log(`  Skipped (slug exists): ${p.slug}`);
       } else {
         log(`  Insert failed: ${JSON.stringify(result)}`);
       }
     }
 
-    // Update log
-    if (!DRY_RUN) {
+    // Update log only on successful inserts
+    if (!DRY_RUN && insertedOk) {
       if (!logData[today]) logData[today] = [];
       logData[today].push({ title: p.title, slug: p.slug, at: new Date().toISOString() });
       fs.writeFileSync(CRON_LOG, JSON.stringify(logData, null, 2));

@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { DEMO_JOBS } from '@/lib/demo-jobs'
 
 const headlineStyle: React.CSSProperties = {
   fontFamily: 'var(--font-bricolage)',
@@ -12,14 +13,6 @@ const headlineStyle: React.CSSProperties = {
   lineHeight: 1.0,
   letterSpacing: '-4.5px',
   color: '#363535',
-}
-
-const PLATFORM_EMOJI: Record<string, string> = {
-  'TikTok': '●',
-  'YouTube Shorts': '●',
-  'Instagram Reels': '●',
-  'Twitter/X': '●',
-  'LinkedIn': '●',
 }
 
 function formatDate(dateStr: string) {
@@ -33,7 +26,7 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
-type Job = {
+type DbJob = {
   id: string
   title: string
   description: string
@@ -43,24 +36,30 @@ type Job = {
   brands: { company_name: string; industry: string }
 }
 
+type DisplayJob = {
+  id: string
+  title: string
+  description: string
+  platforms: string[]
+  budget_range: string
+  created_at: string
+  brands: { company_name: string; industry: string }
+  isDemo?: boolean
+}
+
 export default function JobsPage() {
-  const [user, setUser] = useState<{ email?: string; user_metadata?: { role?: 'brand' | 'creator' } } | null>(null)
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [jobs, setJobs] = useState<DisplayJob[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    const getUser = async () => {
+    const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
-
-      if (user.user_metadata?.role === 'brand') { router.push('/dashboard'); return }
-
-      const { data: creatorData } = await supabase.from('creators').select('id').eq('user_id', user.id).single()
-      if (!creatorData) { router.push('/dashboard'); return }
-
-      setUser(user)
+      if (!user) {
+        router.push('/login')
+        return
+      }
 
       const { data: jobsData } = await supabase
         .from('jobs')
@@ -68,13 +67,35 @@ export default function JobsPage() {
         .eq('status', 'open')
         .order('created_at', { ascending: false })
 
-      setJobs((jobsData as Job[]) || [])
+      const liveJobs = ((jobsData as DbJob[]) || []).map((j) => ({
+        ...j,
+        isDemo: false,
+      }))
+
+      const targetCount = 14
+      const needed = Math.max(0, targetCount - liveJobs.length)
+      const demoJobs: DisplayJob[] = DEMO_JOBS.slice(0, needed).map((j) => ({
+        id: j.id,
+        title: j.title,
+        description: j.description,
+        platforms: j.platforms,
+        budget_range: j.budget_range,
+        created_at: j.created_at,
+        brands: {
+          company_name: j.brand.company_name,
+          industry: j.brand.industry,
+        },
+        isDemo: true,
+      }))
+
+      setJobs([...liveJobs, ...demoJobs])
       setLoading(false)
     }
-    getUser()
+
+    load()
   }, [])
 
-  
+  const liveCount = useMemo(() => jobs.filter((j) => !j.isDemo).length, [jobs])
 
   if (loading) {
     return (
@@ -86,13 +107,15 @@ export default function JobsPage() {
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
-
-      <main className="pt-28 pb-20 max-w-2xl mx-auto px-6">
+      <main className="pt-28 pb-20 max-w-3xl mx-auto px-6">
         <div className="mb-8 fade-up">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-1 gap-3">
             <h1 style={headlineStyle}>Open Briefs</h1>
             <span className="section-label">{jobs.length} available</span>
           </div>
+          <p className="text-xs text-[#9a9a9a]">
+            {liveCount} live brief{liveCount !== 1 ? 's' : ''} + curated Otto opportunities to keep your pipeline moving.
+          </p>
         </div>
 
         {jobs.length === 0 ? (
@@ -106,13 +129,18 @@ export default function JobsPage() {
             {jobs.map((job, i) => (
               <div key={job.id} className={`card card-hover space-y-3 fade-up stagger-${Math.min(i + 1, 5)}`}>
                 {/* Company + date */}
-                <div className="flex items-center gap-2 text-xs text-[#6b6b6b]">
+                <div className="flex items-center gap-2 text-xs text-[#6b6b6b] flex-wrap">
                   <span className="font-semibold text-[#363535]">{job.brands?.company_name || 'Brand'}</span>
                   {job.brands?.industry && (
                     <>
                       <span>·</span>
                       <span className="px-2 py-0.5 bg-[#e8e8e4] rounded-full text-[#6b6b6b]">{job.brands.industry}</span>
                     </>
+                  )}
+                  {job.isDemo && (
+                    <span className="px-2 py-0.5 bg-[#ccff00]/30 rounded-full text-[#363535] font-semibold">
+                      Otto Featured
+                    </span>
                   )}
                   <span>·</span>
                   <span>{formatDate(job.created_at)}</span>
@@ -128,21 +156,28 @@ export default function JobsPage() {
 
                 {/* Platforms */}
                 <div className="flex flex-wrap gap-2">
-                  {(job.platforms || []).map(p => (
+                  {(job.platforms || []).map((p) => (
                     <span key={p} className="text-sm text-[#363535]">
                       ● {p}
                     </span>
                   ))}
                 </div>
 
-                {/* Budget + Apply */}
+                {/* Budget + CTA */}
                 <div className="flex items-center justify-between pt-1">
                   <span className="px-3 py-1 bg-[#ccff00]/20 rounded-full text-xs font-semibold text-[#363535]">
                     {job.budget_range}
                   </span>
-                  <Link href={`/jobs/${job.id}/apply`} className="btn-primary text-sm py-2 px-5">
-                    Apply →
-                  </Link>
+
+                  {job.isDemo ? (
+                    <Link href={`/jobs/${job.id}`} className="btn-primary text-sm py-2 px-5">
+                      View brief →
+                    </Link>
+                  ) : (
+                    <Link href={`/jobs/${job.id}/apply`} className="btn-primary text-sm py-2 px-5">
+                      Apply →
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}

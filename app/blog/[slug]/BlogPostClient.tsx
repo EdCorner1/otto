@@ -215,7 +215,7 @@ export default function BlogPostClient({ slug }: { slug: string }) {
   const articleRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
-  const seriesIndex = SERIES_SLUGS.indexOf(slug)
+  const seriesIndex = SERIES_SLUGS.indexOf(resolvedSlug)
   const isInSeries = seriesIndex !== -1
   const prevSlug = seriesIndex > 0 ? SERIES_SLUGS[seriesIndex - 1] : null
   const nextSlug = seriesIndex < SERIES_SLUGS.length - 1 ? SERIES_SLUGS[seriesIndex + 1] : null
@@ -226,7 +226,7 @@ export default function BlogPostClient({ slug }: { slug: string }) {
       const { data: p } = await supabase
         .from('blog_posts')
         .select('*, blog_categories(name, slug)')
-        .eq('slug', slug)
+        .eq('slug', resolvedSlug)
         .eq('status', 'published')
         .single()
       if (!p) { setNotFound(true); setLoading(false); return }
@@ -236,7 +236,7 @@ export default function BlogPostClient({ slug }: { slug: string }) {
       setLoading(false)
     }
     load()
-  }, [slug])
+  }, [resolvedSlug])
 
   // Scroll progress tracker
   useEffect(() => {

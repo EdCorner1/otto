@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { getDemoJobById } from '@/lib/demo-jobs'
 
 
 type Job = {
@@ -24,8 +25,14 @@ export default function ApplyPage() {
   const [creatorRate, setCreatorRate] = useState('')
   const router = useRouter()
   const supabase = createClient()
+  const demoJob = getDemoJobById(jobId)
 
   useEffect(() => {
+    if (demoJob) {
+      router.replace(`/jobs/${jobId}`)
+      return
+    }
+
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }

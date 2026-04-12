@@ -6,8 +6,41 @@
  * Run: SB_SERVICE_ROLE=<key> node scripts/content-enhancer.js [--dry-run] [--slug=<slug>]
  */
 
+const fs = require('fs')
+const path = require('path')
 const { execSync, spawn } = require('child_process')
-const SB_KEY = process.env.SB_SERVICE_ROLE || process.env.SUPABASE_SERVICE_KEY || ''
+
+function loadLocalEnv() {
+  const envPath = path.resolve(process.cwd(), '.env.local')
+  if (!fs.existsSync(envPath)) return
+
+  const raw = fs.readFileSync(envPath, 'utf8')
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+
+    const idx = trimmed.indexOf('=')
+    if (idx <= 0) continue
+
+    const key = trimmed.slice(0, idx).trim()
+    let value = trimmed.slice(idx + 1).trim()
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1)
+    }
+
+    if (!(key in process.env)) {
+      process.env[key] = value
+    }
+  }
+}
+
+loadLocalEnv()
+
+const SB_KEY =
+  process.env.SB_SERVICE_ROLE ||
+  process.env.SUPABASE_SERVICE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  ''
 const DRY_RUN = process.argv.includes('--dry-run')
 const TARGET_SLUG = process.argv.find(a => a.startsWith('--slug='))?.split('=')[1] || null
 const SB_URL = 'https://vcoeayvzuranirnxavwn.supabase.co'
@@ -81,7 +114,7 @@ function addRelatedPosts(content, currentSlug, allPosts) {
 
 async function main() {
   if (!SB_KEY) {
-    log('ERROR: SUPABASE_SERVICE_KEY env var not set')
+    log('ERROR: Supabase service key env var not set (checked SUPABASE_SERVICE_KEY, SUPABASE_SERVICE_ROLE_KEY, SB_SERVICE_ROLE)')
     process.exit(1)
   }
 

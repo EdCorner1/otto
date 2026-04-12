@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import HomeAuthCtas from './HomeAuthCtas'
 
 const IconBrief = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -35,10 +36,7 @@ export default function HomePage() {
           <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
           <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
         </Link>
-        <div className="flex items-center gap-5">
-          <Link href="/login" className="btn-ghost text-sm px-4 py-2 hidden sm:inline-flex">Sign in</Link>
-          <Link href="/signup" className="btn-primary text-sm py-2 px-5">Get Started</Link>
-        </div>
+        <HomeAuthCtas />
       </nav>
 
       {/* ─── HERO — full first screen ─────────────────────── */}
