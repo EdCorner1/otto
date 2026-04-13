@@ -13,8 +13,6 @@ button, a, input, textarea, select, label { min-height: 44px; }
 @media (max-width: 480px) {
   .card { padding: 1.25rem; border-radius: 1.25rem; }
   .section-label { font-size: 0.65rem; }
-  h1 { letter-spacing: -2px !important; }
-  h2 { letter-spacing: -1px !important; }
 }
 
 /* Touch-friendly tap targets for pills/tags */
