@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { MessageCircle } from 'lucide-react'
 
 const headlineStyle: React.CSSProperties = {
   fontFamily: 'var(--font-bricolage)',
@@ -121,7 +122,7 @@ export default function MessagesPage() {
 
         {deals.length === 0 ? (
           <div className="text-center py-20 fade-up">
-            <div className="text-4xl mb-4">💬</div>
+            <div className="mb-4 flex justify-center"><MessageCircle size={48} className="text-[#ccff00]" /></div>
             <h2 className="font-display text-xl font-semibold text-[#363535] mb-2">No conversations yet</h2>
             <p className="text-sm text-[#6b6b6b] mb-6">Apply to a brief to get started.</p>
             <Link href="/jobs" className="btn-primary">Browse Briefs</Link>

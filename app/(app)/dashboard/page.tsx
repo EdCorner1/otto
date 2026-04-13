@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 import { DEMO_JOBS } from '@/lib/demo-jobs'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { CheckCircle } from 'lucide-react'
 
 const headlineStyle: React.CSSProperties = {
   fontFamily: 'var(--font-bricolage)',
@@ -217,8 +218,8 @@ useEffect(() => {
       {/* Success banner */}
       {posted && (
         <div className="mb-6 fade-up bg-[#ccff00] text-[#1c1c1c] rounded-xl px-5 py-3 text-sm font-semibold flex items-center justify-between">
-          <span>✅ Brief posted successfully! Creators can now apply.</span>
-          <button onClick={() => setPosted(false)} className="opacity-60 hover:opacity-100">✕</button>
+          <span className="flex items-center gap-2"><CheckCircle size={16} /> Brief posted. Creators can now apply.</span>
+          <button onClick={() => setPosted(false)} className="opacity-60 hover:opacity-100 ml-2 text-lg leading-none">&times;</button>
         </div>
       )}
 

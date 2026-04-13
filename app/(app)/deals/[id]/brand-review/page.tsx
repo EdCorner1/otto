@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { ExternalLink, CheckCircle, RotateCcw } from 'lucide-react'
 
 type Deal = {
   id: string; status: string; budget: number | null
@@ -180,7 +181,7 @@ export default function BrandDealReviewPage() {
               <p className="text-xs text-[#9a9a9a] mb-2">Content link</p>
               <a href={deal.submitted_url} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-medium text-[#363535] bg-[#f0f0ec] hover:bg-[#e8e8e4] px-4 py-2.5 rounded-xl transition-colors break-all">
-                <span>🔗</span>
+              <ExternalLink size={14} />
                 <span className="break-all">{deal.submitted_url}</span>
               </a>
             </div>
@@ -206,14 +207,14 @@ export default function BrandDealReviewPage() {
             >
               {actioning && done === 'approved' ? (
                 <><span className="w-4 h-4 border-2 border-[#1c1c1e]/30 border-t-[#1c1c1e] rounded-full animate-spin" /> Approving...</>
-              ) : '✅ Approve & release payment'}
+              ) : <><CheckCircle size={16} /> Approve & release payment</>}
             </button>
             <button
               onClick={handleRevision}
               disabled={actioning}
               className="btn-ghost flex-1"
             >
-              {actioning && done === 'revision' ? 'Sending...' : '🔁 Request revision'}
+              {actioning && done === 'revision' ? 'Sending...' : <><RotateCcw size={16} /> Request revision</>}
             </button>
             <Link href={`/messages/${deal.id}`} className="btn-ghost">Message creator</Link>
           </div>
@@ -223,7 +224,7 @@ export default function BrandDealReviewPage() {
       {/* Approved state */}
       {deal.status === 'approved' && (
         <div className="card text-center py-8">
-          <div className="text-4xl mb-3">✅</div>
+          <div className="mb-3 flex justify-center"><CheckCircle size={40} className="text-green-600" /></div>
           <h2 style={{ fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-2">Work approved!</h2>
           <p className="text-sm text-[#6b6b6b] mb-6">Payment has been released to the creator.</p>
@@ -234,7 +235,7 @@ export default function BrandDealReviewPage() {
       {/* Revision requested */}
       {deal.status === 'revision_requested' && (
         <div className="card text-center py-8">
-          <div className="text-4xl mb-3">🔁</div>
+          <div className="mb-3 flex justify-center"><RotateCcw size={40} className="text-blue-500" /></div>
           <h2 style={{ fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-2">Revision requested</h2>
           <p className="text-sm text-[#6b6b6b] mb-6">The creator has been notified. Check messages for updates.</p>

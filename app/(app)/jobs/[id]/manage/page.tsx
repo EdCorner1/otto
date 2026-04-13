@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { CheckCircle } from 'lucide-react'
 
 type Application = {
   id: string; message: string; proposed_rate?: number; status: string; created_at: string
@@ -87,7 +88,7 @@ export default function JobManagePage() {
         deal_id: deal.id,
         sender_id: user.id,
         sender_name: brandData?.company_name || 'Brand',
-        content: `🎉 Great news! You've been selected for "${job.title}". Head over to discuss the brief and get started.`,
+        content: `You have been selected for "${job.title}". Head over to discuss the brief and get started.`,
       })
       setDealCreated(app.creators.id)
       setJob(prev => prev ? { ...prev, status: 'filled' } : null)
@@ -182,7 +183,7 @@ export default function JobManagePage() {
       {/* Accepted state */}
       {dealCreated && (
         <div className="mb-6 p-5 bg-green-50 border border-green-200 rounded-xl">
-          <p className="text-sm font-semibold text-green-800 mb-1">✅ Creator selected!</p>
+          <p className="text-sm font-semibold text-green-800 mb-1 flex items-center gap-1"><CheckCircle size={14} /> Creator selected</p>
           <p className="text-xs text-green-700 mb-3">A conversation has been started. Head to Messages to discuss next steps.</p>
           <Link href="/messages" className="text-xs font-semibold text-green-800 underline">Go to Messages →</Link>
         </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { ExternalLink, MessageCircle, CheckCircle } from 'lucide-react'
 
 type Deal = {
   id: string; status: string; budget: number | null
@@ -216,7 +217,8 @@ export default function DealOverviewPage() {
               <p className="text-xs text-[#9a9a9a] mb-2">Content link</p>
               <a href={deal.submitted_url} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-medium text-[#363535] bg-[#f0f0ec] hover:bg-[#e8e8e4] px-4 py-2.5 rounded-xl transition-colors break-all">
-                🔗 <span className="break-all">{deal.submitted_url}</span>
+                              <ExternalLink size={14} />
+                <span className="break-all">{deal.submitted_url}</span>
               </a>
             </div>
           )}
@@ -242,12 +244,12 @@ export default function DealOverviewPage() {
 
       {/* Actions */}
       <div className="flex gap-3">
-        <Link href={`/messages/${deal.id}`} className="btn-primary flex-1 text-center">
-          💬 Message {isBrand ? deal.creators?.display_name?.split(' ')[0] : 'brand'}
+        <Link href={`/messages/${deal.id}`} className="btn-primary flex-1 text-center inline-flex items-center justify-center gap-2">
+          <MessageCircle size={16} /> Message {isBrand ? deal.creators?.display_name?.split(' ')[0] : 'brand'}
         </Link>
         {isBrand && deal.status === 'submitted' && (
-          <Link href={`/deals/${deal.id}/brand-review`} className="btn-primary flex-1 text-center">
-            ✅ Review work
+          <Link href={`/deals/${deal.id}/brand-review`} className="btn-primary flex-1 text-center inline-flex items-center justify-center gap-2">
+            <CheckCircle size={16} /> Review work
           </Link>
         )}
       </div>

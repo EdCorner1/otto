@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { CheckCircle } from 'lucide-react'
 import { getDemoJobById } from '@/lib/demo-jobs'
 
 
@@ -82,7 +83,7 @@ export default function ApplyPage() {
   if (success) {
     return (
       <div className="max-w-xl mx-auto px-6 pt-10 text-center">
-        <div className="text-5xl mb-6">✅</div>
+        <div className="mb-6 flex justify-center"><CheckCircle size={56} className="text-green-600" /></div>
         <h1 style={{ fontSize: 'clamp(24px, 4vw, 36px)',
           letterSpacing: '-1.5px', color: '#1c1c1e',
         }} className="mb-4">
