@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Globe } from 'lucide-react'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -379,15 +380,22 @@ export default function ProfileEditPage() {
                   { platform: 'YouTube', key: 'youtube', value: youtube, onChange: setYoutube, placeholder: 'https://youtube.com/@yourchannel' },
                   { platform: 'Instagram', key: 'instagram', value: instagram, onChange: setInstagram, placeholder: 'https://instagram.com/yourhandle' },
                   { platform: 'Twitter / X', key: 'twitter', value: twitter, onChange: setTwitter, placeholder: 'https://x.com/yourhandle' },
-                  { platform: 'Website', key: 'website', icon: '🌐', value: website, onChange: setWebsite, placeholder: 'https://yoursite.com' },
-                ].map(({ platform, key, icon, value, onChange, placeholder }) => (
-                  <div key={key} className="flex items-center gap-3">
-                    <span className="w-7 h-7 rounded-lg bg-[#f0f0ec] flex items-center justify-center text-xs flex-shrink-0">{icon}</span>
-                    <input value={value} onChange={e => onChange(e.target.value)} type="url"
-                      placeholder={placeholder}
-                      className="flex-1 px-3 py-2 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-xs text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
-                  </div>
-                ))}
+                  { platform: 'Website', key: 'website', value: website, onChange: setWebsite, placeholder: 'https://yoursite.com' },
+                ].map(({ platform, key, value, onChange, placeholder }) => {
+                  const label = key === 'tiktok' ? 'TT' : key === 'youtube' ? 'YT' : key === 'instagram' ? 'IG' : key === 'twitter' ? 'X' : ''
+                  return (
+                    <div key={key} className="flex items-center gap-3">
+                      {key === 'website' ? (
+                        <span className="w-7 h-7 rounded-lg bg-[#f0f0ec] flex items-center justify-center flex-shrink-0"><Globe size={13} /></span>
+                      ) : (
+                        <span className="w-7 h-7 rounded-lg bg-[#f0f0ec] flex items-center justify-center text-xs font-bold flex-shrink-0">{label}</span>
+                      )}
+                      <input value={value} onChange={e => onChange(e.target.value)} type="url"
+                        placeholder={placeholder}
+                        className="flex-1 px-3 py-2 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-xs text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </>

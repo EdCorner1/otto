@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import { Globe, Calendar } from 'lucide-react'
 
 type Brand = {
   id: string; user_id: string; company_name: string; website: string | null; logo_url: string | null;
@@ -208,11 +209,11 @@ export default function BrandProfilePage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-[#363535] hover:text-[#1c1c1c] underline underline-offset-2"
                   >
-                    🌐 {brand.website.replace(/^https?:\/\//, '')}
+                    <Globe size={12} /> {brand.website.replace(/^https?:\/\//, '')}
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </a>
                 )}
-                <span className="text-xs text-[#9a9a9a]">📅 Joined {formatDate(brand.created_at)}</span>
+                <span className="flex items-center gap-1 text-xs text-[#9a9a9a]"><Calendar size={11} /> Joined {formatDate(brand.created_at)}</span>
               </div>
 
               {/* Subscription tier */}

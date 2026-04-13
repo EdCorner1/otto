@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import { Calendar } from 'lucide-react'
 
 type Social = { id: string; creator_id: string; platform: string; url: string }
 type PortfolioItem = { id: string; creator_id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; platform: string | null; views_count: number; sort_order: number; created_at: string }
@@ -247,7 +248,7 @@ export default function CreatorProfilePage() {
                 {creator.hourly_rate && (
                   <span className="flex items-center gap-1">💷 £{creator.hourly_rate}/hr</span>
                 )}
-                <span className="flex items-center gap-1">📅 Joined {formatDate(creator.created_at)}</span>
+                <span className="flex items-center gap-1 text-xs text-[#9a9a9a]"><Calendar size={11} /> Joined {formatDate(creator.created_at)}</span>
                 {creator.profile_views > 0 && (
                   <span className="flex items-center gap-1">👁 {creator.profile_views} views</span>
                 )}
