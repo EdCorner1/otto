@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ─── Responsive base ─────────────────────────────────────── */
 * { -webkit-tap-highlight-color: transparent; }
 
@@ -112,7 +116,6 @@ h2, .headline-lg {
 }
 
 /* ─── Buttons ───────────────────────────────────────────── */
-@tailwind components;
 @layer components {
   .btn-primary {
     display: inline-flex;
