@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
 
 export const runtime = 'nodejs'
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY
+const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -15,11 +14,22 @@ const SEGMENT_NAMES = {
 
 type Role = keyof typeof SEGMENT_NAMES
 
+type GatewayResponse<T> = {
+  data: T | null
+  error: { message?: string; name?: string; statusCode?: number | null } | null
+}
+
+type Segment = { id: string; name: string }
+
+type ListSegmentsResponse = {
+  object: 'list'
+  data: Segment[]
+  has_more: boolean
+}
+
 const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
   : null
-
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null
 
 function isValidRole(value: unknown): value is Role {
   return value === 'creator' || value === 'brand'
@@ -29,11 +39,44 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
-async function ensureSegment(role: Role) {
-  if (!resend) return null
+async function gateway<T = unknown>(path: string, options: RequestInit = {}): Promise<GatewayResponse<T>> {
+  if (!OPENCLAW_GATEWAY_TOKEN) {
+    return {
+      data: null,
+      error: { message: 'Missing Otto gateway token.' },
+    }
+  }
 
+  const res = await fetch(`https://gateway.maton.ai${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  })
+
+  const json = await res.json().catch(() => null)
+
+  if (!res.ok) {
+    return {
+      data: null,
+      error: json?.error || json || { message: res.statusText, statusCode: res.status },
+    }
+  }
+
+  return {
+    data: (json?.data ?? json) as T,
+    error: null,
+  }
+}
+
+async function ensureSegment(role: Role) {
   const targetName = SEGMENT_NAMES[role]
-  const listed = await resend.segments.list({ limit: 100 })
+
+  const listed = await gateway<ListSegmentsResponse>('/resend/segments?limit=100', {
+    method: 'GET',
+  })
 
   if (listed.error) {
     throw new Error(listed.error.message || 'Could not list Resend segments')
@@ -42,7 +85,11 @@ async function ensureSegment(role: Role) {
   const existing = listed.data?.data?.find((segment) => segment.name === targetName)
   if (existing) return existing.id
 
-  const created = await resend.segments.create({ name: targetName })
+  const created = await gateway<{ id: string }>('/resend/segments', {
+    method: 'POST',
+    body: JSON.stringify({ name: targetName }),
+  })
+
   if (created.error || !created.data?.id) {
     throw new Error(created.error?.message || 'Could not create Resend segment')
   }
@@ -51,37 +98,44 @@ async function ensureSegment(role: Role) {
 }
 
 async function syncToResend(email: string, role: Role) {
-  if (!resend) return { ok: false, reason: 'missing_resend_key' as const }
+  if (!OPENCLAW_GATEWAY_TOKEN) return { ok: false as const, reason: 'missing_gateway_token' as const }
 
   const segmentId = await ensureSegment(role)
-  if (!segmentId) return { ok: false, reason: 'missing_segment' as const }
 
-  const created = await resend.contacts.create({
-    email,
-    unsubscribed: false,
-    properties: {
-      role,
-      source: 'otto-ugc-waitlist-hero',
-    },
-    segments: [{ id: segmentId }],
+  const created = await gateway('/resend/contacts', {
+    method: 'POST',
+    body: JSON.stringify({
+      email,
+      unsubscribed: false,
+      properties: {
+        role,
+        source: 'otto-ugc-waitlist-hero',
+      },
+      segments: [{ id: segmentId }],
+    }),
   })
 
   if (!created.error) {
     return { ok: true as const }
   }
 
-  const added = await resend.contacts.segments.add({ email, segmentId })
+  const added = await gateway(`/resend/contacts/${encodeURIComponent(email)}/segments/${segmentId}`, {
+    method: 'POST',
+  })
+
   if (added.error) {
     throw new Error(added.error.message || 'Could not add contact to segment')
   }
 
-  await resend.contacts.update({
-    email,
-    unsubscribed: false,
-    properties: {
-      role,
-      source: 'otto-ugc-waitlist-hero',
-    },
+  await gateway(`/resend/contacts/${encodeURIComponent(email)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      unsubscribed: false,
+      properties: {
+        role,
+        source: 'otto-ugc-waitlist-hero',
+      },
+    }),
   })
 
   return { ok: true as const }
@@ -126,7 +180,7 @@ export async function POST(req: Request) {
       )
     }
 
-    return NextResponse.json({ ok: true, resendConfigured: !!RESEND_API_KEY })
+    return NextResponse.json({ ok: true, resendConfigured: !!OPENCLAW_GATEWAY_TOKEN })
   } catch {
     return NextResponse.json(
       { error: 'Could not join the waitlist right now. Try again in a minute.' },
