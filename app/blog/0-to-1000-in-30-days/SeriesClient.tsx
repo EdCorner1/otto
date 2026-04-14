@@ -28,7 +28,7 @@ const DAYS = [
   { day: 25, title: 'Day 25: Protecting Yourself and Your Work', slug: 'day-25-protecting-yourself-and-work', teaser: 'Contracts, copyright, and the red flags to watch for.' },
   { day: 26, title: 'Day 26: Raising Your Rates', slug: 'day-26-raising-your-rates', teaser: 'When to raise, how much, and how to tell your existing clients.' },
   { day: 27, title: 'Day 27: Your First £3,000 Month', slug: 'day-27-first-3000-month', teaser: 'The milestone that makes UGC feel like a real business.' },
-  { day: 28, title: 'Day 28: Building a Signup of Brands', slug: 'day-28-building-brand-demand', teaser: 'How to be in a position where brands come to you.' },
+  { day: 28, title: 'Day 28: Building Brand Demand', slug: 'day-28-building-brand-demand', teaser: 'How to be in a position where brands come to you.' },
   { day: 29, title: 'Day 29: Planning Your Next 90 Days', slug: 'day-29-planning-next-90-days', teaser: 'From £0 to £1,000 was the start. Here is what the next 90 days look like.' },
   { day: 30, title: 'Day 30: Where to Go From Here', slug: 'day-30-where-to-go-from-here', teaser: 'The path from £1,000 to £10,000 a month — and what actually comes next.' },
 ]
@@ -108,11 +108,11 @@ export default function SeriesPage() {
         {/* CTA */}
         <div className="mt-12 p-8 bg-[#1c1c1c] rounded-2xl text-center">
           <h2 style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '26px', letterSpacing: '-2px', color: '#fff' }} className="mb-2">
-            Want early access to everything?
+            Want access to everything?
           </h2>
-          <p className="text-white/50 text-sm mb-6">Join the Otto signup — get notified as each post drops.</p>
+          <p className="text-white/50 text-sm mb-6">Create your Otto account to follow along with each post.</p>
           <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 bg-[#ccff00] text-[#1c1c1c] rounded-xl text-sm font-bold hover:bg-[#d9ff4d] transition-colors">
-            Get Started →
+            Create account →
           </Link>
         </div>
       </div>

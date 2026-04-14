@@ -225,10 +225,10 @@ export default function JobDetailPage() {
               This is a curated sample brief to keep the marketplace active while we expand live campaigns.
             </p>
             <Link
-              href={`/signup?source=otto-featured-brief&job=${encodeURIComponent(job.title)}`}
+              href="/signup"
               className="btn-primary"
             >
-              Express interest →
+              Create an account →
             </Link>
           </div>
         ) : alreadyApplied ? (

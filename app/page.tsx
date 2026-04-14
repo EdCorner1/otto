@@ -174,7 +174,7 @@ export default function HomePage() {
               href="/signup"
               className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-[#363535] hover:text-[#1c1c1e] transition-colors"
             >
-              Join Otto
+              Get Started
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
@@ -270,7 +270,7 @@ export default function HomePage() {
           <div className="mt-5 text-center">
             <p className="text-sm text-[#9a9a9a] mb-3">Login to see all briefs and apply</p>
             <Link href="/signup" className="btn-primary text-sm px-6 py-3">
-              Join Otto — free for creators
+              Create your account
             </Link>
           </div>
 
@@ -395,10 +395,10 @@ export default function HomePage() {
             Ready to work with UGC creators?
           </h2>
           <p className="text-[#6b6b6b] text-base mb-8">
-            create your account. Be first when we open.
+            Create your account and start exploring Otto.
           </p>
           <Link href="/signup" className="btn-primary text-base px-8 py-4 inline-flex items-center gap-2">
-            Join Otto Today
+            Create your account
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>

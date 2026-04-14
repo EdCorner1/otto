@@ -155,11 +155,11 @@ export default function ResourcesPage() {
         {/* CTA */}
         <div className="bg-[#363535] rounded-2xl p-8 text-center">
           <h2 style={{ fontSize: 'clamp(22px, 4vw, 32px)', letterSpacing: '-2px', color: '#ffffff' }} className="mb-3">
-            Want early access to everything?
+            Want access to everything?
           </h2>
-          <p className="text-white/60 text-sm mb-6">Join the Otto signup and get notified as resources drop — before anyone else.</p>
+          <p className="text-white/60 text-sm mb-6">Create your Otto account to access resources as they drop.</p>
           <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 bg-[#ccff00] text-[#1c1c1c] rounded-xl text-sm font-bold hover:bg-[#d9ff4d] transition-colors">
-            Get Started →
+            Create your account →
           </Link>
         </div>
 

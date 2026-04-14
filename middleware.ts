@@ -9,7 +9,6 @@ export async function middleware(request: NextRequest) {
     '/',
     '/login',
     '/signup',
-    '/signup',
     '/blog',
     '/resources',
     '/explore',

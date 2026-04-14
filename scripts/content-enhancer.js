@@ -82,7 +82,7 @@ async function updatePostContent(id, content) {
 function addInlineCTA(content) {
   // Insert inline CTA at ~60% through the content
   const lines = content.split('\n')
-  const cta = '\n\n{{CTA: create your account →}}\n\n'
+  const cta = '\n\n{{CTA: Create your account →}}\n\n'
   const midPoint = Math.floor(lines.length * 0.6)
   let insertAt = lines.length - 2
 

@@ -68,7 +68,7 @@ and have a useful note even if they forget everything else.]
 
 ## CTA — Bottom of every post
 
-[One sentence that bridges from the post topic to the signup/community.
+[One sentence that bridges from the post topic to the account/community.
 Must feel like a natural next step, not a cold sell.]
 
 → Join [X] readers getting UGC insights that actually convert.
@@ -105,7 +105,7 @@ The renderer will display these at the bottom of the article.]
 
 ### Inline CTA (within article)
 ```
-{{CTA: create your account →}}
+{{CTA: Create your account →}}
 ```
 Renders as a styled inline banner.
 
