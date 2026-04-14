@@ -79,7 +79,7 @@ function renderImageWithCaption(src: string, alt: string, caption: string): stri
 }
 
 function renderInlineCTA(): string {
-  return `<div class="inline-cta"><span>🚀</span><div><strong>Want more practical UGC insights?</strong><p>Create your Otto account to access practical UGC insights and tools.</p></div><a href="/signup" class="inline-cta-btn">Create account →</a></div>`
+  return `<div class="inline-cta"><span>🚀</span><div><strong>Want more practical UGC insights?</strong><p>Join the Otto signup — the newsletter for tech creators who mean business.</p></div><a href="/signup" class="inline-cta-btn">Get Started →</a></div>`
 }
 
 function renderHorizontalRule(): string {
@@ -382,10 +382,10 @@ export default function BlogPostClient({ slug }: { slug: string }) {
             <p className="mb-2" style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 600, fontSize: '20px', letterSpacing: '-0.5px', color: '#fff' }}>
               Want more practical UGC insights?
             </p>
-            <p className="text-white/50 text-sm mb-5">Create your Otto account to access practical UGC insights and tools.</p>
+            <p className="text-white/50 text-sm mb-5">Join the Otto signup — the newsletter for tech creators who mean business.</p>
             <Link href="/signup"
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#ccff00] text-[#1c1c1e] rounded-xl text-sm font-bold hover:bg-[#d9ff4d] transition-colors">
-              Create account →
+              Get Started →
             </Link>
           </div>
         )}
