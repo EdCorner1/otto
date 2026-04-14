@@ -135,9 +135,9 @@ export default function WaitlistPage() {
             style={{
               fontFamily: 'var(--font-bricolage)',
               fontWeight: 300,
-              fontSize: 'clamp(3rem, 7.8vw, 6.2rem)',
-              lineHeight: 0.96,
-              letterSpacing: '-0.055em',
+              fontSize: 'clamp(2.8rem, 7vw, 5.8rem)',
+              lineHeight: 1.02,
+              letterSpacing: '-0.025em',
             }}
           >
             {content.headline}
