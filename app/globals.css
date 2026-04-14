@@ -1,6 +1,29 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ─── Responsive base ─────────────────────────────────────── */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Images: never overflow */
+img { max-width: 100%; height: auto; }
+
+/* Interactive targets: minimum 44px on mobile */
+button, a, input, textarea, select, label { min-height: 44px; }
+/* But don&apos;t force it on clearly large desktop targets */
+.btn-primary, .btn-ghost { min-height: unset; }
+
+/* Padding scale for mobile-first */
+@media (max-width: 480px) {
+  .card { padding: 1.25rem; border-radius: 1.25rem; }
+  .section-label { font-size: 0.65rem; }
+  h1 { letter-spacing: -2px !important; }
+  h2 { letter-spacing: -1px !important; }
+}
+
+/* Touch-friendly tap targets for pills/tags */
+@media (max-width: 480px) {
+  button:not(.btn-primary):not(.btn-ghost) {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
 
 /* ─── Tailwind comes first — our overrides come after ─── */
 
@@ -188,7 +211,7 @@ h2, .headline-lg {
   overflow: hidden;
 }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
-.scrollbar-hide { -ms-overlog-style: none; scrollbar-width: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ─── Entrance animations ─────────────────────────────── */
 @keyframes fadeUp {
