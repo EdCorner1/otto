@@ -6,76 +6,36 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 type CreatorProfile = {
-  id: string; display_name: string; headline: string; bio: string
-  location: string; availability: string; avatar_url?: string
-  hourly_rate?: string; skills?: string[]
+  id: string
+  display_name: string
+  headline: string
+  bio: string
+  location: string
+  availability: string
+  avatar_url?: string
+  hourly_rate?: string
+  skills?: string[]
   creator_socials?: { platform: string; url: string }[]
-  user_id: string; created_at: string
+  user_id: string
+  created_at: string
 }
 
 type Job = {
-  id: string; title: string; platforms: string[]
-  budget_range: string; created_at: string; status: string
-}
-
-type PortfolioItem = {
-  id: string; type: string; url: string; caption?: string
+  id: string
+  title: string
+  platforms: string[]
+  budget_range: string
+  created_at: string
+  status: string
 }
 
 const platformIcons: Record<string, string> = {
-  'Instagram': '📸', 'TikTok': '🎵', 'YouTube': '▶️',
-  'Twitter/X': '✖', 'LinkedIn': '💼', 'Website': '🔗',
-}
-
-function PortfolioGrid({ items }: { items: PortfolioItem[] }) {
-  if (items.length === 0) return null
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {items.map((item: PortfolioItem) => (
-        <a
-          key={item.id}
-          href={item.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block"
-        >
-          <div className="relative aspect-[9/16] rounded-xl overflow-hidden bg-[#f0f0ec] group">
-            {item.type === 'video' ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://img.youtube.com/vi/${extractYTId(item.url)}/hqdefault.jpg`}
-                  alt={item.caption || 'Video'}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="ml-0.5">
-                      <polygon points="5,3 19,12 5,21" />
-                    </svg>
-                  </div>
-                </div>
-              </>
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.url} alt={item.caption || ''} className="w-full h-full object-cover" />
-            )}
-            {item.caption && (
-              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
-                <p className="text-xs text-white leading-snug line-clamp-2">{item.caption}</p>
-              </div>
-            )}
-          </div>
-        </a>
-      ))}
-    </div>
-  )
-}
-
-function extractYTId(url: string): string {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
-  return match ? match[1] : ''
+  'Instagram': '📸',
+  'TikTok': '🎵',
+  'YouTube': '▶️',
+  'Twitter/X': '✖',
+  'LinkedIn': '💼',
+  'Website': '🔗',
 }
 
 export default function CreatorProfilePage() {
@@ -87,7 +47,6 @@ export default function CreatorProfilePage() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [recentJobs, setRecentJobs] = useState<Job[]>([])
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([])
 
   useEffect(() => {
     const load = async () => {
@@ -105,23 +64,19 @@ export default function CreatorProfilePage() {
 
       setCreator(data as CreatorProfile)
 
-      const [{ data: appsData }, { data: portfolioData }] = await Promise.all([
-        supabase
-          .from('applications')
-          .select('jobs(id, title, platforms, budget_range, created_at, status)')
-          .eq('creator_id', creatorId)
-          .order('created_at', { ascending: false })
-          .limit(5),
-        supabase
-          .from('portfolio_items')
-          .select('*')
-          .eq('creator_id', creatorId)
-          .order('created_at', { ascending: true }),
-      ])
+      // Fetch recent applications this creator has made
+      const { data: apps } = await supabase
+        .from('applications')
+        .select('jobs(id, title, platforms, budget_range, created_at, status)')
+        .eq('creator_id', creatorId)
+        .order('created_at', { ascending: false })
+        .limit(5)
 
-      const jobs = (appsData || []).map((a: any) => a.jobs as Job | Job[]).filter(Boolean).flat() as Job[]
+      const jobs = (apps || [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((a: any) => a.jobs)
+        .filter(Boolean)
       setRecentJobs(jobs)
-      setPortfolio((portfolioData as PortfolioItem[]) || [])
       setLoading(false)
     }
     load()
@@ -135,7 +90,7 @@ export default function CreatorProfilePage() {
 
   if (notFound || !creator) return (
     <div className="max-w-2xl mx-auto px-6 pt-20 text-center">
-      <h1 style={{ fontSize: '32px', letterSpacing: '-0.5px', color: '#363535' }} className="mb-3">Creator not found</h1>
+      <h1 style={{ fontSize: '32px', letterSpacing: '-1.5px', color: '#363535' }} className="mb-3">Creator not found</h1>
       <p className="text-[#6b6b6b] mb-6">This profile doesn&apos;t exist or has been removed.</p>
       <Link href="/creators" className="btn-primary inline-block">Browse creators</Link>
     </div>
@@ -169,7 +124,7 @@ export default function CreatorProfilePage() {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 style={{ fontSize: 'clamp(22px, 4vw, 32px)', letterSpacing: '-0.5px', color: '#1c1c1e' }} className="mb-1">
+            <h1 style={{ fontSize: 'clamp(22px, 4vw, 32px)', letterSpacing: '-1.5px', color: '#1c1c1e' }} className="mb-1">
               {creator.display_name}
             </h1>
             {creator.headline && (
@@ -194,8 +149,9 @@ export default function CreatorProfilePage() {
           <p className="text-sm text-[#6b6b6b] whitespace-pre-wrap leading-relaxed mb-4">{creator.bio}</p>
         )}
 
+        {/* Skills */}
         {skills.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2">
             {skills.map((skill: string) => (
               <span key={skill} className="text-xs px-2.5 py-1 bg-[#f0f0ec] text-[#363535] rounded-full font-medium">
                 {skill}
@@ -203,8 +159,12 @@ export default function CreatorProfilePage() {
             ))}
           </div>
         )}
+      </div>
 
-        {socials.length > 0 && (
+      {/* Social links */}
+      {socials.length > 0 && (
+        <div className="card mb-5">
+          <h2 style={{ fontSize: '16px', letterSpacing: '-0.5px', color: '#1c1c1e' }} className="mb-3">Social links</h2>
           <div className="flex flex-wrap gap-2">
             {socials.map((social: { platform: string; url: string }) => (
               <a
@@ -212,31 +172,22 @@ export default function CreatorProfilePage() {
                 href={social.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[#f0f0ec] hover:bg-[#e8e8e4] rounded-full text-[#6b6b6b] transition-colors capitalize"
+                className="inline-flex items-center gap-2 text-sm px-3 py-2 bg-[#f0f0ec] hover:bg-[#e8e8e4] rounded-xl text-[#363535] transition-colors"
               >
                 <span>{platformIcons[social.platform] || '🔗'}</span>
                 {social.platform}
               </a>
             ))}
           </div>
-        )}
-      </div>
-
-      {/* Portfolio */}
-      {portfolio.length > 0 && (
-        <div className="card mb-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 style={{ fontSize: '18px', letterSpacing: '-0.5px', color: '#1c1c1e' }}>Portfolio</h2>
-            <span className="text-xs text-[#9a9a9a]">{portfolio.length} item{portfolio.length !== 1 ? 's' : ''}</span>
-          </div>
-          <PortfolioGrid items={portfolio} />
         </div>
       )}
 
       {/* Recent activity */}
       {recentJobs.length > 0 && (
         <div className="card mb-5">
-          <h2 style={{ fontSize: '16px', letterSpacing: '-0.5px', color: '#1c1c1e' }} className="mb-3">Recent activity</h2>
+          <h2 style={{ fontSize: '16px', letterSpacing: '-0.5px', color: '#1c1c1e' }} className="mb-3">
+            Recent applications
+          </h2>
           <div className="space-y-3">
             {recentJobs.map((job: Job) => (
               <Link
