@@ -1,28 +1,14 @@
-/* ─── Responsive base ─────────────────────────────────────── */
-* { -webkit-tap-highlight-color: transparent; }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Images: never overflow */
+/* ─── Tailwind comes first — our overrides come after ─── */
+
+/* Responsive base */
+* { -webkit-tap-highlight-color: transparent; }
 img { max-width: 100%; height: auto; }
 
-/* Interactive targets: minimum 44px on mobile */
-button, a, input, textarea, select, label { min-height: 44px; }
-/* But don&apos;t force it on clearly large desktop targets */
-.btn-primary, .btn-ghost { min-height: unset; }
-
-/* Padding scale for mobile-first */
-@media (max-width: 480px) {
-  .card { padding: 1.25rem; border-radius: 1.25rem; }
-  .section-label { font-size: 0.65rem; }
-}
-
-/* Touch-friendly tap targets for pills/tags */
-@media (max-width: 480px) {
-  button:not(.btn-primary):not(.btn-ghost) {
-    min-height: 40px;
-    min-width: 40px;
-  }
-}
-
+/* Design tokens — override Tailwind defaults after @tailwind base */
 :root {
   --bg: #fafaf9;
   --bg-alt: #1c1c1c;
@@ -37,28 +23,24 @@ button, a, input, textarea, select, label { min-height: 44px; }
   --accent-surface: #f5ffd9;
 }
 
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-open-sans), 'Open Sans', system-ui, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Bricolage Grotesque via Next.js font system */
+/* Bricolage Grotesque via next/font */
 .font-display,
 .headline-xl,
 h1, h2, h3 {
   font-family: var(--font-bricolage), 'Bricolage Grotesque', system-ui, sans-serif;
 }
 
-/* Headline styles matching Ed's site exactly */
+/* Headline scale */
 h1, .headline-xl {
-  font-family: var(--font-bricolage), 'Bricolage Grotesque', system-ui, sans-serif;
   font-weight: 600;
   font-size: clamp(36px, 7vw, 56px);
   line-height: 1.0;
@@ -67,7 +49,6 @@ h1, .headline-xl {
 }
 
 h2, .headline-lg {
-  font-family: var(--font-bricolage), 'Bricolage Grotesque', system-ui, sans-serif;
   font-weight: 600;
   font-size: clamp(32px, 5vw, 48px);
   line-height: 1.05;
@@ -83,7 +64,6 @@ h2, .headline-lg {
 }
 
 /* ─── Buttons ───────────────────────────────────────────── */
-@tailwind components;
 @layer components {
   .btn-primary {
     display: inline-flex;
@@ -99,6 +79,7 @@ h2, .headline-lg {
     border-radius: 0.875rem;
     transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.3s ease;
     box-shadow: 0 0 0 0 rgba(204, 255, 0, 0.4);
+    min-height: unset;
   }
 
   .btn-primary:hover {
@@ -123,6 +104,7 @@ h2, .headline-lg {
     border-radius: 0.875rem;
     border: 1px solid transparent;
     transition: all 0.2s ease;
+    min-height: unset;
   }
 
   .btn-ghost:hover {
@@ -156,24 +138,30 @@ h2, .headline-lg {
   }
 }
 
+/* ─── Responsive utilities ──────────────────────────────── */
+/* Mobile touch targets */
+@media (max-width: 480px) {
+  button, a, input, textarea, select, label { min-height: 44px; }
+  .card { padding: 1.25rem; border-radius: 1.25rem; }
+  .section-label { font-size: 0.65rem; }
+}
+
 /* ─── Scrollbar ─────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d0d0cc; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #ccff00; }
 
-/* ─── Text utilities (Tailwind missing these) ───────────────── */
+/* ─── Text utilities ────────────────────────────────────── */
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
 .scrollbar-hide::-webkit-scrollbar { display: none; }
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide { -ms-overlog-style: none; scrollbar-width: none; }
 
 /* ─── Entrance animations ─────────────────────────────── */
 @keyframes fadeUp {
@@ -182,7 +170,7 @@ h2, .headline-lg {
 }
 
 /*
-  Default to visible so pages never render as blank if animations are
+  Default to visible so pages never render blank if animations are
   disabled (reduced-motion, strict browser settings, extensions, etc.).
 */
 .fade-up {
@@ -204,7 +192,7 @@ h2, .headline-lg {
   .fade-up.stagger-5 { animation-delay: 480ms; }
 }
 
-/* ── Blog prose ───────────────────────────────────────────────── */
+/* ─── Blog prose ─────────────────────────────────────────── */
 .prose-blog h1,
 .prose-blog h2,
 .prose-blog h3 {
