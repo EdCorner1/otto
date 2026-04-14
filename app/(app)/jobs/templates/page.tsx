@@ -138,7 +138,7 @@ export default function BriefTemplatesPage() {
         <h1 style={{
           fontFamily: 'var(--font-bricolage)',
           fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)',
-          lineHeight: 1.0, letterSpacing: '-2px', color: '#363535',
+          lineHeight: 1.0, letterSpacing: '-0.5px', color: '#363535',
         }} className="mb-3">
           Brief templates
         </h1>

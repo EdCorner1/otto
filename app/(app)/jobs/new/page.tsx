@@ -10,7 +10,7 @@ const headlineStyle: React.CSSProperties = {
   fontWeight: 600,
   fontSize: 'clamp(28px, 5vw, 40px)',
   lineHeight: 1.0,
-  letterSpacing: '-4.5px',
+  letterSpacing: '-0.5px',
   color: '#363535',
 }
 
@@ -190,7 +190,7 @@ export default function NewJobPage() {
           </div>
 
           {/* Budget + Timeline row */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block section-label mb-2">Budget range <span className="text-red-400">*</span></label>
               <select

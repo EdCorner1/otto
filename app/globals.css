@@ -1,6 +1,27 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ─── Responsive base ─────────────────────────────────────── */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Images: never overflow */
+img { max-width: 100%; height: auto; }
+
+/* Interactive targets: minimum 44px on mobile */
+button, a, input, textarea, select, label { min-height: 44px; }
+/* But don&apos;t force it on clearly large desktop targets */
+.btn-primary, .btn-ghost { min-height: unset; }
+
+/* Padding scale for mobile-first */
+@media (max-width: 480px) {
+  .card { padding: 1.25rem; border-radius: 1.25rem; }
+  .section-label { font-size: 0.65rem; }
+}
+
+/* Touch-friendly tap targets for pills/tags */
+@media (max-width: 480px) {
+  button:not(.btn-primary):not(.btn-ghost) {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
 
 :root {
   --bg: #fafaf9;
@@ -62,6 +83,7 @@ h2, .headline-lg {
 }
 
 /* ─── Buttons ───────────────────────────────────────────── */
+@tailwind components;
 @layer components {
   .btn-primary {
     display: inline-flex;
@@ -139,6 +161,19 @@ h2, .headline-lg {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d0d0cc; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #ccff00; }
+
+/* ─── Text utilities (Tailwind missing these) ───────────────── */
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ─── Entrance animations ─────────────────────────────── */
 @keyframes fadeUp {

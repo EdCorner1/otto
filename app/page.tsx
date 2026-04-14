@@ -65,7 +65,7 @@ export default function HomePage() {
             </div>
 
             {/* Headline — exact match to Ed's site */}
-            <h1 className="fade-up stagger-1" style={{ fontSize: 'clamp(48px, 7vw, 84px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+            <h1 className="fade-up stagger-1" style={{ fontSize: 'clamp(48px, 7vw, 84px)', lineHeight: 1.0, letterSpacing: '-1px', color: '#363535' }}>
               The UGC marketplace<br />
               for tech brands<br />
               &amp; creators
@@ -135,7 +135,7 @@ export default function HomePage() {
               {[
                 { num: '10%', label: 'Platform fee' },
                 { num: '48hr', label: 'Avg. brief fill' },
-                { num: 'Escrow', label: 'protected' },
+                { num: '48hr', label: 'Creator pay' },
                 { num: 'No CC', label: 'required' },
               ].map(({ num, label }) => (
                 <div key={label}>
@@ -143,6 +143,12 @@ export default function HomePage() {
                   <div className="text-xs text-[#9a9a9a]">{label}</div>
                 </div>
               ))}
+            </div>
+
+            {/* Fast pay callout */}
+            <div className="mt-4 inline-flex items-center gap-3 px-4 py-2.5 bg-[#1c1c1e] rounded-xl">
+              <span className="text-base">⚡</span>
+              <p className="text-xs font-semibold text-white">Creators paid within 48hrs of content approval — guaranteed.</p>
             </div>
           </div>
 

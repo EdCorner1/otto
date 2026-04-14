@@ -46,6 +46,7 @@ function formatTime(dateStr: string) {
 type Deal = {
   id: string
   amount: number
+  budget?: number
   status: string
   created_at: string
   job_id: string
@@ -155,7 +156,7 @@ export default function MessagesPage() {
                     </p>
                   </div>
                   <div className="flex-shrink-0 text-right">
-                    <div className="text-sm font-semibold text-[#363535]">£{deal.amount}</div>
+                    <div className="text-sm font-semibold text-[#363535]">£{deal.budget}</div>
                     <div className="text-xs text-[#9a9a9a] mt-0.5">{formatTime(deal.created_at)}</div>
                   </div>
                 </Link>

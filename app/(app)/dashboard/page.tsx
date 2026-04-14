@@ -12,7 +12,7 @@ const headlineStyle: React.CSSProperties = {
   fontWeight: 600,
   fontSize: 'clamp(28px, 5vw, 40px)',
   lineHeight: 1.0,
-  letterSpacing: '-4.5px',
+  letterSpacing: '-0.5px',
   color: '#363535',
 }
 
@@ -356,17 +356,15 @@ useEffect(() => {
           {/* Otto UGC campaign ideas */}
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="section-label mb-0">Otto UGC Campaign Ideas</h2>
-              <Link href="/jobs/new" className="text-xs text-[#6b6b6b] hover:text-[#363535]">Post one now →</Link>
+              <h2 className="section-label mb-0">Quick start</h2>
+              <Link href="/jobs/new" className="text-xs text-[#6b6b6b] hover:text-[#363535]">Post a brief →</Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {featuredJobs.slice(0, 4).map((job) => (
-                <div key={job.id} className="card card-hover">
-                  <p className="text-xs text-[#9a9a9a] mb-1">{job.budget_range} · {job.timeline}</p>
-                  <p className="font-semibold text-[#363535] text-sm leading-snug mb-2">{job.title}</p>
-                  <p className="text-xs text-[#6b6b6b] line-clamp-2">{job.description}</p>
-                </div>
-              ))}
+            <div className="card text-center py-8">
+              <p className="text-sm font-semibold text-[#363535] mb-1.5">Ready to work with creators?</p>
+              <p className="text-xs text-[#6b6b6b] mb-4">Post your first brief and get proposals from vetted tech UGC creators within 48 hours.</p>
+              <Link href="/jobs/new" className="btn-primary text-sm inline-flex items-center gap-1.5">
+                Post a Brief →
+              </Link>
             </div>
           </section>
         </div>

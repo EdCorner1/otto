@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, ClipboardList } from 'lucide-react'
 
 type Application = {
   id: string; message: string; proposed_rate?: number; status: string; created_at: string
@@ -31,6 +31,7 @@ export default function JobManagePage() {
   const [accepting, setAccepting] = useState<string | null>(null)
   const [rejecting, setRejecting] = useState<string | null>(null)
   const [dealCreated, setDealCreated] = useState<string | null>(null)
+  const [actionError, setActionError] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
@@ -62,49 +63,64 @@ export default function JobManagePage() {
   const handleAccept = async (app: Application) => {
     if (!job || !user) return
     setAccepting(app.id)
+    setActionError('')
 
-    // Create a deal
-    const { data: brandData } = await supabase
-      .from('brands').select('id, company_name').eq('user_id', user.id).single()
+    try {
+      // Re-verify job ownership before any action
+      const { data: brandData } = await supabase
+        .from('brands').select('id, company_name').eq('user_id', user.id).single()
+      if (!brandData) throw new Error('Brand profile not found.')
 
-    const { data: deal, error } = await supabase.from('deals').insert({
-      job_id: job.id,
-      brand_id: brandData!.id,
-      creator_id: app.creators.id,
-      budget: app.proposed_rate || null,
-      status: 'proposed',
-    }).select().single()
+      const { data: jobData } = await supabase
+        .from('jobs').select('brand_id').eq('id', job.id).single()
+      if (!jobData || jobData.brand_id !== brandData.id) throw new Error('Unauthorized.')
 
-    if (!error && deal) {
-      // Update all apps to rejected except the accepted one
+      const { data: deal, error: dealError } = await supabase.from('deals').insert({
+        job_id: job.id,
+        brand_id: brandData.id,
+        creator_id: app.creators.id,
+        budget: app.proposed_rate || null,
+        status: 'proposed',
+      }).select().single()
+
+      if (dealError) throw dealError
+
       await supabase.from('applications').update({ status: 'rejected' })
         .eq('job_id', job.id).neq('id', app.id)
       await supabase.from('applications').update({ status: 'accepted' })
         .eq('id', app.id)
-      // Update job status
       await supabase.from('jobs').update({ status: 'filled' }).eq('id', job.id)
-      // Send a welcome message to the creator
       await supabase.from('messages').insert({
         deal_id: deal.id,
         sender_id: user.id,
-        sender_name: brandData?.company_name || 'Brand',
+        sender_name: brandData.company_name || 'Brand',
         content: `You have been selected for "${job.title}". Head over to discuss the brief and get started.`,
       })
+
       setDealCreated(app.creators.id)
       setJob(prev => prev ? { ...prev, status: 'filled' } : null)
       setApps(prev => prev.map(a => ({
         ...a,
         status: a.id === app.id ? 'accepted' : 'rejected',
       })))
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setAccepting(null)
     }
-    setAccepting(null)
   }
 
   const handleReject = async (appId: string) => {
     setRejecting(appId)
-    await supabase.from('applications').update({ status: 'rejected' }).eq('id', appId)
-    setApps(prev => prev.map(a => a.id === appId ? { ...a, status: 'rejected' } : a))
-    setRejecting(null)
+    setActionError('')
+    try {
+      await supabase.from('applications').update({ status: 'rejected' }).eq('id', appId)
+      setApps(prev => prev.map(a => a.id === appId ? { ...a, status: 'rejected' } : a))
+    } catch {
+      setActionError('Failed to decline. Please try again.')
+    } finally {
+      setRejecting(null)
+    }
   }
 
   if (loading) return (
@@ -180,6 +196,13 @@ export default function JobManagePage() {
         </div>
       </div>
 
+      {/* Action error */}
+      {actionError && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
+          {actionError}
+        </div>
+      )}
+
       {/* Accepted state */}
       {dealCreated && (
         <div className="mb-6 p-5 bg-green-50 border border-green-200 rounded-xl">
@@ -192,7 +215,7 @@ export default function JobManagePage() {
       {/* Pending applications */}
       {pendingApps.length === 0 && !dealCreated ? (
         <div className="card text-center py-10">
-          <div className="text-4xl mb-3">📋</div>
+          <div className="mb-3 flex justify-center"><ClipboardList className="w-10 h-10 text-[#d0d0d0]" /></div>
           <p className="text-sm text-[#6b6b6b]">No proposals yet.</p>
           <p className="text-xs text-[#9a9a9a] mt-1">Share your brief with creators to get proposals.</p>
         </div>

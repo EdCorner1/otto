@@ -292,7 +292,7 @@ export default function DealThreadPage() {
               const isOwn = msg.sender_id === user!.id
               return (
                 <div key={msg.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
-                  <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${isOwn
+                  <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${isOwn
                       ? 'bg-[#ccff00] text-[#1c1c1c] rounded-br-md'
                       : 'bg-white border border-[#e8e8e4] text-[#363535] rounded-bl-md'
                     }`}>

@@ -1,16 +1,38 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { FileText, Book, ClipboardList, Wrench } from 'lucide-react'
 
 export const metadata = {
   title: 'Resources — Otto UGC',
   description: 'Free resources for tech UGC creators. Guides, templates, tools, and insights to build your creator business.',
 }
 
-const resources = [
+const ICON_MAP: Record<string, React.ReactNode> = {
+  FileText: <FileText className="w-6 h-6" />,
+  Book: <Book className="w-6 h-6" />,
+  ClipboardList: <ClipboardList className="w-6 h-6" />,
+  Wrench: <Wrench className="w-6 h-6" />,
+}
+function IconMap({ name }: { name: string }) {
+  return ICON_MAP[name] ?? <FileText className="w-6 h-6" />
+}
+
+type ResourceItem = { title: string; status: string }
+type ResourceSection = {
+  category: string
+  description: string
+  icon: string
+  href: string | null
+  cta: string | null
+  coming: boolean
+  items: ResourceItem[] | null
+}
+
+const resources: ResourceSection[] = [
   {
     category: 'Blog',
     description: 'Practical insights on tech UGC — pricing, pitching, brand deals, and building a creator business.',
-    icon: '📝',
+    icon: 'FileText',
     href: '/blog',
     cta: 'Read the blog',
     coming: false,
@@ -19,7 +41,7 @@ const resources = [
   {
     category: 'Guides',
     description: 'In-depth guides for every stage of the creator journey.',
-    icon: '📖',
+    icon: 'Book',
     href: null,
     cta: null,
     coming: true,
@@ -33,7 +55,7 @@ const resources = [
   {
     category: 'Templates',
     description: 'Copy-and-paste templates that close deals.',
-    
+    icon: 'ClipboardList',
     href: null,
     cta: null,
     coming: true,
@@ -47,7 +69,7 @@ const resources = [
   {
     category: 'Tools',
     description: 'The exact tools that actually work for tech UGC creators.',
-    icon: '🛠️',
+    icon: 'Wrench',
     href: null,
     cta: null,
     coming: true,
@@ -94,7 +116,7 @@ export default function ResourcesPage() {
           {resources.map((section) => (
             <div key={section.category} className="bg-white border border-[#e8e8e4] rounded-2xl p-6">
               <div className="flex items-start gap-4 mb-4">
-                <span className="text-2xl">{section.icon}</span>
+                <span className="text-[#ccff00]"><IconMap name={section.icon} /></span>
                 <div className="flex-1">
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <h2 style={{ fontSize: '22px', letterSpacing: '-1.5px', color: '#363535' }}>

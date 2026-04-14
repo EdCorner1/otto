@@ -65,6 +65,7 @@ export default function OnboardingPage() {
   const [videoUploadProgress, setVideoUploadProgress] = useState('')
   const [newPortfolioCaption, setNewPortfolioCaption] = useState('')
   const [addingPortfolio, setAddingPortfolio] = useState(false)
+  const [skippedPortfolio, setSkippedPortfolio] = useState(false)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
   // ─── STEP 0: ROLE SELECTION ─────────────────────────
@@ -828,105 +829,150 @@ export default function OnboardingPage() {
 
               {error && <div className="mb-4 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">{error}</div>}
 
-              <button
-                onClick={async () => {
-                  if (portfolioItems.length < 3 || portfolioItems.length > 6) {
-                    setError('Add between 3 and 6 videos to publish your profile.');
-                    return;
-                  }
-                  setLoading(true);
-                  setError('');
-                  try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) { router.push('/login'); return; }
+              <div className="space-y-3">
+                {/* Skip button */}
+                <button
+                  onClick={async () => {
+                    setLoading(true)
+                    setError('')
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser()
+                      if (!user) { router.push('/login'); return }
 
-                    // 1. Upload avatar to Supabase Storage
-                    let finalAvatarUrl = avatarUrl;
-                    if (avatarFile) {
-                      const ext = avatarFile.name.split('.').pop();
-                      const avatarPath = `${user.id}/avatar.${ext}`;
-                      const { error: uploadError } = await supabase.storage
-                        .from('avatars')
-                        .upload(avatarPath, avatarFile, { upsert: true });
-                      if (uploadError) throw uploadError;
-                      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(avatarPath);
-                      finalAvatarUrl = urlData.publicUrl;
+                      let finalAvatarUrl = avatarUrl
+                      if (avatarFile) {
+                        const ext = avatarFile.name.split('.').pop()
+                        const avatarPath = `${user.id}/avatar.${ext}`
+                        const { error: uploadError } = await supabase.storage
+                          .from('avatars').upload(avatarPath, avatarFile, { upsert: true })
+                        if (uploadError) throw uploadError
+                        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(avatarPath)
+                        finalAvatarUrl = urlData.publicUrl
+                      }
+
+                      const { error: creatorError } = await supabase.from('creators').insert([{
+                        user_id: user.id,
+                        display_name: creator.display_name,
+                        headline: creator.headline,
+                        bio: creator.bio,
+                        location: creator.location || null,
+                        hourly_rate: creator.hourly_rate ? parseFloat(creator.hourly_rate) : null,
+                        website: null,
+                        avatar_url: finalAvatarUrl || null,
+                      }])
+                      if (creatorError) throw creatorError
+
+                      const { data: creatorData } = await supabase
+                        .from('creators').select('id').eq('user_id', user.id).single()
+
+                      if (creatorData) {
+                        const skills = skillsCsv.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12)
+                        const hobbies = hobbiesCsv.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12)
+                        const tagsPayload = [
+                          ...skills.map(tag => ({ creator_id: creatorData.id, tag: `skill:${tag}` })),
+                          ...(experienceSummary.trim() ? [{ creator_id: creatorData.id, tag: `exp:${experienceSummary.trim()}` }] : []),
+                          ...hobbies.map(tag => ({ creator_id: creatorData.id, tag: `hobby:${tag}` })),
+                        ]
+                        if (tagsPayload.length > 0) await supabase.from('creator_tags').insert(tagsPayload)
+
+                        const socialLinks = socials.filter(s => s.url.trim())
+                        if (socialLinks.length > 0) {
+                          await supabase.from('creator_socials').insert(
+                            socialLinks.map(s => ({ creator_id: creatorData.id, platform: s.platform as string, url: s.url }))
+                          )
+                        }
+                      }
+
+                      await supabase.from('users').update({ role: 'creator' }).eq('id', user.id)
+                      setStep(5)
+                    } catch (err: unknown) {
+                      setError(err instanceof Error ? err.message : 'Something went wrong.')
+                    } finally {
+                      setLoading(false)
                     }
+                  }}
+                  className="btn-ghost w-full py-4 text-sm"
+                >
+                  {loading ? 'Setting up...' : 'Skip for now — I\'ll add videos later'}
+                </button>
 
-                    // 2. Insert creator profile
-                    const { error: creatorError } = await supabase.from('creators').insert([{
-                      user_id: user.id,
-                      display_name: creator.display_name,
-                      headline: creator.headline,
-                      bio: creator.bio,
-                      location: creator.location || null,
-                      hourly_rate: creator.hourly_rate ? parseFloat(creator.hourly_rate) : null,
-                      website: null,
-                      avatar_url: finalAvatarUrl || null,
-                    }]);
-                    if (creatorError) throw creatorError;
-
-                    const { data: creatorData } = await supabase
-                      .from('creators')
-                      .select('id')
-                      .eq('user_id', user.id)
-                      .single();
-
-                    if (creatorData) {
-                      // 3. Insert profile tags (skills / experience / hobbies)
-                      const skills = skillsCsv
-                        .split(',')
-                        .map(s => s.trim())
-                        .filter(Boolean)
-                        .slice(0, 12)
-
-                      const hobbies = hobbiesCsv
-                        .split(',')
-                        .map(s => s.trim())
-                        .filter(Boolean)
-                        .slice(0, 12)
-
-                      const tagsPayload = [
-                        ...skills.map(tag => ({ creator_id: creatorData.id, tag: `skill:${tag}` })),
-                        ...(experienceSummary.trim() ? [{ creator_id: creatorData.id, tag: `exp:${experienceSummary.trim()}` }] : []),
-                        ...hobbies.map(tag => ({ creator_id: creatorData.id, tag: `hobby:${tag}` })),
-                      ]
-
-                      if (tagsPayload.length > 0) {
-                        await supabase.from('creator_tags').insert(tagsPayload)
-                      }
-
-                      // 4. Insert social links
-                      const socialLinks = socials.filter(s => s.url.trim());
-                      if (socialLinks.length > 0) {
-                        await supabase.from('creator_socials').insert(
-                          socialLinks.map(s => ({ creator_id: creatorData.id, platform: s.platform as string, url: s.url }))
-                        );
-                      }
-
-                      // 5. Insert portfolio items
-                      if (portfolioItems.length > 0) {
-                        await supabase.from('portfolio_items').insert(
-                          portfolioItems.map(p => ({ creator_id: creatorData.id, type: p.type, url: p.url, caption: p.caption || null }))
-                        );
-                      }
+                {/* Publish with portfolio */}
+                <button
+                  onClick={async () => {
+                    if (portfolioItems.length < 3 || portfolioItems.length > 6) {
+                      setError('Add at least 3 videos to publish with a portfolio, or use the skip button above.')
+                      return
                     }
+                    setLoading(true)
+                    setError('')
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser()
+                      if (!user) { router.push('/login'); return }
 
-                    // 6. Update user role
-                    await supabase.from('users').update({ role: 'creator' }).eq('id', user.id);
+                      let finalAvatarUrl = avatarUrl
+                      if (avatarFile) {
+                        const ext = avatarFile.name.split('.').pop()
+                        const avatarPath = `${user.id}/avatar.${ext}`
+                        const { error: uploadError } = await supabase.storage
+                          .from('avatars').upload(avatarPath, avatarFile, { upsert: true })
+                        if (uploadError) throw uploadError
+                        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(avatarPath)
+                        finalAvatarUrl = urlData.publicUrl
+                      }
 
-                    setStep(5);
-                  } catch (err: unknown) {
-                    setError(err instanceof Error ? err.message : 'Something went wrong.');
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                disabled={loading}
-                className="btn-primary w-full py-4 text-base disabled:opacity-60"
-              >
-                {loading ? 'Publishing...' : (portfolioItems.length >= 3 && portfolioItems.length <= 6) ? 'Publish Profile →' : `Add ${Math.max(0, 3 - portfolioItems.length)} more →`}
-              </button>
+                      const { error: creatorError } = await supabase.from('creators').insert([{
+                        user_id: user.id,
+                        display_name: creator.display_name,
+                        headline: creator.headline,
+                        bio: creator.bio,
+                        location: creator.location || null,
+                        hourly_rate: creator.hourly_rate ? parseFloat(creator.hourly_rate) : null,
+                        website: null,
+                        avatar_url: finalAvatarUrl || null,
+                      }])
+                      if (creatorError) throw creatorError
+
+                      const { data: creatorData } = await supabase
+                        .from('creators').select('id').eq('user_id', user.id).single()
+
+                      if (creatorData) {
+                        const skills = skillsCsv.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12)
+                        const hobbies = hobbiesCsv.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12)
+                        const tagsPayload = [
+                          ...skills.map(tag => ({ creator_id: creatorData.id, tag: `skill:${tag}` })),
+                          ...(experienceSummary.trim() ? [{ creator_id: creatorData.id, tag: `exp:${experienceSummary.trim()}` }] : []),
+                          ...hobbies.map(tag => ({ creator_id: creatorData.id, tag: `hobby:${tag}` })),
+                        ]
+                        if (tagsPayload.length > 0) await supabase.from('creator_tags').insert(tagsPayload)
+
+                        const socialLinks = socials.filter(s => s.url.trim())
+                        if (socialLinks.length > 0) {
+                          await supabase.from('creator_socials').insert(
+                            socialLinks.map(s => ({ creator_id: creatorData.id, platform: s.platform as string, url: s.url }))
+                          )
+                        }
+
+                        if (portfolioItems.length > 0) {
+                          await supabase.from('portfolio_items').insert(
+                            portfolioItems.map(p => ({ creator_id: creatorData.id, type: p.type, url: p.url, caption: p.caption || null }))
+                          )
+                        }
+                      }
+
+                      await supabase.from('users').update({ role: 'creator' }).eq('id', user.id)
+                      setStep(5)
+                    } catch (err: unknown) {
+                      setError(err instanceof Error ? err.message : 'Something went wrong.')
+                    } finally {
+                      setLoading(false)
+                    }
+                  }}
+                  disabled={loading}
+                  className="btn-primary w-full py-4 text-base disabled:opacity-60"
+                >
+                  {loading ? 'Publishing...' : portfolioItems.length >= 3 ? 'Publish Profile with Portfolio →' : `Add ${Math.max(0, 3 - portfolioItems.length)} more videos →`}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -950,14 +996,26 @@ export default function OnboardingPage() {
                   <polyline points="20,6 9,17 4,12" />
                 </svg>
               </div>
-              <h1 className="text-4xl font-display tracking-tight mb-3" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display tracking-tight mb-3" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-0.5px', color: '#363535' }}>
                 Your profile is live.
               </h1>
               <p className="text-[#6b6b6b] text-lg mb-2">Brands can now discover you and send briefs.</p>
-              <p className="text-[#6b6b6b] mb-10">Complete your social links and add more portfolio items any time from your dashboard.</p>
-              <Link href="/dashboard" className="btn-primary inline-flex items-center gap-2 text-base px-8 py-4">
-                Go to Dashboard →
-              </Link>
+              <p className="text-[#6b6b6b] mb-6">Complete your social links and add more portfolio items any time from your dashboard.</p>
+
+              {/* Fast pay promise */}
+              <div className="mb-10 inline-flex items-center gap-3 px-5 py-3 bg-[#1c1c1e] rounded-2xl text-left">
+                <div className="w-10 h-10 rounded-full bg-[#ccff00] flex items-center justify-center text-lg flex-shrink-0">⚡</div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Get paid in 48 hours</p>
+                  <p className="text-xs text-[#9a9a9a]">We release payment within 48hrs of content approval. No waiting weeks.</p>
+                </div>
+              </div>
+
+              <div className="block">
+                <Link href="/dashboard" className="btn-primary inline-flex items-center gap-2 text-base px-8 py-4">
+                  Go to Dashboard →
+                </Link>
+              </div>
             </div>
           </div>
         </div>

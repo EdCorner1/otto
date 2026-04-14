@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -13,11 +13,18 @@ type Creator = {
   hourly_rate: string; user_id: string
 }
 
+const PLATFORM_FILTERS = ['All', 'TikTok', 'Instagram', 'YouTube Shorts', 'LinkedIn']
+const NICHE_FILTERS = ['All', 'SaaS & AI', 'Hardware & Gadgets', 'Fintech', 'Consumer Tech', 'Travel & Lifestyle']
+const AUDIENCE_FILTERS = ['All', 'B2B', 'B2C']
+
 export default function CreatorsDiscoverPage() {
   const [user, setUser] = useState<{ id: string } | null>(null)
   const [creators, setCreators] = useState<Creator[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [platform, setPlatform] = useState('All')
+  const [niche, setNiche] = useState('All')
+  const [audience, setAudience] = useState('All')
   const router = useRouter()
   const supabase = createClient()
 
@@ -35,11 +42,7 @@ export default function CreatorsDiscoverPage() {
           .map(t => t.tag)
           .filter(tag => tag.startsWith('skill:'))
           .map(tag => tag.replace('skill:', '').trim())
-
-        return {
-          ...c,
-          skills: c.skills?.length ? c.skills : skillTags,
-        }
+        return { ...c, skills: c.skills?.length ? c.skills : skillTags }
       })
 
       setCreators(normalized)
@@ -48,15 +51,47 @@ export default function CreatorsDiscoverPage() {
     getUser()
   }, [])
 
-  const filtered = creators.filter(c => {
-    const q = search.toLowerCase()
-    return (
-      !q ||
-      c.display_name?.toLowerCase().includes(q) ||
-      c.headline?.toLowerCase().includes(q) ||
-      c.skills?.some((s: string) => s.toLowerCase().includes(q))
-    )
-  })
+  const filtered = useMemo(() => {
+    return creators.filter(c => {
+      const q = search.toLowerCase()
+      const matchesSearch =
+        !q ||
+        c.display_name?.toLowerCase().includes(q) ||
+        c.headline?.toLowerCase().includes(q) ||
+        c.skills?.some((s: string) => s.toLowerCase().includes(q)) ||
+        c.bio?.toLowerCase().includes(q)
+
+      const platformMatch =
+        platform === 'All' ||
+        c.creator_socials?.some((s: { platform: string }) =>
+          s.platform.toLowerCase() === platform.toLowerCase()
+        )
+
+      const nicheMap: Record<string, string[]> = {
+        'SaaS & AI': ['saas', 'ai', 'productivity', 'software', 'no-code', 'automation', 'chatgpt', 'cursor'],
+        'Hardware & Gadgets': ['hardware', 'gadget', 'electronics', 'smart home', 'wearable', 'audio'],
+        'Fintech': ['fintech', 'banking', 'crypto', 'payments', 'trading', 'budgeting'],
+        'Consumer Tech': ['consumer', 'smartphone', 'laptop', 'tablet', 'gaming', 'camera'],
+        'Travel & Lifestyle': ['travel', 'lifestyle', 'fitness', 'health', 'wellness', 'outdoor'],
+      }
+
+      const nicheMatch =
+        niche === 'All' ||
+        (nicheMap[niche] || []).some((n: string) =>
+          c.skills?.some((s: string) => s.toLowerCase().includes(n)) ||
+          c.headline?.toLowerCase().includes(n) ||
+          c.bio?.toLowerCase().includes(n)
+        )
+
+      const b2bSkills = ['b2b', 'saas', 'fintech', 'enterprise', 'b2b', 'linkedin', 'professional']
+      const b2bMatch =
+        audience === 'All' ||
+        (audience === 'B2B' && c.skills?.some((s: string) => b2bSkills.includes(s.toLowerCase()))) ||
+        (audience === 'B2C' && !c.skills?.some((s: string) => b2bSkills.includes(s.toLowerCase())))
+
+      return matchesSearch && platformMatch && nicheMatch && b2bMatch
+    })
+  }, [creators, search, platform, niche, audience])
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
@@ -72,17 +107,17 @@ export default function CreatorsDiscoverPage() {
         <h1 style={{
           fontFamily: 'var(--font-bricolage)',
           fontWeight: 600, fontSize: 'clamp(28px, 5vw, 40px)',
-          lineHeight: 1.0, letterSpacing: '-2px', color: '#363535',
+          lineHeight: 1.0, letterSpacing: '-0.5px', color: '#363535',
         }} className="mb-2">
           Discover creators
         </h1>
         <p className="text-sm text-[#6b6b6b]">
-          Find the right creator for your next campaign.
+          Vetted tech UGC creators — filtered by platform, niche, and audience.
         </p>
       </div>
 
       {/* Search */}
-      <div className="relative mb-8">
+      <div className="relative mb-6">
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9a9a9a]">🔍</span>
         <input
           type="text"
@@ -94,11 +129,88 @@ export default function CreatorsDiscoverPage() {
         />
       </div>
 
+      {/* Filters */}
+      <div className="space-y-3 mb-8">
+
+        {/* Platform */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs text-[#9a9a9a] w-16 flex-shrink-0">Platform</span>
+          <div className="flex gap-2 flex-wrap">
+            {PLATFORM_FILTERS.map(f => (
+              <button
+                key={f}
+                onClick={() => setPlatform(f)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  platform === f
+                    ? 'bg-[#1c1c1e] text-white'
+                    : 'bg-white border border-[#e8e8e4] text-[#6b6b6b] hover:border-[#363535]'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Niche */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs text-[#9a9a9a] w-16 flex-shrink-0">Niche</span>
+          <div className="flex gap-2 flex-wrap">
+            {NICHE_FILTERS.map(f => (
+              <button
+                key={f}
+                onClick={() => setNiche(f)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  niche === f
+                    ? 'bg-[#1c1c1e] text-white'
+                    : 'bg-white border border-[#e8e8e4] text-[#6b6b6b] hover:border-[#363535]'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Audience */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs text-[#9a9a9a] w-16 flex-shrink-0">Audience</span>
+          <div className="flex gap-2 flex-wrap">
+            {AUDIENCE_FILTERS.map(f => (
+              <button
+                key={f}
+                onClick={() => setAudience(f)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  audience === f
+                    ? 'bg-[#1c1c1e] text-white'
+                    : 'bg-white border border-[#e8e8e4] text-[#6b6b6b] hover:border-[#363535]'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Results count */}
+        {(platform !== 'All' || niche !== 'All' || audience !== 'All' || search) && (
+          <p className="text-xs text-[#9a9a9a] pl-[72px]">
+            {filtered.length} creator{filtered.length !== 1 ? 's' : ''} match your filters
+          </p>
+        )}
+      </div>
+
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="text-center py-20">
           <div className="text-4xl mb-3">🔍</div>
-          <p className="text-sm text-[#6b6b6b]">No creators match your search.</p>
+          <p className="text-sm text-[#6b6b6b]">No creators match your filters.</p>
+          <button
+            onClick={() => { setPlatform('All'); setNiche('All'); setAudience('All'); setSearch('') }}
+            className="mt-3 text-xs text-[#363535] underline hover:text-[#1c1c1e]"
+          >
+            Clear filters
+          </button>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">

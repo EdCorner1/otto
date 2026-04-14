@@ -21,6 +21,7 @@ export default function ApplyPage() {
   const [job, setJob] = useState<Job | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [success, setSuccess] = useState(false)
   const [message, setMessage] = useState('')
   const [creatorRate, setCreatorRate] = useState('')
@@ -58,20 +59,60 @@ export default function ApplyPage() {
     e.preventDefault()
     if (!message.trim()) return
     setSubmitting(true)
+    setSubmitError('')
 
-    const { data: { user: currentUser } } = await supabase.auth.getUser()
-    const { data: creatorData } = await supabase
-      .from('creators').select('id').eq('user_id', currentUser?.id).single()
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) {
+        router.push('/login')
+        return
+      }
 
-    await supabase.from('applications').insert({
-      job_id: jobId,
-      creator_id: creatorData?.id,
-      message: message.trim(),
-      proposed_rate: creatorRate ? Number(creatorRate) : null,
-      status: 'pending',
-    })
-    setSuccess(true)
-    setSubmitting(false)
+      const { data: creatorData } = await supabase
+        .from('creators').select('id').eq('user_id', currentUser.id).single()
+
+      if (!creatorData?.id) {
+        router.push('/onboarding')
+        return
+      }
+
+      // Check for duplicate application
+      const { data: existing } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('job_id', jobId)
+        .eq('creator_id', creatorData.id)
+        .single()
+
+      if (existing) {
+        setSubmitError('You have already applied to this brief.')
+        setSubmitting(false)
+        return
+      }
+
+      const { error: insertError } = await supabase.from('applications').insert({
+        job_id: jobId,
+        creator_id: creatorData.id,
+        message: message.trim(),
+        proposed_rate: creatorRate ? Number(creatorRate) : null,
+        status: 'pending',
+      })
+
+      if (insertError) {
+        if (insertError.code === '23505') {
+          setSubmitError('You have already applied to this brief.')
+        } else {
+          setSubmitError('Something went wrong. Please try again.')
+        }
+        setSubmitting(false)
+        return
+      }
+
+      setSuccess(true)
+    } catch {
+      setSubmitError('Something went wrong. Please check your connection and try again.')
+      setSubmitting(false)
+    }
   }
 
   if (loading) return (
@@ -140,9 +181,16 @@ export default function ApplyPage() {
 
       {/* Form */}
       <h1 style={{ fontSize: 'clamp(24px, 4vw, 36px)',
-        letterSpacing: '-1.5px', color: '#1c1c1e',
+        letterSpacing: '-0.5px', color: '#1c1c1e',
       }} className="mb-1">Apply</h1>
       <p className="text-sm text-[#6b6b6b] mb-6">Tell the brand why you&apos;re the right creator for this.</p>
+
+      {submitError && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-start gap-3">
+          <span className="text-red-400 mt-0.5">⚠</span>
+          <span>{submitError}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>

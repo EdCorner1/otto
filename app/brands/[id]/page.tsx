@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { Globe, Calendar } from 'lucide-react'
+import { Globe, Calendar, ClipboardList } from 'lucide-react'
 
 type Brand = {
   id: string; user_id: string; company_name: string; website: string | null; logo_url: string | null;
@@ -281,7 +281,7 @@ export default function BrandProfilePage() {
 
         {openJobs.length === 0 && (
           <div className="card text-center py-12">
-            <div className="text-4xl mb-3">📋</div>
+            <div className="mb-3 flex justify-center"><ClipboardList className="w-10 h-10 text-[#d0d0d0]" /></div>
             <p className="text-sm text-[#6b6b6b]">No open briefs right now.</p>
             {isCurrentUser && (
               <Link href="/jobs/new" className="btn-primary text-sm mt-4 inline-flex items-center gap-2">

@@ -5,14 +5,35 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { DEMO_JOBS } from '@/lib/demo-jobs'
+import { ClipboardList } from 'lucide-react'
 
 const headlineStyle: React.CSSProperties = {
   fontFamily: 'var(--font-bricolage)',
   fontWeight: 600,
   fontSize: 'clamp(28px, 5vw, 40px)',
   lineHeight: 1.0,
-  letterSpacing: '-4.5px',
+  letterSpacing: '-0.5px',
   color: '#363535',
+}
+
+function BrandLogo({ companyName }: { companyName: string }) {
+  const initial = companyName.charAt(0).toUpperCase()
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+    '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+  ]
+  const colorIndex = companyName.charCodeAt(0) % colors.length
+  const bg = colors[colorIndex]
+
+  return (
+    <div
+      className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+      style={{ backgroundColor: bg }}
+      aria-hidden="true"
+    >
+      {initial}
+    </div>
+  )
 }
 
 function formatDate(dateStr: string) {
@@ -79,6 +100,7 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState<DisplayJob[]>([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState('All')
+  const [liveOnly, setLiveOnly] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -142,9 +164,11 @@ export default function JobsPage() {
   const liveCount = useMemo(() => jobs.filter((j) => !j.isDemo).length, [jobs])
 
   const filteredJobs = useMemo(() => {
-    if (activeFilter === 'All') return jobs
-    return jobs.filter(j => j.category === activeFilter)
-  }, [jobs, activeFilter])
+    let result = jobs
+    if (liveOnly) result = result.filter(j => !j.isDemo)
+    if (activeFilter !== 'All') result = result.filter(j => j.category === activeFilter)
+    return result
+  }, [jobs, activeFilter, liveOnly])
 
   if (loading) {
     return (
@@ -160,11 +184,27 @@ export default function JobsPage() {
         <div className="mb-6 fade-up">
           <div className="flex items-center justify-between mb-1 gap-3">
             <h1 style={headlineStyle}>Open Briefs</h1>
-            <span className="section-label">{filteredJobs.length} available</span>
+            <span className="section-label">{filteredJobs.length} shown</span>
           </div>
           <p className="text-xs text-[#9a9a9a]">
             {liveCount} live brief{liveCount !== 1 ? 's' : ''} + curated Otto opportunities to keep your pipeline moving.
           </p>
+        </div>
+
+        {/* Live only toggle */}
+        <div className="mb-4 flex items-center justify-between fade-up stagger-1">
+          <span className="text-xs text-[#9a9a9a]">
+            {liveCount} live brief{liveCount !== 1 ? 's' : ''} available
+          </span>
+          <button
+            onClick={() => setLiveOnly(v => !v)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              liveOnly ? 'bg-[#ccff00] text-[#1c1c1c]' : 'bg-white border border-[#e8e8e4] text-[#6b6b6b]'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${liveOnly ? 'bg-[#1c1c1c]' : 'bg-[#9a9a9a]'}`} />
+            {liveOnly ? 'Showing live only' : 'Show live only'}
+          </button>
         </div>
 
         {/* Category filter tabs */}
@@ -188,7 +228,7 @@ export default function JobsPage() {
 
         {filteredJobs.length === 0 ? (
           <div className="text-center py-20 fade-up">
-            <div className="text-4xl mb-4">📋</div>
+            <div className="mb-4 flex justify-center"><ClipboardList className="w-10 h-10 text-[#d0d0d0]" /></div>
             <h2 className="font-display text-xl font-semibold text-[#363535] mb-2">No briefs in this category</h2>
             <p className="text-sm text-[#6b6b6b]">Try a different filter or check back later.</p>
           </div>
@@ -198,6 +238,7 @@ export default function JobsPage() {
               <div key={job.id} className={`card card-hover space-y-3 fade-up stagger-${Math.min(i + 1, 5)}`}>
                 {/* Company + date + category */}
                 <div className="flex items-center gap-2 text-xs text-[#6b6b6b] flex-wrap">
+                  <BrandLogo companyName={job.brands?.company_name || 'B'} />
                   <span className="font-semibold text-[#363535]">{job.brands?.company_name || 'Brand'}</span>
                   {job.brands?.industry && (
                     <>
@@ -238,17 +279,17 @@ export default function JobsPage() {
                 </div>
 
                 {/* Budget + CTA */}
-                <div className="flex items-center justify-between pt-1">
-                  <span className="px-3 py-1 bg-[#ccff00]/20 rounded-full text-xs font-semibold text-[#363535]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                  <span className="inline-block px-3 py-1 bg-[#ccff00]/20 rounded-full text-xs font-semibold text-[#363535] w-fit">
                     {job.budget_range}
                   </span>
 
                   {job.isDemo ? (
-                    <Link href={`/jobs/${job.id}`} className="btn-primary text-sm py-2 px-5">
+                    <Link href={`/jobs/${job.id}`} className="btn-primary text-sm py-2 px-5 text-center">
                       View brief →
                     </Link>
                   ) : (
-                    <Link href={`/jobs/${job.id}/apply`} className="btn-primary text-sm py-2 px-5">
+                    <Link href={`/jobs/${job.id}/apply`} className="btn-primary text-sm py-2 px-5 text-center">
                       Apply →
                     </Link>
                   )}
