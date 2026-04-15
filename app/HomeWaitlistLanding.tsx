@@ -13,6 +13,8 @@ const AVATARS = [
   'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=96&q=80',
 ]
 
+const OTTO_GREEN = '#BEF264'
+
 const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
   creator: {
     headline: 'Get paid to make tech content for your favourite brands',
@@ -103,28 +105,36 @@ export default function HomeWaitlistLanding() {
             </div>
           </div>
 
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#e8e8e4] bg-white px-3 py-1.5 shadow-sm">
-            <span className={`text-sm font-semibold transition-colors ${role === 'creator' ? 'text-[#1c1c1e]' : 'text-[#9a9a9a]'}`}>
+          <div className="mb-8 inline-flex items-center gap-4 rounded-full border border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm">
+            <span
+              className={`text-sm font-medium transition-colors duration-300 ${
+                role === 'creator' ? 'text-black' : 'text-gray-400'
+              }`}
+            >
               I&apos;m a creator
             </span>
 
             <button
               type="button"
+              role="switch"
+              aria-checked={role === 'brand'}
               aria-label="Toggle creator or brand"
-              aria-pressed={role === 'brand'}
-              onClick={() => setRole((current) => (current === 'creator' ? 'brand' : 'creator'))}
-              className="relative inline-flex h-7 w-[58px] items-center rounded-full border border-[#bfe800] bg-[#ccff00] p-[3px] transition-all duration-200"
+              onClick={() => setRole(role === 'creator' ? 'brand' : 'creator')}
+              className="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none"
+              style={{ backgroundColor: role === 'brand' ? OTTO_GREEN : '#E5E7EB' }}
             >
-              <span className="pointer-events-none absolute left-2 text-[9px] font-bold tracking-[0.08em] text-white/95">
-                ON
-              </span>
               <span
-                className="absolute h-[22px] w-[22px] rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-all duration-200"
-                style={{ left: role === 'brand' ? 'calc(100% - 1.55rem)' : '0.2rem' }}
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                  role === 'brand' ? 'translate-x-6' : 'translate-x-1'
+                }`}
               />
             </button>
 
-            <span className={`text-sm font-semibold transition-colors ${role === 'brand' ? 'text-[#1c1c1e]' : 'text-[#9a9a9a]'}`}>
+            <span
+              className={`text-sm font-medium transition-colors duration-300 ${
+                role === 'brand' ? 'text-black' : 'text-gray-400'
+              }`}
+            >
               I&apos;m a brand
             </span>
           </div>
