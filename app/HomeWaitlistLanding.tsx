@@ -14,6 +14,7 @@ const AVATARS = [
 ]
 
 const OTTO_GREEN = '#BEF264'
+const TECH_PURPLE = '#A855F7'
 
 const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
   creator: {
@@ -105,40 +106,49 @@ export default function HomeWaitlistLanding() {
             </div>
           </div>
 
-          <div className="mb-8 inline-flex items-center gap-4 rounded-full border border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm">
-            <span 
-              className={`text-sm font-medium transition-colors duration-300 ${
-                role === 'creator' ? 'text-black' : 'text-gray-400'
-              }`}
-            >
-              I&apos;m a creator
-            </span>
+          <div className="relative group mb-8 inline-flex overflow-hidden rounded-full p-[1px]">
+            <div
+              className="absolute inset-[-1000%] opacity-0 transition-opacity duration-500 group-hover:opacity-100 animate-[spin_4s_linear_infinite]"
+              style={{
+                background: `conic-gradient(from 0deg, transparent 0deg, transparent 300deg, ${OTTO_GREEN} 310deg, ${TECH_PURPLE} 340deg, transparent 360deg)`,
+              }}
+            />
 
-            <button
-              type="button"
-              role="switch"
-              aria-checked={role === 'brand'}
-              aria-label="Toggle creator or brand"
-              onClick={() => setRole(role === 'creator' ? 'brand' : 'creator')}
-              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${
-                role === 'brand' ? 'bg-[#BEF264]' : 'bg-gray-200'
-              }`}
-              style={{ backgroundColor: role === 'brand' ? OTTO_GREEN : '#E5E7EB' }}
-            >
+            <div className="relative z-10 flex items-center gap-4 rounded-full border border-gray-100 bg-white px-4 py-2 shadow-sm backdrop-blur-md">
               <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
-                  role === 'brand' ? 'translate-x-6' : 'translate-x-1'
+                className={`text-sm font-medium transition-colors duration-300 ${
+                  role === 'creator' ? 'text-black' : 'text-gray-400'
                 }`}
-              />
-            </button>
+              >
+                I&apos;m a creator
+              </span>
 
-            <span 
-              className={`text-sm font-medium transition-colors duration-300 ${
-                role === 'brand' ? 'text-black' : 'text-gray-400'
-              }`}
-            >
-              I&apos;m a brand
-            </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={role === 'brand'}
+                aria-label="Toggle creator or brand"
+                onClick={() => setRole(role === 'creator' ? 'brand' : 'creator')}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-500 focus:outline-none ${
+                  role === 'brand' ? 'shadow-[0_0_15px_rgba(190,242,100,0.4)]' : ''
+                }`}
+                style={{ backgroundColor: role === 'brand' ? OTTO_GREEN : '#E5E7EB' }}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                    role === 'brand' ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+
+              <span
+                className={`text-sm font-medium transition-colors duration-300 ${
+                  role === 'brand' ? 'text-black' : 'text-gray-400'
+                }`}
+              >
+                I&apos;m a brand
+              </span>
+            </div>
           </div>
 
           <h1
