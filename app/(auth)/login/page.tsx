@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -10,8 +10,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [redirectTo, setRedirectTo] = useState('/dashboard')
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setRedirectTo(params.get('redirectTo') || '/dashboard')
+  }, [])
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,7 +33,7 @@ export default function LoginPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      router.push(redirectTo)
       router.refresh()
     }
   }
@@ -37,7 +43,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}${redirectTo}`,
       },
     })
     if (error) {
@@ -53,7 +59,7 @@ export default function LoginPage() {
           Welcome back
         </h1>
         <p className="text-gray-500 text-sm mb-8">
-          Sign in to your Otto account
+          Sign in to access the private Otto platform.
         </p>
 
         {error && (
@@ -122,10 +128,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-medium text-[#84cc16] hover:underline">
-            Sign up free
-          </Link>
+          Private access is currently limited to approved test accounts.
         </p>
       </div>
     </div>

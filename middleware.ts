@@ -1,26 +1,36 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const DEFAULT_ALLOWED_EMAILS = ['edcorner1@gmail.com']
+
+function getAllowedEmails() {
+  const fromEnv = process.env.OTTO_PLATFORM_ALLOWED_EMAILS
+    ?.split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+
+  return fromEnv?.length ? fromEnv : DEFAULT_ALLOWED_EMAILS
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Public routes — let them through without auth check
-  const publicPrefixes = [
+  const publicExactRoutes = [
     '/',
     '/login',
-    '/signup',
-    '/signup',
-    '/blog',
-    '/resources',
-    '/explore',
-    '/api/',
-    '/_next/',
-    '/favicon.ico',
+    '/creators/welcome',
+    '/brands/welcome',
   ]
 
-  const isPublic = publicPrefixes.some(prefix =>
-    pathname === prefix || pathname.startsWith(prefix)
-  )
+  const publicPrefixes = [
+    '/blog',
+    '/resources',
+    '/api/waitlist',
+  ]
+
+  const isPublic =
+    publicExactRoutes.includes(pathname) ||
+    publicPrefixes.some((prefix) => pathname.startsWith(prefix))
 
   if (isPublic) {
     return NextResponse.next()
@@ -56,6 +66,13 @@ export async function middleware(request: NextRequest) {
     const redirectUrl = new URL('/login', request.url)
     redirectUrl.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(redirectUrl)
+  }
+
+  const allowedEmails = getAllowedEmails()
+  const email = (user.email || '').toLowerCase()
+
+  if (!allowedEmails.includes(email)) {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return supabaseResponse
