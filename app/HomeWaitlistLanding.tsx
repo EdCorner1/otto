@@ -82,14 +82,14 @@ export default function HomeWaitlistLanding() {
       <main className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 pt-28 pb-12 md:px-10">
         <section className="w-full max-w-4xl text-center">
           <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
-            <div className="flex -space-x-3">
+            <div className="flex -space-x-2.5">
               {AVATARS.map((src, index) => (
                 <div
                   key={src}
-                  className="relative h-11 w-11 overflow-hidden rounded-full border-2 border-[#fafaf9] bg-[#f0f0ec] shadow-sm"
+                  className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-[#fafaf9] bg-[#f0f0ec] shadow-sm sm:h-10 sm:w-10"
                   style={{ zIndex: AVATARS.length - index }}
                 >
-                  <Image src={src} alt="Waitlist avatar" fill sizes="44px" className="object-cover" />
+                  <Image src={src} alt="Waitlist avatar" fill sizes="40px" className="object-cover" />
                 </div>
               ))}
             </div>
