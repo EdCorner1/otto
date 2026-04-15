@@ -103,7 +103,7 @@ export default function HomeWaitlistLanding() {
             </div>
           </div>
 
-          <div className="mb-8 inline-flex items-center gap-4 rounded-full border border-[#e8e8e4] bg-white px-4 py-2 shadow-sm">
+          <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-[#e8e8e4] bg-white px-4 py-2 shadow-sm">
             <span className={`text-sm font-semibold transition-colors ${role === 'creator' ? 'text-[#1c1c1e]' : 'text-[#9a9a9a]'}`}>
               I&apos;m a creator
             </span>
@@ -113,11 +113,10 @@ export default function HomeWaitlistLanding() {
               aria-label="Toggle creator or brand"
               aria-pressed={role === 'brand'}
               onClick={() => setRole((current) => (current === 'creator' ? 'brand' : 'creator'))}
-              className="relative h-8 w-16 rounded-full transition-colors"
-              style={{ background: role === 'brand' ? '#ccff00' : '#ccff00' }}
+              className="relative inline-flex h-8 w-14 items-center rounded-full border border-[#bfe800] bg-[#ccff00] p-1 transition-all duration-200"
             >
               <span
-                className="absolute top-1 h-6 w-6 rounded-full bg-white shadow-md transition-all duration-200"
+                className="absolute h-6 w-6 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-all duration-200"
                 style={{ left: role === 'brand' ? 'calc(100% - 1.75rem)' : '0.25rem' }}
               />
             </button>
