@@ -90,7 +90,7 @@ export default function HomeWaitlistLanding() {
         </div>
       </header>
 
-      <main className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 pt-28 pb-12 md:px-10">
+      <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl items-start justify-center px-6 pt-24 pb-12 md:px-10">
         <section className="w-full max-w-4xl text-center">
           <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
             <div className="flex -space-x-2.5">
@@ -163,7 +163,7 @@ export default function HomeWaitlistLanding() {
             style={{
               fontFamily: 'var(--font-bricolage)',
               fontWeight: 300,
-              fontSize: 'clamp(3rem, 7.2vw, 6rem)',
+              fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
               lineHeight: 0.98,
               letterSpacing: '-0.04em',
             }}
