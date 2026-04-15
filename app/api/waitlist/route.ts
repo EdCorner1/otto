@@ -7,10 +7,10 @@ type Role = 'creator' | 'brand'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN
+const RESEND_API_KEY = process.env.RESEND_API_KEY
 const RESEND_OTTO_CREATORS_AUDIENCE_ID = process.env.RESEND_OTTO_CREATORS_AUDIENCE_ID
 const RESEND_OTTO_BRANDS_AUDIENCE_ID = process.env.RESEND_OTTO_BRANDS_AUDIENCE_ID
-const RESEND_GATEWAY_BASE = 'https://gateway.maton.ai/resend'
+const RESEND_API_BASE = 'https://api.resend.com'
 
 function isValidRole(value: unknown): value is Role {
   return value === 'creator' || value === 'brand'
@@ -52,12 +52,12 @@ export async function POST(req: Request) {
     const resendAudienceId =
       role === 'creator' ? RESEND_OTTO_CREATORS_AUDIENCE_ID : RESEND_OTTO_BRANDS_AUDIENCE_ID
 
-    if (OPENCLAW_GATEWAY_TOKEN && resendAudienceId) {
+    if (RESEND_API_KEY && resendAudienceId) {
       try {
-        const resendRes = await fetch(`${RESEND_GATEWAY_BASE}/audiences/${resendAudienceId}/contacts`, {
+        const resendRes = await fetch(`${RESEND_API_BASE}/audiences/${resendAudienceId}/contacts`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
