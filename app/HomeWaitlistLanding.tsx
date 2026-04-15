@@ -127,7 +127,8 @@ export default function HomeWaitlistLanding() {
                 aria-checked={role === 'brand'}
                 aria-label="Toggle creator or brand"
                 onClick={() => setRole(role === 'creator' ? 'brand' : 'creator')}
-                className="relative inline-flex h-[29px] w-[55px] items-center rounded-full bg-[#f6f6f2] px-[3px] focus:outline-none"
+                className="relative inline-flex h-[29px] w-[55px] items-center rounded-full px-[3px] focus:outline-none"
+                style={{ backgroundColor: OTTO_GREEN }}
               >
                 <span
                   className={`inline-block h-[23px] w-[23px] rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.16)] transition-transform duration-300 ${
