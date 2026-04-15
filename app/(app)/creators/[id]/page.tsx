@@ -20,7 +20,7 @@ type Job = {
 
 type Application = {
   id: string; job_id: string; status: string; created_at: string
-  jobs: { id: string; title: string; brands: { company_name: string } }
+  jobs: { id: string; title: string; platforms: string[]; budget_range: string; created_at: string; status: string; brands?: { company_name: string } }
 }
 
 type PortfolioItem = {
@@ -124,7 +124,8 @@ export default function CreatorProfilePage() {
           .order('created_at', { ascending: true }),
       ])
 
-      const jobs = (appsData || []).map((a: Application) => a.jobs as Job[]).filter(Boolean).flat() as Job[]
+      const jobsRaw = (appsData || []).map((a: { jobs: unknown }) => a.jobs).filter(Boolean)
+      const jobs = (jobsRaw as unknown as Job[][]).flat()
       setRecentJobs(jobs)
       setPortfolio((portfolioData as PortfolioItem[]) || [])
       setLoading(false)
