@@ -106,7 +106,7 @@ export default function HomeWaitlistLanding() {
           </div>
 
           <div className="mb-8 inline-flex items-center gap-4 rounded-full border border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm">
-            <span
+            <span 
               className={`text-sm font-medium transition-colors duration-300 ${
                 role === 'creator' ? 'text-black' : 'text-gray-400'
               }`}
@@ -120,7 +120,9 @@ export default function HomeWaitlistLanding() {
               aria-checked={role === 'brand'}
               aria-label="Toggle creator or brand"
               onClick={() => setRole(role === 'creator' ? 'brand' : 'creator')}
-              className="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none"
+              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${
+                role === 'brand' ? 'bg-[#BEF264]' : 'bg-gray-200'
+              }`}
               style={{ backgroundColor: role === 'brand' ? OTTO_GREEN : '#E5E7EB' }}
             >
               <span
@@ -130,7 +132,7 @@ export default function HomeWaitlistLanding() {
               />
             </button>
 
-            <span
+            <span 
               className={`text-sm font-medium transition-colors duration-300 ${
                 role === 'brand' ? 'text-black' : 'text-gray-400'
               }`}
