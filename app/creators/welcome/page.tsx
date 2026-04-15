@@ -83,7 +83,16 @@ export default function CreatorWelcome() {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h1 className="font-heading text-3xl font-bold text-[#1c1c1e]">You&apos;re all set ✦</h1>
+          <h1
+            className="text-3xl font-semibold text-[#1c1c1e] sm:text-4xl"
+            style={{
+              fontFamily: 'var(--font-bricolage)',
+              letterSpacing: '-0.04em',
+              lineHeight: 1.08,
+            }}
+          >
+            You&apos;re all set ✦
+          </h1>
           <p className="mt-3 text-[#6b6b6b]">We&apos;ve got everything we need. We&apos;ll be in touch when we launch — and you&apos;ll get first access.</p>
           <a href="/" className="mt-8 inline-block rounded-full bg-[#1c1c1e] px-8 py-3.5 text-sm font-bold text-white">Back to home</a>
         </div>
