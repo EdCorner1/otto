@@ -14,7 +14,6 @@ const AVATARS = [
 ]
 
 const OTTO_GREEN = '#BEF264'
-const TECH_PURPLE = '#A855F7'
 
 const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
   creator: {
@@ -106,55 +105,45 @@ export default function HomeWaitlistLanding() {
             </div>
           </div>
 
-          <div
-            className="mb-8 inline-flex items-center justify-center rounded-[28px] border border-[#ecece7] bg-white/75 px-5 py-4 shadow-sm backdrop-blur-sm"
-            style={{
-              backgroundImage:
-                'linear-gradient(rgba(28,28,30,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(28,28,30,0.04) 1px, transparent 1px)',
-              backgroundSize: '22px 22px',
-              backgroundPosition: 'center center',
-            }}
-          >
-            <div className="relative z-10 flex items-center gap-4">
-              <span
-                className={`text-sm font-medium transition-colors duration-300 ${
-                  role === 'creator' ? 'text-black' : 'text-gray-400'
-                }`}
-              >
-                I&apos;m a creator
-              </span>
+          <div className="mb-8 flex items-center justify-center gap-4">
+            <span
+              className={`text-sm font-medium transition-colors duration-300 ${
+                role === 'creator' ? 'text-black' : 'text-gray-400'
+              }`}
+            >
+              I&apos;m a creator
+            </span>
 
-              <div className="relative inline-flex overflow-hidden rounded-full p-[1.5px] shadow-[0_0_24px_rgba(190,242,100,0.18)]">
-                <div
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: `linear-gradient(90deg, ${OTTO_GREEN} 0%, ${TECH_PURPLE} 100%)`,
-                  }}
+            <div className="relative inline-flex h-8 w-[58px] items-center justify-center rounded-full overflow-hidden shadow-[0_0_18px_rgba(190,242,100,0.28)]">
+              <div
+                className="absolute inset-0 rounded-full animate-[spin_3.2s_linear_infinite]"
+                style={{
+                  background: `conic-gradient(from 0deg, transparent 0deg, ${OTTO_GREEN} 110deg, ${OTTO_GREEN} 220deg, transparent 360deg)`,
+                }}
+              />
+              <button
+                type="button"
+                role="switch"
+                aria-checked={role === 'brand'}
+                aria-label="Toggle creator or brand"
+                onClick={() => setRole(role === 'creator' ? 'brand' : 'creator')}
+                className="relative inline-flex h-[29px] w-[55px] items-center rounded-full bg-[#f6f6f2] px-[3px] focus:outline-none"
+              >
+                <span
+                  className={`inline-block h-[23px] w-[23px] rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.16)] transition-transform duration-300 ${
+                    role === 'brand' ? 'translate-x-[27px]' : 'translate-x-[1px]'
+                  }`}
                 />
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={role === 'brand'}
-                  aria-label="Toggle creator or brand"
-                  onClick={() => setRole(role === 'creator' ? 'brand' : 'creator')}
-                  className="relative inline-flex h-8 w-[56px] items-center rounded-full bg-white/95 px-[3px] transition-all duration-300 focus:outline-none"
-                >
-                  <span
-                    className={`inline-block h-[24px] w-[24px] rounded-full bg-white shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition-transform duration-300 ${
-                      role === 'brand' ? 'translate-x-6' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <span
-                className={`text-sm font-medium transition-colors duration-300 ${
-                  role === 'brand' ? 'text-black' : 'text-gray-400'
-                }`}
-              >
-                I&apos;m a brand
-              </span>
+              </button>
             </div>
+
+            <span
+              className={`text-sm font-medium transition-colors duration-300 ${
+                role === 'brand' ? 'text-black' : 'text-gray-400'
+              }`}
+            >
+              I&apos;m a brand
+            </span>
           </div>
 
           <h1
