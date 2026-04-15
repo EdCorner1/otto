@@ -79,7 +79,7 @@ export default function HomeWaitlistLanding() {
 
       <main className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 pt-28 pb-12 md:px-10">
         <section className="w-full max-w-4xl text-center">
-          <div className="mb-8 flex flex-col items-center gap-4">
+          <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
             <div className="flex -space-x-3">
               {AVATARS.map((src, index) => (
                 <div
@@ -92,7 +92,7 @@ export default function HomeWaitlistLanding() {
               ))}
             </div>
 
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#e8e8e4] bg-white px-4 py-2 shadow-sm">
+            <div className="inline-flex items-center gap-2">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ccff00] opacity-70" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#ccff00] shadow-[0_0_14px_rgba(204,255,0,0.85)]" />
