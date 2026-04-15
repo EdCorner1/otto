@@ -60,6 +60,11 @@ export default function HomeWaitlistLanding() {
 
       setSubmitted(true)
       setEmail('')
+
+      // Redirect to role-specific welcome page
+      if (data?.redirectUrl) {
+        window.location.href = data.redirectUrl
+      }
     } catch {
       setError('Something went wrong. Try again.')
     } finally {
