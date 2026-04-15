@@ -41,10 +41,13 @@ export default function SignupPage() {
 
   const handleGoogleSignup = async () => {
     setLoading(true)
+    const callbackUrl = new URL('/auth/callback', window.location.origin)
+    callbackUrl.searchParams.set('next', '/onboarding')
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/onboarding`,
+        redirectTo: callbackUrl.toString(),
       },
     })
     if (error) {

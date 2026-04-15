@@ -18,13 +18,16 @@ export async function middleware(request: NextRequest) {
   const publicExactRoutes = [
     '/',
     '/login',
+    '/signup',
     '/creators/welcome',
     '/brands/welcome',
   ]
 
   const publicPrefixes = [
+    '/auth/callback',
     '/blog',
     '/resources',
+    '/explore',
     '/api/waitlist',
   ]
 
