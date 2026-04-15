@@ -73,7 +73,13 @@ export default function HomeWaitlistLanding() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafaf9] text-[#363535]">
+    <div
+      className="min-h-screen text-[#363535]"
+      style={{
+        backgroundColor: '#fafaf9',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='%23e8e8e4' stroke-width='0.75'/%3E%3C/svg%3E")`,
+      }}
+    >
       <header className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50">
         <div className="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-[#e8e8e4] bg-white/85 px-5 py-3.5 shadow-lg shadow-black/[0.06] backdrop-blur-md md:px-6">
           <a href="/" className="flex items-center gap-2">
