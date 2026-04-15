@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!post) return { title: 'Post Not Found' }
 
-  const url = `https://otto.edcorner.co.uk/blog/${slug}`
+  const url = `https://www.ottougc.com/blog/${slug}`
   return {
     title: post.title,
     description: post.excerpt ?? undefined,

@@ -17,7 +17,7 @@ const openSans = Open_Sans({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://otto.edcorner.co.uk'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.ottougc.com'),
   title: {
     default: 'Otto — UGC for tech brands and creators',
     template: '%s | Otto',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_GB',
-    url: 'https://otto.edcorner.co.uk',
+    url: 'https://www.ottougc.com',
     siteName: 'Otto',
     title: 'Otto — UGC for tech brands and creators',
     description: 'Connect with UGC creators who understand your audience. Real work, fairly priced.',

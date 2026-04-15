@@ -46,7 +46,7 @@ const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SB_SERVICE_ROLE ||
   '';
-const APP_URL      = process.env.NEXT_PUBLIC_APP_URL || 'https://otto.edcorner.co.uk';
+const APP_URL      = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ottougc.com';
 const CRON_LOG     = '/home/node/.openclaw/workspace/otto-app/.cron-log.json';
 
 const MAX_POSTS_PER_RUN = 10;
