@@ -36,13 +36,6 @@ export default function CMSPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    const next = searchParams.get('filter')
-    if (next && ['all', 'draft', 'in_review', 'published', 'archived'].includes(next)) {
-      setFilter(next)
-    }
-  }, [searchParams])
-
-  useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }

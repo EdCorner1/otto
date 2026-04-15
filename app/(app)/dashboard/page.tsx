@@ -73,7 +73,7 @@ export default function DashboardPage() {
   } | null>(null)
   const [role, setRole] = useState<Role>(null)
   const [loading, setLoading] = useState(true)
-  const [posted, setPosted] = useState(false)
+  const [posted, setPosted] = useState(searchParams.get('posted') === '1')
   const [brandJobs, setBrandJobs] = useState<Job[]>([])
   const [brandDeals, setBrandDeals] = useState<Deal[]>([])
   const [creatorApps, setCreatorApps] = useState<Application[]>([])
@@ -135,12 +135,6 @@ useEffect(() => {
     }
     getUser()
   }, [])
-
-  useEffect(() => {
-    if (searchParams.get('posted') === '1') {
-      setPosted(true)
-    }
-  }, [searchParams])
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
