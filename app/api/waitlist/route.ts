@@ -7,9 +7,10 @@ type Role = 'creator' | 'brand'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const RESEND_API_KEY = process.env.RESEND_API_KEY
-const RESEND_AUDIENCE_ID = process.env.RESEND_OTTO_WAITLIST_AUDIENCE_ID // Creator Waitlist audience
-const RESEND_API_BASE = 'https://api.resend.com'
+const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN
+const RESEND_OTTO_CREATORS_AUDIENCE_ID = process.env.RESEND_OTTO_CREATORS_AUDIENCE_ID
+const RESEND_OTTO_BRANDS_AUDIENCE_ID = process.env.RESEND_OTTO_BRANDS_AUDIENCE_ID
+const RESEND_GATEWAY_BASE = 'https://gateway.maton.ai/resend'
 
 function isValidRole(value: unknown): value is Role {
   return value === 'creator' || value === 'brand'
@@ -47,25 +48,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Could not join the waitlist right now.' }, { status: 500 })
     }
 
-    // Add to Resend audience — store role in first_name field for segmentation
-    // "Creator" or "Brand" prefix lets us identify the segment in Resend
-    if (RESEND_API_KEY && RESEND_AUDIENCE_ID) {
+    // Add to the correct Resend audience (creator vs brand)
+    const resendAudienceId =
+      role === 'creator' ? RESEND_OTTO_CREATORS_AUDIENCE_ID : RESEND_OTTO_BRANDS_AUDIENCE_ID
+
+    if (OPENCLAW_GATEWAY_TOKEN && resendAudienceId) {
       try {
-        await fetch(`${RESEND_API_BASE}/audiences/${RESEND_AUDIENCE_ID}/contacts`, {
+        const resendRes = await fetch(`${RESEND_GATEWAY_BASE}/audiences/${resendAudienceId}/contacts`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Authorization': `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             email,
-            // Prefix with role so we can segment in Resend without separate audiences
-            first_name: `${role.charAt(0).toUpperCase() + role.slice(1)}`,
             unsubscribed: false,
           }),
         })
-      } catch {
-        // Non-fatal — waitlist is already in Supabase
+
+        // Ignore duplicates/non-critical audience sync issues — Supabase is the source of truth
+        if (!resendRes.ok && resendRes.status !== 409) {
+          const errorBody = await resendRes.text().catch(() => '')
+          console.error('Resend audience sync failed:', resendRes.status, errorBody)
+        }
+      } catch (error) {
+        console.error('Resend audience sync error:', error)
       }
     }
 
