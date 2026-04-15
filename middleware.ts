@@ -14,6 +14,14 @@ function getAllowedEmails() {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const host = request.headers.get('host') || ''
+
+  if (host === 'otto.edcorner.co.uk') {
+    const redirectUrl = new URL(request.url)
+    redirectUrl.protocol = 'https:'
+    redirectUrl.host = 'www.ottougc.com'
+    return NextResponse.redirect(redirectUrl, 308)
+  }
 
   const publicExactRoutes = [
     '/',
