@@ -16,10 +16,10 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
 
-  if (host === 'otto.edcorner.co.uk') {
+  if (host === 'otto.edcorner.co.uk' || host === 'www.ottougc.com') {
     const redirectUrl = new URL(request.url)
     redirectUrl.protocol = 'https:'
-    redirectUrl.host = 'www.ottougc.com'
+    redirectUrl.host = 'ottougc.com'
     return NextResponse.redirect(redirectUrl, 308)
   }
 

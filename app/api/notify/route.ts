@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
       case 'new_proposal': {
         const { dealId, brandId, creatorId, jobTitle, creatorName } = data
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ottougc.com'
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ottougc.com'
 
         // Get brand user email via users table
         const { data: brandUser } = await supabase
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
       case 'work_submitted': {
         const { dealId, brandId, creatorId, jobTitle, creatorName } = data
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ottougc.com'
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ottougc.com'
 
         const { data: brandUser } = await supabase
           .from('users').select('email').eq('id', brandId).maybeSingle()
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
       case 'deal_approved': {
         const { dealId, creatorId, jobTitle, brandName } = data
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ottougc.com'
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ottougc.com'
 
         const { data: creatorUser } = await supabase
           .from('users').select('email').eq('id', creatorId).maybeSingle()
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
 
       case 'revision_requested': {
         const { dealId, creatorId, jobTitle, brandName, revisionNotes } = data
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ottougc.com'
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ottougc.com'
 
         const { data: creatorUser } = await supabase
           .from('users').select('email').eq('id', creatorId).maybeSingle()
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
         // Lightweight ping — recipientEmail passed directly from caller
         const { dealId, recipientEmail, senderName, preview, jobTitle } = data
         if (!recipientEmail) break
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ottougc.com'
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ottougc.com'
         const html = emailShell(`
           <p style="margin:0 0 8px;font-size:13px;color:#6b6b6b">New Message</p>
           <h1 style="${HEADLINE_STYLE};font-size:28px;margin:0 0 16px">${senderName} sent you a message</h1>

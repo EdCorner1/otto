@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.ottougc.com/sitemap.xml
+Sitemap: https://ottougc.com/sitemap.xml

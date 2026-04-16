@@ -18,7 +18,7 @@ export type DemoJob = {
 }
 
 const demoBrands = [
-  { company_name: 'Otto UGC', industry: 'Creator Platform', website: 'https://www.ottougc.com', logo_initials: 'O' },
+  { company_name: 'Otto UGC', industry: 'Creator Platform', website: 'https://ottougc.com', logo_initials: 'O' },
   { company_name: 'Raycon', industry: 'Consumer Electronics', website: 'https://www.rayconglobal.com', logo_initials: 'R' },
   { company_name: 'Pingo', industry: 'Smart Home', website: 'https://www.pingo.io', logo_initials: 'P' },
   { company_name: 'Detris', industry: 'Fitness Tech', website: 'https://detris.com', logo_initials: 'D' },
