@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
-// Emails that skip the onboarding check and can access owner-only surfaces
 const OWNER_EMAILS = ['edcorner1@gmail.com']
 
 type Role = 'creator' | 'brand'
@@ -13,6 +12,14 @@ type Role = 'creator' | 'brand'
 type ProfileSummary = {
   name: string
   avatarUrl: string | null
+}
+
+type NavItem = {
+  label: string
+  href?: string
+  icon: React.ReactNode
+  comingSoon?: boolean
+  activePrefixes?: string[]
 }
 
 function HamburgerIcon({ open }: { open: boolean }) {
@@ -25,6 +32,69 @@ function HamburgerIcon({ open }: { open: boolean }) {
       <path d="M3 6H17M3 10H17M3 14H17" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   )
+}
+
+function DashboardIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="4" rx="1.5" />
+      <rect x="14" y="10" width="7" height="11" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  )
+}
+
+function MessageIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+
+function PortfolioIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <path d="M9 13h6" />
+    </svg>
+  )
+}
+
+function CampaignIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15V6a2 2 0 0 0-2-2H8l-5 5v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1" />
+      <path d="M17 3v6h6" />
+    </svg>
+  )
+}
+
+function PaymentsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M2 10h20" />
+      <path d="M7 15h2" />
+    </svg>
+  )
+}
+
+function AffiliateIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 7h3a5 5 0 0 1 0 10h-3" />
+      <path d="M9 17H6A5 5 0 0 1 6 7h3" />
+      <path d="M8 12h8" />
+    </svg>
+  )
+}
+
+function isActive(pathname: string, item: NavItem) {
+  if (!item.href) return false
+  const prefixes = item.activePrefixes?.length ? item.activePrefixes : [item.href]
+  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -114,67 +184,108 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     bootstrap()
 
     return () => { cancelled = true }
-  }, [pathname, router])
+  }, [pathname, router, supabase])
 
-  // Close mobile menu on route change
-  useEffect(() => { queueMicrotask(() => setMobileOpen(false)) }, [pathname])
+  useEffect(() => {
+    queueMicrotask(() => setMobileOpen(false))
+  }, [pathname])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.replace('/')
   }
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
-      <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
-    </div>
-  )
+  const desktopNavItems = useMemo<NavItem[]>(() => {
+    const base: NavItem[] = [
+      { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
+      { label: 'Messages', href: '/messages', icon: <MessageIcon /> },
+      {
+        label: role === 'brand' ? 'Brand Profile' : 'Portfolio',
+        href: role === 'brand' ? '/profile/edit' : '/profile/edit',
+        icon: <PortfolioIcon />,
+        activePrefixes: ['/profile/edit', '/explore'],
+      },
+      {
+        label: 'Live Campaigns',
+        href: '/deals',
+        icon: <CampaignIcon />,
+        activePrefixes: ['/deals'],
+      },
+      { label: 'Payments', icon: <PaymentsIcon />, comingSoon: true },
+      { label: 'Affiliates', icon: <AffiliateIcon />, comingSoon: true },
+    ]
 
-  if (!user) return null
+    if (role === 'brand') {
+      base.splice(3, 0, {
+        label: 'My Briefs',
+        href: '/jobs',
+        icon: <DashboardIcon />,
+        activePrefixes: ['/jobs'],
+      })
+    }
 
-  const isCreator = role === 'creator'
-  const isBrand = role === 'brand'
-  const isOwner = OWNER_EMAILS.includes(user.email ?? '')
+    if (role === 'creator') {
+      base.splice(3, 0, {
+        label: 'Find Work',
+        href: '/jobs',
+        icon: <DashboardIcon />,
+        activePrefixes: ['/jobs'],
+      })
+    }
 
-  const navLinks = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/jobs', label: isBrand ? 'My Briefs' : 'Find Work' },
-    ...(isBrand ? [{ href: '/jobs/templates', label: 'Brief Templates' }] : []),
-    { href: '/messages', label: 'Messages' },
-    ...(isCreator ? [{ href: '/explore', label: 'Discover' }] : []),
-    ...(isOwner ? [{ href: '/ops', label: 'Ops' }] : []),
-  ]
+    return base
+  }, [role])
+
+  const quickLinks = useMemo(() => {
+    const links = [
+      { href: '/profile/edit', label: 'Edit profile' },
+      ...(OWNER_EMAILS.includes(user?.email ?? '') ? [{ href: '/ops', label: 'Ops dashboard' }] : []),
+    ]
+    return links
+  }, [user?.email])
 
   const isOnboardingRoute = pathname === '/onboarding'
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
+        <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!user) return null
 
   if (isOnboardingRoute) {
     return <div className="min-h-screen bg-[#fafaf9]">{children}</div>
   }
 
+  const currentSection = desktopNavItems.find((item) => isActive(pathname, item))?.label || 'Dashboard'
+
   return (
     <div className="min-h-screen bg-[#fafaf9]">
-
-      {/* Nav */}
       <header className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex h-16 items-center justify-between px-5 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <span style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 700, fontSize: '20px', letterSpacing: '-1px', color: '#363535' }}>
-            Otto
-          </span>
-          <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
-        </Link>
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={() => setMobileOpen((o) => !o)}
+            className="md:hidden p-2 rounded-xl text-[#363535] hover:bg-[#f0f0ec] transition-colors"
+            aria-label="Toggle menu"
+          >
+            <HamburgerIcon open={mobileOpen} />
+          </button>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex h-full items-center gap-1 self-stretch">
-          {navLinks.map(({ href, label }) => (
-            <Link key={href} href={href}
-              className={`inline-flex h-full items-center rounded-xl px-4 text-sm font-medium transition-colors ${pathname === href ? 'text-[#363535]' : 'text-[#6b6b6b] hover:text-[#363535]'}`}>
-              {label}
-            </Link>
-          ))}
-        </nav>
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <span style={{ fontFamily: 'var(--font-bricolage)', fontWeight: 700, fontSize: '20px', letterSpacing: '-1px', color: '#363535' }}>
+              Otto
+            </span>
+            <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
+          </Link>
 
-        {/* Right side */}
-        <div className="hidden md:flex h-full items-center">
+          <div className="hidden md:block h-7 w-px bg-[#ecece8]" />
+          <p className="hidden md:block text-sm font-medium text-[#6b6b6b] truncate">{currentSection}</p>
+        </div>
+
+        <div className="flex h-full items-center">
           <div className="relative group h-full flex items-center">
             <button className="inline-flex h-11 items-center gap-3 rounded-2xl px-3 text-left transition-colors hover:bg-[#f7f7f5]">
               {profileSummary.avatarUrl ? (
@@ -185,7 +296,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   {profileSummary.name?.[0] ?? 'U'}
                 </span>
               )}
-              <span className="text-sm font-medium text-[#363535]">{profileSummary.name}</span>
+              <span className="hidden sm:block text-sm font-medium text-[#363535] max-w-[160px] truncate">{profileSummary.name}</span>
             </button>
             <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-[#e8e8e4] rounded-xl shadow-lg shadow-black/[0.08] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
               <div className="px-4 py-3 border-b border-[#f0f0ec]">
@@ -199,64 +310,147 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMobileOpen(o => !o)}
-          className="md:hidden p-2 rounded-xl text-[#363535] hover:bg-[#f0f0ec] transition-colors"
-          aria-label="Toggle menu"
-        >
-          <HamburgerIcon open={mobileOpen} />
-        </button>
       </header>
 
-      {/* Mobile menu overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 flex flex-col pt-24 px-6 bg-white/95 backdrop-blur-md md:hidden">
-          <button
-            onClick={() => setMobileOpen(false)}
-            className="absolute top-6 right-6 p-2 text-[#363535]"
-            aria-label="Close menu"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-            </svg>
-          </button>
-          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3">
+      <aside className="hidden md:flex fixed left-8 top-24 bottom-6 z-40 w-[264px] flex-col rounded-[28px] border border-[#e8e8e4] bg-white/90 backdrop-blur-md shadow-lg shadow-black/[0.04]">
+        <div className="px-5 pt-5 pb-4 border-b border-[#f3f3ef]">
+          <div className="flex items-center gap-3">
             {profileSummary.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={profileSummary.avatarUrl} alt={profileSummary.name} className="h-10 w-10 rounded-full object-cover border border-[#e8e8e4]" />
+              <img src={profileSummary.avatarUrl} alt={profileSummary.name} className="h-11 w-11 rounded-full object-cover border border-[#e8e8e4]" />
             ) : (
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1c1c1e] text-sm font-bold text-white">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1c1c1e] text-sm font-bold text-white">
                 {profileSummary.name?.[0] ?? 'U'}
               </span>
             )}
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-[#363535]">{profileSummary.name}</p>
-              <p className="truncate text-xs text-[#9a9a9a]">{user.email}</p>
+              <p className="truncate text-xs text-[#9a9a9a]">{role === 'brand' ? 'Brand account' : 'Creator account'}</p>
             </div>
           </div>
-          <nav className="flex flex-col gap-1">
-            {navLinks.map(({ href, label }) => (
-              <Link key={href} href={href} onClick={() => setMobileOpen(false)}
-                className={`py-4 text-base font-medium text-[#363535] border-b border-[#f0f0ec] ${pathname === href ? 'text-[#1c1c1e] font-semibold' : ''}`}>
-                {label}
-              </Link>
-            ))}
-            <Link href="/profile/edit" onClick={() => setMobileOpen(false)}
-              className="py-4 text-base font-medium text-[#6b6b6b] border-b border-[#f0f0ec]">
-              Edit profile
+        </div>
+
+        <nav className="flex-1 px-4 py-4 space-y-1">
+          {desktopNavItems.map((item) => {
+            const active = isActive(pathname, item)
+            const classes = `flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm transition-all ${active ? 'bg-[#f7fbe7] text-[#363535] border border-[#e2efad]' : item.comingSoon ? 'text-[#9a9a9a] bg-[#fbfbfa] border border-transparent' : 'text-[#6b6b6b] hover:bg-[#f7f7f5] hover:text-[#363535]'}`
+
+            const inner = (
+              <>
+                <span className="flex items-center gap-3">
+                  <span className={active ? 'text-[#363535]' : 'text-current'}>{item.icon}</span>
+                  <span className="font-medium">{item.label}</span>
+                </span>
+                {item.comingSoon && (
+                  <span className="rounded-full bg-[#f0f0ec] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#9a9a9a]">Soon</span>
+                )}
+              </>
+            )
+
+            if (item.href && !item.comingSoon) {
+              return (
+                <Link key={item.label} href={item.href} className={classes}>
+                  {inner}
+                </Link>
+              )
+            }
+
+            return (
+              <div key={item.label} className={classes}>
+                {inner}
+              </div>
+            )
+          })}
+        </nav>
+
+        <div className="px-4 pb-4 space-y-2">
+          {quickLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="flex items-center justify-between rounded-2xl border border-[#f0f0ec] px-4 py-3 text-sm text-[#6b6b6b] hover:bg-[#fafaf9] hover:text-[#363535] transition-colors">
+              <span>{link.label}</span>
+              <span>→</span>
             </Link>
-            <button onClick={handleSignOut}
-              className="py-4 text-base font-medium text-[#6b6b6b] text-left mt-2">
-              Sign out
-            </button>
-          </nav>
+          ))}
+          <button onClick={handleSignOut} className="w-full rounded-2xl border border-[#f0f0ec] px-4 py-3 text-left text-sm text-[#6b6b6b] hover:bg-[#fafaf9] hover:text-[#363535] transition-colors">
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-[#1c1c1e]/30 md:hidden" onClick={() => setMobileOpen(false)}>
+          <div className="absolute left-4 top-20 bottom-4 w-[calc(100%-2rem)] max-w-sm rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-xl shadow-black/[0.08]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                {profileSummary.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profileSummary.avatarUrl} alt={profileSummary.name} className="h-11 w-11 rounded-full object-cover border border-[#e8e8e4]" />
+                ) : (
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1c1c1e] text-sm font-bold text-white">
+                    {profileSummary.name?.[0] ?? 'U'}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-[#363535]">{profileSummary.name}</p>
+                  <p className="truncate text-xs text-[#9a9a9a]">{role === 'brand' ? 'Brand account' : 'Creator account'}</p>
+                </div>
+              </div>
+              <button onClick={() => setMobileOpen(false)} className="p-2 rounded-xl text-[#363535] hover:bg-[#f0f0ec]" aria-label="Close menu">
+                <HamburgerIcon open />
+              </button>
+            </div>
+
+            <nav className="space-y-2">
+              {desktopNavItems.map((item) => {
+                const active = isActive(pathname, item)
+                const classes = `flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm transition-all ${active ? 'bg-[#f7fbe7] text-[#363535] border border-[#e2efad]' : item.comingSoon ? 'text-[#9a9a9a] bg-[#fbfbfa] border border-transparent' : 'text-[#6b6b6b] hover:bg-[#f7f7f5] hover:text-[#363535]'}`
+                const inner = (
+                  <>
+                    <span className="flex items-center gap-3">
+                      <span>{item.icon}</span>
+                      <span className="font-medium">{item.label}</span>
+                    </span>
+                    {item.comingSoon && (
+                      <span className="rounded-full bg-[#f0f0ec] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#9a9a9a]">Soon</span>
+                    )}
+                  </>
+                )
+
+                if (item.href && !item.comingSoon) {
+                  return (
+                    <Link key={item.label} href={item.href} onClick={() => setMobileOpen(false)} className={classes}>
+                      {inner}
+                    </Link>
+                  )
+                }
+
+                return (
+                  <div key={item.label} className={classes}>
+                    {inner}
+                  </div>
+                )
+              })}
+            </nav>
+
+            <div className="mt-6 space-y-2">
+              {quickLinks.map((link) => (
+                <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} className="flex items-center justify-between rounded-2xl border border-[#f0f0ec] px-4 py-3 text-sm text-[#6b6b6b] hover:bg-[#fafaf9] hover:text-[#363535] transition-colors">
+                  <span>{link.label}</span>
+                  <span>→</span>
+                </Link>
+              ))}
+              <button onClick={handleSignOut} className="w-full rounded-2xl border border-[#f0f0ec] px-4 py-3 text-left text-sm text-[#6b6b6b] hover:bg-[#fafaf9] hover:text-[#363535] transition-colors">
+                Sign out
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Page content */}
-      <main className="pt-28 pb-20">{children}</main>
+      <main className="pt-28 pb-20 md:pl-[304px]">
+        <div className="px-4 md:px-8">
+          {children}
+        </div>
+      </main>
     </div>
   )
 }
