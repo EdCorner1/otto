@@ -709,11 +709,13 @@ export default function OnboardingPage() {
                       const { data: { user } } = await supabase.auth.getUser()
                       if (!user) return
 
-                      for (const file of files) {
-                        setVideoUploadProgress(`Uploading ${file.name}...`)
-                        const userId = user.id
+                      const userId = user.id
+                      const uploadedFiles: Array<{ fileName: string; uploadId: string }> = []
 
-                        // Request a Mux direct upload URL
+                      for (let index = 0; index < files.length; index++) {
+                        const file = files[index]
+                        setVideoUploadProgress(`Uploading ${file.name} (${index + 1}/${files.length})...`)
+
                         const signRes = await fetch('/api/mux/upload-url', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
@@ -725,12 +727,11 @@ export default function OnboardingPage() {
                         }
                         const { uploadUrl, uploadId } = await signRes.json()
 
-                        // PUT directly to Mux (no Supabase Storage involved)
                         await new Promise<void>((resolve, reject) => {
                           const xhr = new XMLHttpRequest()
                           xhr.upload.addEventListener('progress', (e) => {
                             if (e.lengthComputable) {
-                              setVideoUploadProgress(`Uploading ${file.name} — ${Math.round((e.loaded / e.total) * 100)}%`)
+                              setVideoUploadProgress(`Uploading ${file.name} (${index + 1}/${files.length}) — ${Math.round((e.loaded / e.total) * 100)}%`)
                             }
                           })
                           xhr.addEventListener('load', () => {
@@ -743,26 +744,31 @@ export default function OnboardingPage() {
                           xhr.send(file)
                         })
 
-                        // Poll for the playbackId
-                        setVideoUploadProgress(`Processing ${file.name}...`)
+                        uploadedFiles.push({ fileName: file.name, uploadId })
+                        setVideoUploadProgress(`Uploaded ${index + 1}/${files.length}. Processing in background...`)
+                      }
+
+                      let completed = 0
+                      await Promise.all(uploadedFiles.map(async ({ fileName, uploadId }) => {
                         let playbackId: string | null = null
-                        for (let attempt = 0; attempt < 30; attempt++) {
-                          await new Promise(r => setTimeout(r, 2000))
+                        for (let attempt = 0; attempt < 40; attempt++) {
+                          await new Promise(r => setTimeout(r, 1500))
                           const statusRes = await fetch(`/api/mux/upload-status?uploadId=${uploadId}`)
                           if (statusRes.ok) {
                             const data = await statusRes.json()
                             if (data.playbackId) { playbackId = data.playbackId; break }
-                            if (data.status === 'errored') throw new Error('Video processing failed on Mux')
+                            if (data.status === 'errored') throw new Error(`Video processing failed on Mux for ${fileName}`)
                           }
                         }
-                        if (!playbackId) throw new Error('Timed out waiting for video to process')
+                        if (!playbackId) throw new Error(`Timed out waiting for ${fileName} to process`)
 
+                        completed += 1
                         setPortfolioItems(prev => [
                           ...prev,
                           { type: 'video', url: playbackId!, caption: '' },
                         ])
-                        setVideoUploadProgress('')
-                      }
+                        setVideoUploadProgress(`Processed ${completed}/${uploadedFiles.length} video${uploadedFiles.length === 1 ? '' : 's'}...`)
+                      }))
                     } catch (err: unknown) {
                       const msg = err instanceof Error ? err.message : 'Upload failed'
                       setError(msg.includes('not found') ? 'Video storage bucket not found — please contact support.' : msg)
