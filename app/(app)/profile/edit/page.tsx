@@ -47,7 +47,11 @@ export default function ProfileEditPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setUser(user)
-      const r = user.user_metadata?.role
+      let r = (user.user_metadata?.role as string | undefined) || null
+      if (!r) {
+        const { data: userRow } = await supabase.from('users').select('role').eq('id', user.id).maybeSingle()
+        r = (userRow?.role as string | undefined) || null
+      }
       setRole(r)
 
       if (r === 'creator') {
@@ -116,7 +120,7 @@ export default function ProfileEditPage() {
     const ext = file.name.split('.').pop()
     const path = `avatars/${userId}/avatar.${ext}`
     const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-    if (error) { console.error('Avatar upload error:', error); return null }
+    if (error) throw new Error(`Avatar upload failed: ${error.message}`)
     const { data } = supabase.storage.from('avatars').getPublicUrl(path)
     return data.publicUrl
   }
@@ -181,13 +185,19 @@ export default function ProfileEditPage() {
       // Upload avatar if changed
       if (avatarFile) {
         const url = await uploadAvatar(user.id, avatarFile)
-        if (url) avatarUrl = url
+        if (!url) throw new Error('Could not upload profile photo.')
+        avatarUrl = url
+      }
+
+      if (!role) {
+        throw new Error('Could not determine account type. Please refresh and try again.')
       }
 
       if (role === 'creator') {
         const { data: existing } = await supabase.from('creators').select('id').eq('user_id', user.id).single()
-        if (existing) {
-          await supabase.from('creators').update({
+        if (!existing) throw new Error('Creator profile not found.')
+        {
+          const { error: creatorUpdateError } = await supabase.from('creators').update({
             display_name: displayName.trim() || null,
             headline: headline.trim() || null,
             bio: bio.trim() || null,
@@ -197,6 +207,7 @@ export default function ProfileEditPage() {
             website: website.trim() || null,
             avatar_url: avatarUrl || null,
           }).eq('id', existing.id)
+          if (creatorUpdateError) throw new Error(`Creator save failed: ${creatorUpdateError.message}`)
 
           await upsertSocial(existing.id, 'instagram', instagram)
           await upsertSocial(existing.id, 'tiktok', tiktok)
@@ -207,21 +218,26 @@ export default function ProfileEditPage() {
         }
 
         // Update auth metadata
-        await supabase.auth.updateUser({ data: { display_name: displayName.trim(), role: 'creator' } })
+        const { error: authUpdateError } = await supabase.auth.updateUser({ data: { display_name: displayName.trim(), role: 'creator' } })
+        if (authUpdateError) throw new Error(`Auth profile sync failed: ${authUpdateError.message}`)
       } else if (role === 'brand') {
         const { data: existing } = await supabase.from('brands').select('id').eq('user_id', user.id).single()
-        if (existing) {
-          await supabase.from('brands').update({
+        if (!existing) throw new Error('Brand profile not found.')
+        {
+          const { error: brandUpdateError } = await supabase.from('brands').update({
             company_name: companyName.trim() || null,
             website: websiteUrl.trim() || null,
             industry: industry.trim() || null,
             bio: companyBio.trim() || null,
             logo_url: avatarUrl || null,
           }).eq('id', existing.id)
+          if (brandUpdateError) throw new Error(`Brand save failed: ${brandUpdateError.message}`)
         }
-        await supabase.auth.updateUser({ data: { company_name: companyName.trim(), role: 'brand' } })
+        const { error: authUpdateError } = await supabase.auth.updateUser({ data: { company_name: companyName.trim(), role: 'brand' } })
+        if (authUpdateError) throw new Error(`Auth profile sync failed: ${authUpdateError.message}`)
       }
 
+      setAvatarFile(null)
       setMsg('Profile saved!')
     } catch (err: unknown) {
       setMsg(`Error saving: ${err instanceof Error ? err.message : 'Unknown error'}`)
