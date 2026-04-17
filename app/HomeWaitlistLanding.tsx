@@ -58,12 +58,20 @@ export default function HomeWaitlistLanding() {
         return
       }
 
+      const submittedEmail = email.trim().toLowerCase()
       setSubmitted(true)
       setEmail('')
 
+      try {
+        window.localStorage.setItem('otto_waitlist_email', submittedEmail)
+        window.localStorage.setItem('otto_waitlist_role', role)
+      } catch {}
+
       // Redirect to role-specific welcome page
       if (data?.redirectUrl) {
-        window.location.href = data.redirectUrl
+        const nextUrl = new URL(data.redirectUrl, window.location.origin)
+        nextUrl.searchParams.set('email', submittedEmail)
+        window.location.href = nextUrl.toString()
       }
     } catch {
       setError('Something went wrong. Try again.')

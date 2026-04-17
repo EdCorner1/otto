@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 const INDUSTRIES = ['SaaS & Tech', 'Fashion & Beauty', 'Health & Wellness', 'Food & Beverage', 'Gaming', 'Finance', 'Other']
@@ -47,6 +47,14 @@ export default function BrandWelcome() {
   const [values, setValues] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const [email, setEmail] = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const fromQuery = params.get('email')?.trim().toLowerCase()
+    const fromStorage = window.localStorage.getItem('otto_waitlist_email')?.trim().toLowerCase()
+    setEmail(fromQuery || fromStorage || '')
+  }, [])
 
   const currentQ = BRAND_QUESTIONS[step]
   const currentValue = values[currentQ?.id] || ''
@@ -64,11 +72,13 @@ export default function BrandWelcome() {
   async function handleSubmit(data: Record<string, string>) {
     setSubmitting(true)
     try {
-      await fetch('/api/waitlist-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, role: 'brand' }),
-      })
+      if (email) {
+        await fetch('/api/waitlist-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, ...data, role: 'brand' }),
+        })
+      }
     } catch { /* non-fatal */ }
     setDone(true)
     setSubmitting(false)
@@ -117,7 +127,10 @@ export default function BrandWelcome() {
           <ProgressBar step={step + 1} />
 
           <p className="mb-2 text-sm font-medium text-[#8a8a86] uppercase tracking-wide">Brand onboarding</p>
-          <h2 className="mb-8 font-heading text-3xl font-bold text-[#1c1c1e]">{currentQ.question}</h2>
+          <h2 className="mb-3 font-heading text-3xl font-bold text-[#1c1c1e]">{currentQ.question}</h2>
+          <p className="mb-8 text-sm text-[#6b6b6b]">
+            {email ? `We’ve saved your waitlist spot for ${email}. Answer a few quick questions so we can prioritise the right launch brands.` : 'Answer a few quick questions so we can prioritise the right launch brands.'}
+          </p>
 
           {currentQ.type === 'text' ? (
             <div>

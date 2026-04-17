@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
-// Emails that skip the onboarding check
-const ONBOARDING_BYPASS_EMAILS = ['edcorner1@gmail.com']
+// Emails that skip the onboarding check and can access owner-only surfaces
+const OWNER_EMAILS = ['edcorner1@gmail.com']
 
 type Role = 'creator' | 'brand'
 
@@ -73,7 +73,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       }
 
       const onboardingComplete =
-        ONBOARDING_BYPASS_EMAILS.includes(user.email ?? '')
+        OWNER_EMAILS.includes(user.email ?? '')
           ? true
           : resolvedRole === 'brand'
             ? !!brandRow
@@ -120,6 +120,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const isCreator = role === 'creator'
   const isBrand = role === 'brand'
+  const isOwner = OWNER_EMAILS.includes(user.email ?? '')
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard' },
@@ -127,6 +128,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     ...(isBrand ? [{ href: '/jobs/templates', label: 'Brief Templates' }] : []),
     { href: '/messages', label: 'Messages' },
     ...(isCreator ? [{ href: '/explore', label: 'Discover' }] : []),
+    ...(isOwner ? [{ href: '/ops', label: 'Ops' }] : []),
   ]
 
   const isOnboardingRoute = pathname === '/onboarding'
