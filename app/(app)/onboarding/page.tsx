@@ -78,13 +78,13 @@ export default function OnboardingPage() {
           {/* Floating nav */}
           <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+              <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
               <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
             </Link>
           </nav>
 
           <div className="pt-24">
-            <h1 className="text-4xl font-display tracking-tight mb-3" style={{ fontSize: 'clamp(32px, 6vw, 48px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+            <h1 className="text-4xl font-display mb-3" style={{ fontSize: 'clamp(32px, 6vw, 48px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
               Welcome to Otto.
             </h1>
             <p className="text-[#6b6b6b] text-lg mb-10">What kind of user are you?</p>
@@ -122,14 +122,14 @@ export default function OnboardingPage() {
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
             </nav>
             <div className="pt-24">
               <StepIndicator current={0} total={brandStepTotal} />
               <button onClick={() => { setRole(null); setStep(0); }} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 What brand are you?
               </h1>
               <p className="text-[#6b6b6b] mb-8">Let&apos;s start with the basics.</p>
@@ -178,14 +178,14 @@ export default function OnboardingPage() {
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
             </nav>
             <div className="pt-24">
               <StepIndicator current={1} total={brandStepTotal} />
               <button onClick={() => setStep(1)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 How do you want to create?
               </h1>
               <p className="text-[#6b6b6b] mb-6">Pick the content formats you work with.</p>
@@ -262,14 +262,14 @@ export default function OnboardingPage() {
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
             </nav>
             <div className="pt-24">
               <StepIndicator current={2} total={brandStepTotal} />
               <button onClick={() => setStep(2)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Who are you reaching?
               </h1>
               <p className="text-[#6b6b6b] mb-8">This helps us match you with the right creators.</p>
@@ -301,14 +301,14 @@ export default function OnboardingPage() {
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
             </nav>
             <div className="pt-24">
               <StepIndicator current={3} total={brandStepTotal} />
               <button onClick={() => setStep(3)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 You&apos;re all set.
               </h1>
               <p className="text-[#6b6b6b] mb-8">Review your brand profile before we get started.</p>
@@ -399,14 +399,14 @@ export default function OnboardingPage() {
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
             </nav>
             <div className="pt-24">
               <StepIndicator current={step} total={TOTAL_STEPS} />
               <button onClick={() => setStep(0)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Set up your profile.
               </h1>
               <p className="text-[#6b6b6b] mb-8">This is how brands will find you.</p>
@@ -501,14 +501,14 @@ export default function OnboardingPage() {
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
             </nav>
             <div className="pt-24">
               <StepIndicator current={step} total={TOTAL_STEPS} />
               <button onClick={() => setStep(1)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Add a profile photo.
               </h1>
               <p className="text-[#6b6b6b] mb-8">Brands want to see who&apos;s behind the content. A clear photo builds trust.</p>
@@ -575,18 +575,18 @@ export default function OnboardingPage() {
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
             </nav>
             <div className="pt-24">
               <StepIndicator current={step} total={TOTAL_STEPS} />
               <button onClick={() => setStep(2)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Your social links.
               </h1>
               <p className="text-[#6b6b6b] mb-2">Add at least one of TikTok, Instagram, or YouTube Shorts so brands can check your work fast.</p>
-              <p className="text-xs text-[#ccff00] font-semibold mb-8">Required to go live: 1 primary social. Recommended: 3+ total links.</p>
+              <p className="text-xs text-[#6b6b6b] font-medium mb-8">Required to go live: 1 primary social. Recommended: 3+ total links.</p>
 
               {error && <div className="mb-5 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">{error}</div>}
 
@@ -650,18 +650,18 @@ export default function OnboardingPage() {
           <div className="w-full max-w-lg">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
             </nav>
             <div className="pt-24">
               <StepIndicator current={step} total={TOTAL_STEPS} />
               <button onClick={() => setStep(3)} className="text-sm text-[#6b6b6b] hover:text-[#363535] mb-6 flex items-center gap-1">← Back</button>
-              <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Your portfolio.
               </h1>
               <p className="text-[#6b6b6b] mb-2">Add your best 3–6 videos. 3 gets your profile live. 6 gets you to 100% completion.</p>
-              <p className="text-xs font-semibold text-[#ccff00] mb-6">🎬 Start with your strongest demos, reviews, or native-feeling UGC ads.</p>
+              <p className="text-xs font-medium text-[#6b6b6b] mb-6">🎬 Start with your strongest demos, reviews, or native-feeling UGC ads.</p>
 
               {/* Portfolio grid */}
               {portfolioItems.length > 0 && (
@@ -938,7 +938,7 @@ export default function OnboardingPage() {
           <div className="w-full max-w-lg text-center">
             <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+                <span className="text-lg font-extrabold font-display" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
                 <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
               </Link>
             </nav>
@@ -948,7 +948,7 @@ export default function OnboardingPage() {
                   <polyline points="20,6 9,17 4,12" />
                 </svg>
               </div>
-              <h1 className="text-4xl font-display tracking-tight mb-3" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-0.5px', color: '#363535' }}>
+              <h1 className="text-4xl font-display mb-3" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Your profile is live.
               </h1>
               <p className="text-[#6b6b6b] text-lg mb-2">Brands can now discover you and review your best work straight away.</p>
