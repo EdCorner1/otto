@@ -18,6 +18,7 @@ export default function ProfileEditPage() {
   const [msg, setMsg] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string>('')
+  const [publicProfileHref, setPublicProfileHref] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Creator fields
@@ -59,6 +60,7 @@ export default function ProfileEditPage() {
           .from('creators').select('*, creator_socials(*), creator_tags(*)')
           .eq('user_id', user.id).single()
         if (c) {
+          setPublicProfileHref(`/explore/${c.id}`)
           setDisplayName(c.display_name || '')
           setHeadline(c.headline || '')
           setBio(c.bio || '')
@@ -96,6 +98,7 @@ export default function ProfileEditPage() {
       } else if (r === 'brand') {
         const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).single()
         if (b) {
+          setPublicProfileHref(`/brands/${b.id}`)
           setCompanyName((b as { company_name?: string }).company_name ?? '')
           setWebsiteUrl(b.website || '')
           setIndustry(b.industry || '')
@@ -245,12 +248,6 @@ export default function ProfileEditPage() {
     setSaving(false)
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
-  }
-
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
       <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
@@ -259,41 +256,27 @@ export default function ProfileEditPage() {
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
-      {/* Nav */}
-      <header className="fixed top-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#e8e8e4]">
-        <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>
-            Otto<span className="inline-block w-2 h-2 bg-[#ccff00] rounded-full mb-2" />
-            <span className="text-xs text-[#9a9a9a] font-normal ml-1">/ Edit Profile</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-sm text-[#6b6b6b] hover:text-[#363535]">← Dashboard</Link>
-            <button onClick={handleSignOut} className="text-sm text-[#6b6b6b] hover:text-[#363535]">Sign out</button>
+      <div className="max-w-3xl mx-auto px-6 pt-6 pb-16">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="section-label mb-2">Profile settings</p>
+            <h1 style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.0, letterSpacing: '-1.5px', color: '#363535' }}>
+              Edit Profile
+            </h1>
+            <p className="text-sm text-[#6b6b6b] mt-2">Tighten the details brands and creators actually see.</p>
           </div>
-        </div>
-      </header>
-
-      <div className="max-w-2xl mx-auto px-6 pt-28 pb-16">
-        <div className="flex items-center justify-between mb-8">
-          <h1 style={{ fontSize: 'clamp(24px, 4vw, 36px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }}>
-            Edit Profile
-          </h1>
-          {role === 'creator' && (
-            <Link href={`/creators/${user?.id}`} target="_blank"
-              className="text-sm text-[#6b6b6b] hover:text-[#363535] flex items-center gap-1">
-              View public profile ↗
-            </Link>
-          )}
-          {role === 'brand' && (
-            <Link href={`/brands/${user?.id}`} target="_blank"
-              className="text-sm text-[#6b6b6b] hover:text-[#363535] flex items-center gap-1">
-              View public profile ↗
-            </Link>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/dashboard" className="btn-ghost text-sm">← Dashboard</Link>
+            {publicProfileHref && (
+              <Link href={publicProfileHref} target="_blank" className="btn-ghost text-sm">
+                View public profile ↗
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Avatar */}
-        <div className="card mb-6">
+        <div className="card mb-6 fade-up">
           <p className="text-xs font-semibold text-[#6b6b6b] mb-3">Profile Photo</p>
           <div className="flex items-center gap-4">
             <button onClick={() => fileRef.current?.click()}
