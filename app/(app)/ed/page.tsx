@@ -12,6 +12,11 @@ type DashboardClient = {
   brand_color: string | null
   total_views_month: number
   active_campaigns: number
+  goal_status_counts: {
+    on_track: number
+    behind: number
+    not_started: number
+  }
 }
 
 type DashboardPayload = {
@@ -161,6 +166,8 @@ export default function EdAgencyDashboardPage() {
                 <p className="text-lg font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{client.name}</p>
                 <p className="mt-1 text-sm text-[#6b6b6b]">Views MTD: {(client.total_views_month || 0).toLocaleString()}</p>
                 <p className="text-sm text-[#6b6b6b]">Active campaigns: {client.active_campaigns || 0}</p>
+                <p className="mt-2 text-xs text-[#6b6b6b]">Goals — <span className="text-[#1c1c1e]">On Track: {client.goal_status_counts?.on_track || 0}</span> · <span className="text-rose-600">Behind: {client.goal_status_counts?.behind || 0}</span> · <span className="text-zinc-500">Not Started: {client.goal_status_counts?.not_started || 0}</span></p>
+                <p className="mt-2 text-xs font-medium text-[#1c1c1e] underline decoration-[#ccff00]">View details</p>
               </Link>
             ))}
           </div>

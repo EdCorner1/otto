@@ -14,12 +14,25 @@ type CampaignRow = {
   status: string
   platforms: string[] | null
   notes: string | null
+  tiktok_url: string | null
+  instagram_url: string | null
+  youtube_url: string | null
+  facebook_url: string | null
   created_at: string
 }
 
 type CampaignPostRow = {
   campaign_id: string
   views: number | null
+}
+
+type CampaignGoalRow = {
+  id: string
+  campaign_id: string
+  platform: string
+  target_per_month: number
+  created_at: string
+  updated_at: string
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -39,7 +52,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   const { data: campaigns, error: campaignsError } = await auth.admin
     .from('campaigns')
-    .select('id, client_id, name, start_date, end_date, status, platforms, notes, created_at')
+    .select('id, client_id, name, start_date, end_date, status, platforms, notes, tiktok_url, instagram_url, youtube_url, facebook_url, created_at')
     .eq('client_id', id)
     .order('created_at', { ascending: false })
 
@@ -49,14 +62,25 @@ export async function GET(request: NextRequest, context: RouteContext) {
   const campaignIds = campaignRows.map((campaign) => campaign.id)
 
   let postRows: CampaignPostRow[] = []
+  let goalRows: CampaignGoalRow[] = []
+
   if (campaignIds.length) {
-    const { data: posts, error: postsError } = await auth.admin
-      .from('campaign_posts')
-      .select('campaign_id, views')
-      .in('campaign_id', campaignIds)
+    const [{ data: posts, error: postsError }, { data: goals, error: goalsError }] = await Promise.all([
+      auth.admin
+        .from('campaign_posts')
+        .select('campaign_id, views')
+        .in('campaign_id', campaignIds),
+      auth.admin
+        .from('campaign_goals')
+        .select('id, campaign_id, platform, target_per_month, created_at, updated_at')
+        .in('campaign_id', campaignIds),
+    ])
 
     if (postsError) return NextResponse.json({ error: postsError.message }, { status: 500 })
+    if (goalsError) return NextResponse.json({ error: goalsError.message }, { status: 500 })
+
     postRows = (posts || []) as CampaignPostRow[]
+    goalRows = (goals || []) as CampaignGoalRow[]
   }
 
   const postStatsByCampaign = postRows.reduce<Record<string, { total_views: number; post_count: number }>>((acc, row) => {
@@ -67,8 +91,15 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return acc
   }, {})
 
+  const goalsByCampaign = goalRows.reduce<Record<string, CampaignGoalRow[]>>((acc, row) => {
+    if (!acc[row.campaign_id]) acc[row.campaign_id] = []
+    acc[row.campaign_id].push(row)
+    return acc
+  }, {})
+
   const campaignsWithStats = campaignRows.map((campaign) => ({
     ...campaign,
+    goals: goalsByCampaign[campaign.id] || [],
     total_views: postStatsByCampaign[campaign.id]?.total_views || 0,
     post_count: postStatsByCampaign[campaign.id]?.post_count || 0,
   }))
