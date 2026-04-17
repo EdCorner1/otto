@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { Search } from 'lucide-react'
 
 const QUESTIONS = [
   { id: 'full_name', question: 'What should we call you?', type: 'text', placeholder: 'Your full name' },
@@ -100,7 +101,16 @@ export default function CreatorWelcomePage() {
             <span className="text-lg font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-bricolage)' }}>Otto</span>
             <span className="h-2 w-2 rounded-full bg-[#ccff00]" />
           </Link>
-          <span className="text-sm text-[#6b6b6b]">Creator onboarding</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-[#6b6b6b]">Creator onboarding</span>
+            <Link
+              href="/search"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#e8e8e4] bg-white px-3 py-1.5 text-xs font-semibold text-[#1c1c1e] hover:border-[#1c1c1e]"
+            >
+              <Search className="h-3.5 w-3.5" />
+              Search
+            </Link>
+          </div>
         </div>
       </header>
 

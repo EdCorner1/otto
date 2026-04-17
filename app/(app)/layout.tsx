@@ -101,6 +101,15 @@ function AffiliateIcon() {
   )
 }
 
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  )
+}
+
 function isActive(pathname: string, item: NavItem) {
   if (!item.href) return false
   const prefixes = item.activePrefixes?.length ? item.activePrefixes : [item.href]
@@ -327,6 +336,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="flex h-full items-center gap-2">
+          <Link
+            href="/search"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#ecece8] text-[#6b6b6b] transition-colors hover:bg-[#f7f7f5] hover:text-[#1c1c1e]"
+            aria-label="Open search"
+          >
+            <SearchIcon />
+          </Link>
+
           <Link href="/notifications" className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl text-[#363535] transition-colors hover:bg-[#f7f7f5]" aria-label="Notifications">
             <BellIcon />
             {unreadCount > 0 && (
