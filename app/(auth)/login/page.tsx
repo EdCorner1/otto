@@ -16,7 +16,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    setRedirectTo(params.get('redirectTo') || '/dashboard')
+    const rawRedirect = params.get('redirectTo') || '/dashboard'
+    const safeRedirect = rawRedirect.startsWith('/') && !rawRedirect.startsWith('/auth/callback') && !rawRedirect.startsWith('/auth/v1/callback')
+      ? rawRedirect
+      : '/dashboard'
+    setRedirectTo(safeRedirect)
   }, [])
 
   const handleEmailLogin = async (e: React.FormEvent) => {

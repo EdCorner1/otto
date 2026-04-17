@@ -33,6 +33,7 @@ export async function middleware(request: NextRequest) {
 
   const publicPrefixes = [
     '/auth/callback',
+    '/auth/v1',
     '/blog',
     '/resources',
     '/explore',
