@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createNotification } from '@/lib/server/notifications'
 
 export const runtime = 'nodejs'
 
@@ -94,6 +95,12 @@ async function insertSystemMessage(admin: any, dealId: string, senderId: string,
     sender_name: senderName,
     content: `[SYSTEM:${type}] ${text}`,
   })
+}
+
+async function getJobTitle(admin: any, jobId: string | null) {
+  if (!jobId) return null
+  const { data } = await admin.from('jobs').select('title').eq('id', jobId).maybeSingle()
+  return data?.title || null
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -210,6 +217,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       const creatorName = (application.creators as { display_name?: string } | null)?.display_name || 'creator'
       await insertSystemMessage(auth.admin, id, auth.user.id, auth.senderName, 'offer', `Offer extended to ${creatorName}.`)
 
+      const [{ data: creatorRow }, jobTitle] = await Promise.all([
+        auth.admin.from('creators').select('user_id').eq('id', application.creator_id).maybeSingle(),
+        getJobTitle(auth.admin, deal.job_id),
+      ])
+
+      if (creatorRow?.user_id) {
+        await createNotification(auth.admin, {
+          userId: creatorRow.user_id,
+          type: 'application_accepted',
+          content: `${auth.senderName} accepted your application${jobTitle ? ` for "${jobTitle}"` : ''}.`,
+          linkUrl: `/messages/${id}`,
+        })
+      }
+
       return NextResponse.json({ ok: true, status: 'offered' })
     }
 
@@ -238,6 +259,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         response === 'accept' ? 'Offer accepted.' : 'Offer declined.'
       )
 
+      if (deal.brand_id) {
+        const { data: brandRow } = await auth.admin.from('brands').select('user_id').eq('id', deal.brand_id).maybeSingle()
+        if (brandRow?.user_id) {
+          await createNotification(auth.admin, {
+            userId: brandRow.user_id,
+            type: 'deal_update',
+            content: response === 'accept' ? `${auth.senderName} accepted your offer.` : `${auth.senderName} declined your offer.`,
+            linkUrl: `/messages/${id}`,
+          })
+        }
+      }
+
       return NextResponse.json({ ok: true, status: nextStatus })
     }
 
@@ -259,6 +292,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         await auth.admin.from('deals').update({ status: 'in_progress' }).eq('id', id)
       }
 
+      if (deal.creator_id) {
+        const { data: creatorRow } = await auth.admin.from('creators').select('user_id').eq('id', deal.creator_id).maybeSingle()
+        if (creatorRow?.user_id) {
+          await createNotification(auth.admin, {
+            userId: creatorRow.user_id,
+            type: 'deal_update',
+            content: `${auth.senderName} posted a new brief update.`,
+            linkUrl: `/messages/${id}`,
+          })
+        }
+      }
+
       return NextResponse.json({ ok: true })
     }
 
@@ -278,6 +323,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
       if (statusRank(deal.status) < statusRank('in_progress')) {
         await auth.admin.from('deals').update({ status: 'in_progress' }).eq('id', id)
+      }
+
+      if (deal.brand_id) {
+        const { data: brandRow } = await auth.admin.from('brands').select('user_id').eq('id', deal.brand_id).maybeSingle()
+        if (brandRow?.user_id) {
+          await createNotification(auth.admin, {
+            userId: brandRow.user_id,
+            type: 'deal_update',
+            content: `${auth.senderName} shared new work for your review.`,
+            linkUrl: `/messages/${id}`,
+          })
+        }
       }
 
       return NextResponse.json({ ok: true })
@@ -309,6 +366,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         [submissionUrl ? `Submitted: ${submissionUrl}` : '', submissionNotes || 'Work submitted.'].filter(Boolean).join('\n')
       )
 
+      if (deal.brand_id) {
+        const { data: brandRow } = await auth.admin.from('brands').select('user_id').eq('id', deal.brand_id).maybeSingle()
+        if (brandRow?.user_id) {
+          await createNotification(auth.admin, {
+            userId: brandRow.user_id,
+            type: 'review_requested',
+            content: `${auth.senderName} submitted work and requested review.`,
+            linkUrl: `/messages/${id}`,
+          })
+        }
+      }
+
       return NextResponse.json({ ok: true, status: 'submitted' })
     }
 
@@ -323,6 +392,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       }
 
       await insertSystemMessage(auth.admin, id, auth.user.id, auth.senderName, 'review', 'Submission reviewed and approved.')
+
+      if (deal.creator_id) {
+        const { data: creatorRow } = await auth.admin.from('creators').select('user_id').eq('id', deal.creator_id).maybeSingle()
+        if (creatorRow?.user_id) {
+          await createNotification(auth.admin, {
+            userId: creatorRow.user_id,
+            type: 'deal_update',
+            content: `${auth.senderName} approved your submission.`,
+            linkUrl: `/messages/${id}`,
+          })
+        }
+      }
       return NextResponse.json({ ok: true, status: 'reviewed' })
     }
 
@@ -337,6 +418,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       }
 
       await insertSystemMessage(auth.admin, id, auth.user.id, auth.senderName, 'payment', 'Payment marked as sent.')
+
+      if (deal.creator_id) {
+        const { data: creatorRow } = await auth.admin.from('creators').select('user_id').eq('id', deal.creator_id).maybeSingle()
+        if (creatorRow?.user_id) {
+          await createNotification(auth.admin, {
+            userId: creatorRow.user_id,
+            type: 'payment_received',
+            content: `${auth.senderName} marked this deal as paid.`,
+            linkUrl: `/messages/${id}`,
+          })
+        }
+      }
       return NextResponse.json({ ok: true, status: 'paid' })
     }
 
@@ -351,6 +444,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       }
 
       await insertSystemMessage(auth.admin, id, auth.user.id, auth.senderName, 'complete', 'Deal marked complete.')
+
+      if (deal.creator_id) {
+        const { data: creatorRow } = await auth.admin.from('creators').select('user_id').eq('id', deal.creator_id).maybeSingle()
+        if (creatorRow?.user_id) {
+          await createNotification(auth.admin, {
+            userId: creatorRow.user_id,
+            type: 'deal_update',
+            content: `${auth.senderName} marked the deal complete.`,
+            linkUrl: `/messages/${id}`,
+          })
+        }
+      }
       return NextResponse.json({ ok: true, status: 'complete' })
     }
 

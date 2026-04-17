@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -20,6 +20,7 @@ type NavItem = {
   icon: React.ReactNode
   comingSoon?: boolean
   activePrefixes?: string[]
+  badgeCount?: number
 }
 
 function HamburgerIcon({ open }: { open: boolean }) {
@@ -49,6 +50,15 @@ function MessageIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+
+function BellIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+      <path d="M10 21a2 2 0 0 0 4 0" />
     </svg>
   )
 }
@@ -107,9 +117,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [profileSummary, setProfileSummary] = useState<ProfileSummary>({ name: 'User', avatarUrl: null })
+  const [unreadCount, setUnreadCount] = useState(0)
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     let cancelled = false
@@ -196,10 +207,39 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     router.replace('/')
   }
 
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) return
+
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token
+    if (!token) return
+
+    const response = await fetch('/api/notifications', {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    })
+
+    if (!response.ok) return
+
+    const data = await response.json()
+    const notifications = Array.isArray(data.notifications) ? data.notifications : []
+    setUnreadCount(notifications.filter((item: { read?: boolean }) => !item.read).length)
+  }, [supabase, user])
+
+  useEffect(() => {
+    if (!user) return
+
+    fetchUnreadCount()
+    const intervalId = setInterval(fetchUnreadCount, 30000)
+
+    return () => clearInterval(intervalId)
+  }, [fetchUnreadCount, pathname, user])
+
   const desktopNavItems = useMemo<NavItem[]>(() => {
     const base: NavItem[] = [
       { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
       { label: 'Messages', href: '/messages', icon: <MessageIcon /> },
+      { label: 'Notifications', href: '/notifications', icon: <BellIcon />, badgeCount: unreadCount, activePrefixes: ['/notifications'] },
       {
         label: role === 'brand' ? 'Brand Profile' : 'Portfolio',
         href: role === 'brand' ? '/profile/edit' : '/profile/edit',
@@ -235,7 +275,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
 
     return base
-  }, [role])
+  }, [role, unreadCount])
 
   const quickLinks = useMemo(() => {
     const links = [
@@ -286,7 +326,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <p className="hidden md:block text-sm font-medium text-[#6b6b6b] truncate">{currentSection}</p>
         </div>
 
-        <div className="flex h-full items-center">
+        <div className="flex h-full items-center gap-2">
+          <Link href="/notifications" className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl text-[#363535] transition-colors hover:bg-[#f7f7f5]" aria-label="Notifications">
+            <BellIcon />
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 min-w-[20px] h-5 px-1.5 rounded-full bg-[#ccff00] text-[11px] font-bold text-[#1c1c1e] flex items-center justify-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </Link>
+
           <div className="relative group h-full flex items-center">
             <button className="inline-flex h-11 items-center gap-3 rounded-2xl px-3 text-left transition-colors hover:bg-[#f7f7f5]">
               {profileSummary.avatarUrl ? (
@@ -344,6 +393,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </span>
                 {item.comingSoon && (
                   <span className="rounded-full bg-[#f0f0ec] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#9a9a9a]">Soon</span>
+                )}
+                {!item.comingSoon && item.badgeCount && item.badgeCount > 0 && (
+                  <span className="rounded-full bg-[#ccff00] px-2 py-0.5 text-[10px] font-semibold text-[#1c1c1e]">
+                    {item.badgeCount > 99 ? '99+' : item.badgeCount}
+                  </span>
                 )}
               </>
             )
@@ -412,6 +466,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     </span>
                     {item.comingSoon && (
                       <span className="rounded-full bg-[#f0f0ec] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#9a9a9a]">Soon</span>
+                    )}
+                    {!item.comingSoon && item.badgeCount && item.badgeCount > 0 && (
+                      <span className="rounded-full bg-[#ccff00] px-2 py-0.5 text-[10px] font-semibold text-[#1c1c1e]">
+                        {item.badgeCount > 99 ? '99+' : item.badgeCount}
+                      </span>
                     )}
                   </>
                 )

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createNotification } from '@/lib/server/notifications'
 
 export const runtime = 'nodejs'
 
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     const { data: jobData } = await adminClient
       .from('jobs')
-      .select('id, status')
+      .select('id, status, title, brand_id')
       .eq('id', jobId)
       .eq('status', 'open')
       .maybeSingle()
@@ -129,6 +130,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'You already applied to this brief.' }, { status: 409 })
       }
       throw new Error(insertError.message)
+    }
+
+    const [{ data: brandRow }, { data: creatorRow }] = await Promise.all([
+      adminClient.from('brands').select('user_id').eq('id', jobData.brand_id).maybeSingle(),
+      adminClient.from('creators').select('display_name').eq('id', creatorData.id).maybeSingle(),
+    ])
+
+    if (brandRow?.user_id) {
+      await createNotification(adminClient, {
+        userId: brandRow.user_id,
+        type: 'new_application',
+        content: `${creatorRow?.display_name || 'A creator'} applied to ${jobData.title ? `"${jobData.title}"` : 'your brief'}.`,
+        linkUrl: `/jobs/${jobId}/manage`,
+      })
     }
 
     return NextResponse.json({ ok: true, id: inserted.id })

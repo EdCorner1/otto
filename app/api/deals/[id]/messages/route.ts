@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createNotification } from '@/lib/server/notifications'
 
 export const runtime = 'nodejs'
 
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { data: deal, error: dealError } = await auth.admin
       .from('deals')
-      .select('id, brand_id, creator_id')
+      .select('id, brand_id, creator_id, jobs(title)')
       .eq('id', id)
       .single()
 
@@ -151,6 +152,27 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    const recipientProfileId = auth.role === 'brand' ? deal.creator_id : deal.brand_id
+    const recipientTable = auth.role === 'brand' ? 'creators' : 'brands'
+
+    if (recipientProfileId) {
+      const { data: recipientRow } = await auth.admin
+        .from(recipientTable)
+        .select('user_id')
+        .eq('id', recipientProfileId)
+        .maybeSingle()
+
+      if (recipientRow?.user_id) {
+        const title = ((deal as any).jobs as { title?: string } | null)?.title
+        await createNotification(auth.admin, {
+          userId: recipientRow.user_id,
+          type: 'new_message',
+          content: `${auth.senderName}: ${content.slice(0, 120)}${content.length > 120 ? '…' : ''}${title ? ` (${title})` : ''}`,
+          linkUrl: `/messages/${id}`,
+        })
+      }
     }
 
     return NextResponse.json({ message })
