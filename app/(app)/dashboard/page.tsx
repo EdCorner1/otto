@@ -203,7 +203,7 @@ useEffect(() => {
       nextAction = {
         title: 'Review incoming proposals',
         description: 'You have live briefs. Shortlist creators and move one opportunity into an active deal.',
-        cta: 'View My Briefs',
+        cta: 'View Your Briefs',
         href: '/jobs',
       }
     } else {
@@ -406,10 +406,10 @@ useEffect(() => {
             </section>
           )}
 
-          {/* My briefs */}
+          {/* Your briefs */}
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="section-label mb-0">My Briefs</h2>
+              <h2 className="section-label mb-0">Your briefs</h2>
               <Link href="/jobs" className="text-xs text-[#6b6b6b] hover:text-[#363535]">See all →</Link>
             </div>
             {brandJobs.length === 0 ? (

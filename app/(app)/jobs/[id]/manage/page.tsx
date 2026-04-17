@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle, ClipboardList } from 'lucide-react'
 
@@ -23,6 +23,7 @@ type Job = {
 
 export default function JobManagePage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const jobId = params.id as string
   const [user, setUser] = useState<{ id: string } | null>(null)
   const [job, setJob] = useState<Job | null>(null)
@@ -32,6 +33,7 @@ export default function JobManagePage() {
   const [rejecting, setRejecting] = useState<string | null>(null)
   const [dealCreated, setDealCreated] = useState<string | null>(null)
   const [actionError, setActionError] = useState('')
+  const posted = searchParams.get('posted') === '1'
   const router = useRouter()
   const supabase = createClient()
 
@@ -148,6 +150,12 @@ export default function JobManagePage() {
           ← Dashboard
         </Link>
       </div>
+
+      {posted && (
+        <div className="mb-6 rounded-xl bg-[#ccff00] text-[#1c1c1e] px-4 py-3 text-sm font-semibold">
+          Job posted! Your brief is now live.
+        </div>
+      )}
 
       {/* Job summary */}
       <div className="card mb-8">
