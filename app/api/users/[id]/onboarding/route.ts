@@ -11,7 +11,7 @@ function getEnv(name: string) {
   return value
 }
 
-async function handleRequest(request: NextRequest, { params }: { params: { id: string } }) {
+async function handleRequest(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authHeader = request.headers.get('authorization') || ''
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
@@ -37,7 +37,8 @@ async function handleRequest(request: NextRequest, { params }: { params: { id: s
     }
 
     const user = authData.user
-    if (user.id !== params.id) {
+    const { id } = await params
+    if (user.id !== id) {
       return NextResponse.json({ error: 'Forbidden.' }, { status: 403 })
     }
 
@@ -84,10 +85,10 @@ async function handleRequest(request: NextRequest, { params }: { params: { id: s
   }
 }
 
-export async function PATCH(request: NextRequest, context: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   return handleRequest(request, context)
 }
 
-export async function POST(request: NextRequest, context: { params: { id: string } }) {
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   return handleRequest(request, context)
 }
