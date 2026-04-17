@@ -1,18 +1,42 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { Calendar } from 'lucide-react'
+import VideoThumbnail from '@/components/VideoThumbnail'
+import { Calendar, ExternalLink, MapPin, PoundSterling, Sparkles } from 'lucide-react'
 
 type Social = { id: string; creator_id: string; platform: string; url: string }
-type PortfolioItem = { id: string; creator_id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; platform: string | null; views_count: number; sort_order: number; created_at: string }
+type PortfolioItem = {
+  id: string
+  creator_id: string
+  type: string
+  url: string
+  thumbnail_url: string | null
+  caption: string | null
+  platform: string | null
+  views_count: number
+  sort_order: number
+  created_at: string
+}
 type Creator = {
-  id: string; user_id: string; display_name: string; avatar_url: string | null; bio: string | null;
-  location: string | null; timezone: string | null; hourly_rate: string | null;
-  availability: string; is_verified: boolean; is_pro: boolean; profile_views: number;
-  headline?: string; website?: string; created_at: string; updated_at: string;
+  id: string
+  user_id: string
+  display_name: string
+  avatar_url: string | null
+  bio: string | null
+  location: string | null
+  timezone: string | null
+  hourly_rate: string | null
+  availability: string
+  is_verified: boolean
+  is_pro: boolean
+  profile_views: number
+  headline?: string
+  website?: string
+  created_at: string
+  updated_at: string
 }
 type CreatorTag = { id: string; creator_id: string; tag: string }
 
@@ -22,54 +46,102 @@ type CreatorFull = Creator & {
   portfolio_items: PortfolioItem[]
 }
 
-const platformIcons: Record<string, string> = {
-  tiktok: '●',
-  youtube: '●',
-  instagram: '●',
-  twitter: '●',
-  other: '●',
+const PORTFOLIO_TABS = ['All', 'Tech & Apps', 'AI', 'Travel', 'Health & Fitness'] as const
+
+const socialLabels: Record<string, string> = {
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  instagram: 'Instagram',
+  twitter: 'X',
+  other: 'Link',
+  website: 'Website',
+}
+
+const socialColors: Record<string, string> = {
+  tiktok: 'bg-[#f0f0ec] text-[#363535]',
+  youtube: 'bg-red-50 text-red-600',
+  instagram: 'bg-pink-50 text-pink-600',
+  twitter: 'bg-slate-100 text-slate-700',
+  other: 'bg-[#f0f0ec] text-[#6b6b6b]',
+  website: 'bg-[#ccff00]/25 text-[#363535]',
+}
+
+function isMuxId(url: string) {
+  return Boolean(url) && !url.includes('/') && !url.startsWith('http')
 }
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
 }
 
-function PortfolioGrid({ items }: { items: PortfolioItem[] }) {
-  if (!items.length) return null
+function formatPlatform(platform?: string | null) {
+  if (!platform) return 'Portfolio clip'
+  return socialLabels[platform] || platform.charAt(0).toUpperCase() + platform.slice(1)
+}
+
+function classifyPortfolioItem(item: PortfolioItem) {
+  const source = `${item.caption || ''} ${item.platform || ''}`.toLowerCase()
+  if (/\bai\b|chatgpt|claude|openai|automation|llm|prompt/.test(source)) return 'AI'
+  if (/travel|hotel|flight|airbnb|trip|destination/.test(source)) return 'Travel'
+  if (/health|fitness|gym|wellness|supplement|workout/.test(source)) return 'Health & Fitness'
+  return 'Tech & Apps'
+}
+
+function PortfolioCard({ item }: { item: PortfolioItem }) {
+  const category = classifyPortfolioItem(item)
+  const platformLabel = formatPlatform(item.platform)
+  const caption = item.caption?.trim() || `${category} portfolio piece`
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className="relative aspect-square rounded-xl overflow-hidden bg-[#f0f0ec] group cursor-pointer border border-[#e8e8e4]"
-        >
-          {item.type === 'video' ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#1c1c1c]">
-              <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <span className="text-2xl ml-0.5">▶️</span>
-              </div>
-              {item.thumbnail_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.thumbnail_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60" />
-              )}
+    <article className="overflow-hidden rounded-[24px] border border-[#e8e8e4] bg-white shadow-sm shadow-black/[0.03] transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/[0.06]">
+      <div className="relative aspect-[9/16] bg-[#1c1c1e]">
+        {item.type === 'video' && isMuxId(item.url) ? (
+          <VideoThumbnail
+            muxPlaybackId={item.url}
+            title={caption}
+            subtitle={platformLabel}
+            badge={category}
+            aspectRatio="9/16"
+            className="h-full w-full"
+            rounded="rounded-none"
+          />
+        ) : item.thumbnail_url ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={item.thumbnail_url} alt={caption} className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-black/10" />
+            <div className="absolute left-3 top-3">
+              <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#363535]">
+                {category}
+              </span>
             </div>
-          ) : (
-            item.thumbnail_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.thumbnail_url} alt={item.caption || ''} className="absolute inset-0 w-full h-full object-cover" />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-4xl">🖼️</div>
-            )
-          )}
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-[#1c1c1c]/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-3">
-            {item.caption && <p className="text-white text-xs text-center line-clamp-3">{item.caption}</p>}
-            {item.platform && <span className="mt-2 text-white text-xs">{platformIcons[item.platform] || ''} {item.platform}</span>}
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <p className="text-sm font-semibold text-white line-clamp-2">{caption}</p>
+              <p className="text-xs text-white/75 mt-1">{platformLabel}</p>
+            </div>
+          </>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1c1c1e] text-white">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm text-xl">▶</div>
+            <p className="text-xs uppercase tracking-[0.18em] text-white/65">Portfolio clip</p>
           </div>
+        )}
+      </div>
+
+      <div className="p-4">
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <span className="rounded-full bg-[#f5f5f2] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6b6b6b]">
+            {category}
+          </span>
+          <span className="text-xs text-[#9a9a9a]">{formatDate(item.created_at)}</span>
         </div>
-      ))}
-    </div>
+        <p className="text-sm font-semibold text-[#363535] leading-snug line-clamp-2">{caption}</p>
+        <div className="mt-3 flex items-center justify-between gap-3 text-xs text-[#6b6b6b]">
+          <span>{platformLabel}</span>
+          {item.views_count > 0 ? <span>{item.views_count.toLocaleString()} views</span> : <span>Newest first</span>}
+        </div>
+      </div>
+    </article>
   )
 }
 
@@ -81,6 +153,7 @@ export default function CreatorProfilePage() {
   const [notFound, setNotFound] = useState(false)
   const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<(typeof PORTFOLIO_TABS)[number]>('All')
   const supabase = createClient()
 
   useEffect(() => {
@@ -109,16 +182,44 @@ export default function CreatorProfilePage() {
         return
       }
 
-      // Sort portfolio by sort_order, then created_at
       const sorted = {
         ...creator,
-        portfolio_items: (creator.portfolio_items || []).sort((a: { sort_order?: number }, b: { sort_order?: number }) => (a.sort_order || 0) - (b.sort_order || 0)),
+        portfolio_items: (creator.portfolio_items || []).sort((a: PortfolioItem, b: PortfolioItem) => {
+          const aDate = new Date(a.created_at).getTime()
+          const bDate = new Date(b.created_at).getTime()
+          return bDate - aDate
+        }),
       }
+
       setCreator(sorted)
       setLoading(false)
     }
+
     load()
-  }, [creatorId])
+  }, [creatorId, supabase])
+
+  const portfolio = creator?.portfolio_items || []
+  const socials = creator?.creator_socials || []
+  const tags = creator?.creator_tags || []
+
+  const skills = tags
+    .map((t) => t.tag)
+    .filter((tag) => tag.startsWith('skill:'))
+    .map((tag) => tag.replace('skill:', '').trim())
+
+  const portfolioCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: portfolio.length }
+    for (const tab of PORTFOLIO_TABS.slice(1)) counts[tab] = 0
+    for (const item of portfolio) {
+      counts[classifyPortfolioItem(item)] = (counts[classifyPortfolioItem(item)] || 0) + 1
+    }
+    return counts
+  }, [portfolio])
+
+  const filteredPortfolio = useMemo(() => {
+    if (activeTab === 'All') return portfolio
+    return portfolio.filter((item) => classifyPortfolioItem(item) === activeTab)
+  }, [activeTab, portfolio])
 
   if (loading) {
     return (
@@ -131,53 +232,38 @@ export default function CreatorProfilePage() {
   if (notFound || !creator) {
     return (
       <div className="min-h-screen bg-[#fafaf9] flex flex-col items-center justify-center px-6">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <div className="text-6xl mb-6">🔍</div>
-          <h1 style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }} className="mb-3">
+          <h1 style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }} className="mb-3 font-display">
             Creator not found
           </h1>
           <p className="text-[#6b6b6b] mb-8">This profile doesn&apos;t exist or has been removed.</p>
-          <Link href="/dashboard" className="btn-primary inline-flex items-center gap-2 px-6 py-3">
-            ← Back to Dashboard
+          <Link href="/explore" className="btn-primary inline-flex items-center gap-2 px-6 py-3">
+            Browse creators →
           </Link>
         </div>
       </div>
     )
   }
 
-  const socials = creator.creator_socials || []
-  const portfolio = creator.portfolio_items || []
-  const tags = creator.creator_tags || []
-  const skills = tags
-    .map(t => t.tag)
-    .filter(tag => tag.startsWith('skill:'))
-    .map(tag => tag.replace('skill:', '').trim())
   const experience = tags
-    .map(t => t.tag)
-    .find(tag => tag.startsWith('exp:'))
+    .map((t) => t.tag)
+    .find((tag) => tag.startsWith('exp:'))
     ?.replace('exp:', '')
     .trim()
-  const hobbies = tags
-    .map(t => t.tag)
-    .filter(tag => tag.startsWith('hobby:'))
-    .map(tag => tag.replace('hobby:', '').trim())
 
   const isCurrentUser = currentUser?.id === creator.user_id
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
-      {/* Nav */}
-      <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
+      <nav className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 flex items-center justify-between px-5 py-3.5 bg-white/80 backdrop-blur-md border border-[#e8e8e4] rounded-2xl shadow-lg shadow-black/[0.06]">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg font-extrabold font-display tracking-tight" style={{ fontFamily: 'var(--font-bricolage)', color: '#363535' }}>Otto</span>
+          <span className="text-lg font-extrabold" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-1px', color: '#363535' }}>Otto</span>
           <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse" />
         </Link>
         <div className="flex items-center gap-3">
           {currentUser ? (
-            <>
-              <Link href="/dashboard" className="btn-ghost text-sm px-4 py-2 hidden sm:inline-flex">Dashboard</Link>
-              <Link href="/messages" className="btn-ghost text-sm px-4 py-2 hidden sm:inline-flex">Messages</Link>
-            </>
+            <Link href="/dashboard" className="btn-ghost text-sm px-4 py-2 hidden sm:inline-flex">Dashboard</Link>
           ) : (
             <Link href="/login" className="btn-ghost text-sm px-4 py-2 hidden sm:inline-flex">Sign in</Link>
           )}
@@ -185,183 +271,168 @@ export default function CreatorProfilePage() {
         </div>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-6 pt-28 pb-16">
-        {/* Profile header */}
-        <div className="card mb-6">
-          <div className="flex items-start gap-5">
-            {/* Avatar */}
-            <div className="flex-shrink-0">
-              {creator.avatar_url ? (
-                <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#e8e8e4]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={creator.avatar_url} alt={creator.display_name} className="w-full h-full object-cover" />
+      <div className="max-w-6xl mx-auto px-6 pt-28 pb-16">
+        <section className="card mb-8 overflow-hidden">
+          <div className="grid gap-8 lg:grid-cols-[1.35fr_0.65fr] items-start">
+            <div>
+              <div className="flex items-start gap-5 mb-6">
+                {creator.avatar_url ? (
+                  <div className="w-24 h-24 rounded-[28px] overflow-hidden border border-[#e8e8e4] bg-[#f0f0ec] flex-shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={creator.avatar_url} alt={creator.display_name} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-[28px] bg-[#f0f0ec] border border-[#e8e8e4] flex items-center justify-center text-3xl font-semibold text-[#9a9a9a] flex-shrink-0">
+                    {creator.display_name?.[0] || '?'}
+                  </div>
+                )}
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <h1 className="font-display text-[#363535]" style={{ fontSize: 'clamp(30px, 5vw, 48px)', lineHeight: 0.98, letterSpacing: '-2.5px' }}>
+                      {creator.display_name}
+                    </h1>
+                    {creator.is_verified && (
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#ccff00]" title="Verified">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
+                      </span>
+                    )}
+                  </div>
+                  {creator.headline && <p className="text-base text-[#6b6b6b] leading-relaxed max-w-2xl">{creator.headline}</p>}
+                  <div className="mt-4 flex flex-wrap items-center gap-2.5 text-xs text-[#6b6b6b]">
+                    {creator.location && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><MapPin size={12} /> {creator.location}</span>}
+                    {creator.hourly_rate && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><PoundSterling size={12} /> £{creator.hourly_rate}/hr</span>}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><Calendar size={12} /> Joined {formatDate(creator.created_at)}</span>
+                    {creator.profile_views > 0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5">{creator.profile_views} profile views</span>}
+                  </div>
                 </div>
-              ) : (
-                <div className="w-20 h-20 rounded-2xl bg-[#f0f0ec] border-2 border-dashed border-[#d0d0cc] flex items-center justify-center text-3xl">
-                  {creator.display_name?.[0] || '?'}
+              </div>
+
+              {creator.bio && (
+                <div className="rounded-[24px] border border-[#f0f0ec] bg-[#fcfcfb] p-5 mb-5">
+                  <p className="section-label mb-2">Why brands book them</p>
+                  <p className="text-sm leading-7 text-[#5f5f5a]">{creator.bio}</p>
+                </div>
+              )}
+
+              {(skills.length > 0 || experience) && (
+                <div className="space-y-4">
+                  {skills.length > 0 && (
+                    <div>
+                      <p className="section-label mb-2">Specialties</p>
+                      <div className="flex flex-wrap gap-2">
+                        {skills.map((skill) => (
+                          <span key={skill} className="inline-flex items-center rounded-full bg-[#f0f0ec] px-3 py-1.5 text-xs font-medium text-[#363535]">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {experience && (
+                    <div>
+                      <p className="section-label mb-2">Experience</p>
+                      <p className="text-sm text-[#6b6b6b] leading-relaxed">{experience}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div>
-                  <h1
-                    style={{ fontSize: 'clamp(24px, 4vw, 32px)', lineHeight: 1.0, letterSpacing: '-2px', color: '#363535' }}
-                    className="truncate"
-                  >
-                    {creator.display_name}
-                  </h1>
-                  {creator.headline && (
-                    <p className="text-sm text-[#6b6b6b] mt-1 leading-snug">{creator.headline}</p>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Availability badge */}
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                    creator.availability === 'open' ? 'bg-green-50 text-green-700' :
-                    creator.availability === 'limited' ? 'bg-amber-50 text-amber-700' :
-                    'bg-gray-100 text-gray-500'
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      creator.availability === 'open' ? 'bg-green-500' :
-                      creator.availability === 'limited' ? 'bg-amber-500' :
-                      'bg-gray-400'
-                    }`} />
-                    {creator.availability || 'open'}
-                  </span>
-                  {creator.is_verified && (
-                    <span className="inline-flex items-center justify-center w-6 h-6 bg-[#ccff00] rounded-full" title="Verified">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1c1c1c" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
-                    </span>
-                  )}
+            <div className="space-y-4">
+              <div className="rounded-[24px] border border-[#e8e8e4] bg-[#fcfcfb] p-5">
+                <p className="section-label mb-2">Portfolio at a glance</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-[#f0f0ec] bg-white px-4 py-4">
+                    <p className="text-xs text-[#9a9a9a]">Videos</p>
+                    <p className="mt-1 text-2xl font-semibold text-[#363535]">{portfolio.length}</p>
+                  </div>
+                  <div className="rounded-2xl border border-[#f0f0ec] bg-white px-4 py-4">
+                    <p className="text-xs text-[#9a9a9a]">Categories</p>
+                    <p className="mt-1 text-2xl font-semibold text-[#363535]">{Object.values(portfolioCounts).filter((count, index) => index > 0 && count > 0).length}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Meta row */}
-              <div className="flex items-center gap-4 mt-3 text-xs text-[#6b6b6b] flex-wrap">
-                {creator.location && (
-                  <span className="flex items-center gap-1">📍 {creator.location}</span>
-                )}
-                {creator.hourly_rate && (
-                  <span className="flex items-center gap-1">💷 £{creator.hourly_rate}/hr</span>
-                )}
-                <span className="flex items-center gap-1 text-xs text-[#9a9a9a]"><Calendar size={11} /> Joined {formatDate(creator.created_at)}</span>
-                {creator.profile_views > 0 && (
-                  <span className="flex items-center gap-1">👁 {creator.profile_views} views</span>
-                )}
+              <div className="rounded-[24px] border border-[#e8e8e4] bg-[#fcfcfb] p-5">
+                <p className="section-label mb-2">Links</p>
+                <div className="flex flex-wrap gap-2">
+                  {socials.length > 0 ? socials.map((social) => (
+                    <a
+                      key={social.id}
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-transform hover:-translate-y-0.5 ${socialColors[social.platform] || 'bg-[#f0f0ec] text-[#6b6b6b]'}`}
+                    >
+                      <span>{socialLabels[social.platform] || social.platform}</span>
+                      <ExternalLink size={11} />
+                    </a>
+                  )) : <p className="text-sm text-[#9a9a9a]">No public links added yet.</p>}
+                </div>
               </div>
+
+              {(userRole === 'brand' && !isCurrentUser) && (
+                <Link href={`/jobs/new?invite=${creator.id}`} className="btn-primary w-full justify-center text-sm">
+                  Invite to brief →
+                </Link>
+              )}
+              {isCurrentUser && (
+                <Link href="/profile/edit" className="btn-ghost w-full justify-center text-sm border border-[#e8e8e4]">
+                  Edit profile →
+                </Link>
+              )}
             </div>
           </div>
+        </section>
 
-          {/* Bio */}
-          {creator.bio && (
-            <p className="mt-5 text-sm text-[#6b6b6b] leading-relaxed border-t border-[#e8e8e4] pt-4">
-              {creator.bio}
-            </p>
-          )}
-
-          {/* Skills / experience / hobbies */}
-          {(skills.length > 0 || experience || hobbies.length > 0) && (
-            <div className="mt-4 pt-4 border-t border-[#e8e8e4] space-y-3">
-              {skills.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-[#6b6b6b] mb-1.5">Skills</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {skills.map((s) => (
-                      <span key={s} className="text-xs px-2 py-0.5 bg-[#f0f0ec] rounded-full text-[#6b6b6b]">{s}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {experience && (
-                <div>
-                  <p className="text-xs font-semibold text-[#6b6b6b] mb-1.5">Experience</p>
-                  <p className="text-sm text-[#6b6b6b] leading-relaxed">{experience}</p>
-                </div>
-              )}
-
-              {hobbies.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-[#6b6b6b] mb-1.5">Hobbies & Interests</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {hobbies.map((h) => (
-                      <span key={h} className="text-xs px-2 py-0.5 bg-[#f0f0ec] rounded-full text-[#6b6b6b]">{h}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Social links */}
-          {socials.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-[#e8e8e4]">
-              <div className="flex items-center gap-2 flex-wrap">
-                {socials.map((social: Social) => (
-                  <a
-                    key={social.id}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8e8e4] rounded-lg text-xs font-medium text-[#363535] hover:border-[#ccff00] hover:-translate-y-0.5 transition-all"
-                  >
-                    <span>●</span>
-                    <span className="capitalize">{social.platform}</span>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* CTA for brands */}
-          {userRole === 'brand' && !isCurrentUser && (
-            <div className="mt-5 pt-4 border-t border-[#e8e8e4]">
-              <Link
-                href={`/jobs/new?invite=${creator.id}`}
-                className="btn-primary inline-flex items-center gap-2 text-sm"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-                Invite to Brief
-              </Link>
-            </div>
-          )}
-
-          {isCurrentUser && (
-            <div className="mt-5 pt-4 border-t border-[#e8e8e4]">
-              <Link href="/dashboard" className="btn-ghost text-sm inline-flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit Profile
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Portfolio */}
-        {portfolio.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2
-                style={{ fontSize: 'clamp(18px, 3vw, 22px)', lineHeight: 1.0, letterSpacing: '-1.5px', color: '#363535' }}
-              >
-                Portfolio
+        <section>
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-5">
+            <div>
+              <p className="section-label mb-2">Portfolio</p>
+              <h2 className="font-display text-[#363535]" style={{ fontSize: 'clamp(24px, 4vw, 34px)', lineHeight: 1.0, letterSpacing: '-1.5px' }}>
+                A cleaner way to show real work
               </h2>
-              <span className="text-xs text-[#9a9a9a]">{portfolio.length} items</span>
+              <p className="text-sm text-[#6b6b6b] mt-2">Newest work first, organised into the categories brands care about most.</p>
             </div>
-            <PortfolioGrid items={portfolio} />
+            <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8e8e4] px-3 py-1.5 text-xs text-[#6b6b6b]">
+              <Sparkles size={12} /> {filteredPortfolio.length} piece{filteredPortfolio.length !== 1 ? 's' : ''} in {activeTab}
+            </div>
           </div>
-        )}
 
-        {portfolio.length === 0 && (
-          <div className="card text-center py-12">
-            <div className="text-4xl mb-3">🎬</div>
-            <p className="text-sm text-[#6b6b6b]">No portfolio items yet.</p>
+          <div className="mb-6 flex flex-wrap gap-2">
+            {PORTFOLIO_TABS.map((tab) => {
+              const active = activeTab === tab
+              const count = portfolioCounts[tab] || 0
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${active ? 'bg-[#1c1c1e] text-white shadow-lg shadow-black/[0.08]' : 'bg-white text-[#6b6b6b] border border-[#e8e8e4] hover:border-[#d7d7d1] hover:text-[#363535]'}`}
+                >
+                  <span>{tab}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${active ? 'bg-white/15 text-white' : 'bg-[#f0f0ec] text-[#9a9a9a]'}`}>{count}</span>
+                </button>
+              )
+            })}
           </div>
-        )}
+
+          {filteredPortfolio.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              {filteredPortfolio.map((item) => (
+                <PortfolioCard key={item.id} item={item} />
+              ))}
+            </div>
+          ) : (
+            <div className="card py-14 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#f0f0ec] text-2xl">🎬</div>
+              <h3 className="font-display text-[#363535] mb-2" style={{ fontSize: '24px', lineHeight: 1.0, letterSpacing: '-1px' }}>
+                No portfolio pieces in this category yet
+              </h3>
+              <p className="text-sm text-[#6b6b6b]">Switch tabs or check back after more work gets uploaded.</p>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

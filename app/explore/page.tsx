@@ -105,7 +105,7 @@ function CreatorCard({ creator, userRole }: { creator: Creator; userRole: string
 
         {/* CTA */}
         <div className="mt-auto flex gap-2">
-          <Link href={`/creators/${creator.id}`} className="flex-1 btn-ghost text-xs text-center py-2">
+          <Link href={`/explore/${creator.id}`} className="flex-1 btn-ghost text-xs text-center py-2">
             View Profile
           </Link>
           {userRole === 'brand' && (
