@@ -323,6 +323,7 @@ useEffect(() => {
           </div>
 
           <div className="flex flex-wrap gap-3">
+            <Link href="/onboarding" className="btn-ghost text-sm">Continue onboarding</Link>
             <Link href="/profile/edit" className="btn-ghost text-sm">Edit profile</Link>
             {creatorProfile?.id && <Link href={`/explore/${creatorProfile.id}`} className="btn-primary text-sm">Preview public profile →</Link>}
           </div>

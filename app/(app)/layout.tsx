@@ -148,8 +148,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         else if (creatorRow && !brandRow) resolvedRole = 'creator'
       }
 
+      const isOwner = OWNER_EMAILS.includes((user.email ?? '').toLowerCase())
       const onboardingComplete =
-        OWNER_EMAILS.includes(user.email ?? '')
+        isOwner
           ? true
           : resolvedRole === 'brand'
             ? !!brandRow
@@ -176,7 +177,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         return
       }
 
-      if (onboardingComplete && pathname === '/onboarding') {
+      if (onboardingComplete && pathname === '/onboarding' && !isOwner) {
         router.replace('/dashboard')
       }
     }
