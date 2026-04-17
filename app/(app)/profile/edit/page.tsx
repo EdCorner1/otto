@@ -1,450 +1,564 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Globe } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+type Role = 'creator' | 'brand'
+
+type PortfolioDraft = {
+  id: string
+  url: string
+  platform: string
+  caption: string
+}
+
+type CreatorProfileResponse = {
+  id: string
+  userId: string
+  fullName: string
+  handle: string
+  bio: string
+  mainPlatform: string
+  followerRange: string
+  incomeRange: string
+  nicheTags: string[]
+  portfolioItems: Array<{
+    id: string
+    url: string
+    platform: string | null
+    caption: string | null
+  }>
+}
+
+const MAIN_PLATFORMS = ['tiktok', 'instagram', 'youtube'] as const
+const FOLLOWER_RANGES = ['< 1K', '1K – 10K', '10K – 50K', '50K – 250K', '250K – 500K', '500K +']
+const INCOME_RANGES = ['Not sharing', '$0 – $500/mo', '$500 – $2K/mo', '$2K – $5K/mo', '$5K+/mo']
+const STEPS = ['Basic Info', 'Stats', 'Portfolio', 'Review'] as const
+
+function labelPlatform(platform: string) {
+  if (platform === 'tiktok') return 'TikTok'
+  if (platform === 'instagram') return 'Instagram'
+  if (platform === 'youtube') return 'YouTube'
+  return platform
+}
 
 export default function ProfileEditPage() {
-  const router = useRouter()
   const supabase = createClient()
-  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, unknown> } | null>(null)
-  const [role, setRole] = useState<string | null>(null)
+  const router = useRouter()
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreview, setAvatarPreview] = useState<string>('')
-  const [publicProfileHref, setPublicProfileHref] = useState('')
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [statusMessage, setStatusMessage] = useState('')
+  const [role, setRole] = useState<Role | null>(null)
 
-  // Creator fields
-  const [displayName, setDisplayName] = useState('')
-  const [headline, setHeadline] = useState('')
+  // shared identity
+  const [brandId, setBrandId] = useState('')
+  const [creatorId, setCreatorId] = useState('')
+
+  // creator mode state
+  const [step, setStep] = useState(0)
+  const [fullName, setFullName] = useState('')
+  const [handle, setHandle] = useState('')
   const [bio, setBio] = useState('')
-  const [location, setLocation] = useState('')
-  const [hourlyRate, setHourlyRate] = useState('')
-  const [availability, setAvailability] = useState('open')
-  const [instagram, setInstagram] = useState('')
-  const [tiktok, setTiktok] = useState('')
-  const [youtube, setYoutube] = useState('')
-  const [twitter, setTwitter] = useState('')
-  const [website, setWebsite] = useState('')
-  const [skills, setSkills] = useState('')
-  const [experience, setExperience] = useState('')
-  const [hobbiesInterests, setHobbiesInterests] = useState('')
+  const [mainPlatform, setMainPlatform] = useState<string>('tiktok')
+  const [followerRange, setFollowerRange] = useState('')
+  const [incomeRange, setIncomeRange] = useState('')
+  const [nicheInput, setNicheInput] = useState('')
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioDraft[]>([])
 
-  // Brand fields
+  // brand mode state
   const [companyName, setCompanyName] = useState('')
-  const [websiteUrl, setWebsiteUrl] = useState('')
+  const [companyDescription, setCompanyDescription] = useState('')
+  const [logoUrl, setLogoUrl] = useState('')
   const [industry, setIndustry] = useState('')
-  const [companyBio, setCompanyBio] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
-      setUser(user)
-      let r = (user.user_metadata?.role as string | undefined) || null
-      if (!r) {
+      const { data: authData } = await supabase.auth.getUser()
+      const user = authData.user
+
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
+      let resolvedRole = (user.user_metadata?.role as Role | undefined) || null
+      if (!resolvedRole) {
         const { data: userRow } = await supabase.from('users').select('role').eq('id', user.id).maybeSingle()
-        r = (userRow?.role as string | undefined) || null
+        const roleFromUsers = userRow?.role as Role | undefined
+        resolvedRole = roleFromUsers || null
       }
-      setRole(r)
 
-      if (r === 'creator') {
-        const { data: c } = await supabase
-          .from('creators').select('*, creator_socials(*), creator_tags(*)')
-          .eq('user_id', user.id).single()
-        if (c) {
-          setPublicProfileHref(`/explore/${c.id}`)
-          setDisplayName(c.display_name || '')
-          setHeadline(c.headline || '')
-          setBio(c.bio || '')
-          setLocation(c.location || '')
-          setHourlyRate(c.hourly_rate || '')
-          setAvailability(c.availability || 'open')
-          setAvatarPreview(c.avatar_url || '')
-          const socials = ((c as { creator_socials?: Array<{ platform: string; url: string }> }).creator_socials ?? [])
-          socials.forEach((s) => {
-            if (s.platform === 'instagram') setInstagram(s.url)
-            if (s.platform === 'tiktok') setTiktok(s.url)
-            if (s.platform === 'youtube') setYoutube(s.url)
-            if (s.platform === 'twitter') setTwitter(s.url)
-            if (s.platform === 'website') setWebsite(s.url)
-          })
-          setWebsite(((c as { website?: string }).website) || socials.find((s) => s.platform === 'website')?.url || '')
+      const [{ data: creatorRow }, { data: brandRow }] = await Promise.all([
+        supabase.from('creators').select('id').eq('user_id', user.id).maybeSingle(),
+        supabase.from('brands').select('id, company_name, bio, logo_url, industry, website').eq('user_id', user.id).maybeSingle(),
+      ])
 
-          const tags = ((c as { creator_tags?: Array<{ tag: string }> }).creator_tags ?? [])
-          const skillTags = tags
-            .map(t => t.tag)
-            .filter(tag => tag.startsWith('skill:'))
-            .map(tag => tag.replace('skill:', '').trim())
-          const expTag = tags
-            .map(t => t.tag)
-            .find(tag => tag.startsWith('exp:'))
-          const hobbyTags = tags
-            .map(t => t.tag)
-            .filter(tag => tag.startsWith('hobby:'))
-            .map(tag => tag.replace('hobby:', '').trim())
-
-          setSkills(skillTags.join(', '))
-          setExperience(expTag ? expTag.replace('exp:', '').trim() : '')
-          setHobbiesInterests(hobbyTags.join(', '))
-        }
-      } else if (r === 'brand') {
-        const { data: b } = await supabase.from('brands').select('*').eq('user_id', user.id).single()
-        if (b) {
-          setPublicProfileHref(`/brands/${b.id}`)
-          setCompanyName((b as { company_name?: string }).company_name ?? '')
-          setWebsiteUrl(b.website || '')
-          setIndustry(b.industry || '')
-          setCompanyBio((b as { bio?: string }).bio ?? '')
-          setAvatarPreview(b.logo_url || '')
-        }
+      if (!resolvedRole) {
+        if (brandRow && !creatorRow) resolvedRole = 'brand'
+        if (creatorRow && !brandRow) resolvedRole = 'creator'
       }
+
+      setRole(resolvedRole)
+
+      if (resolvedRole === 'brand') {
+        if (!brandRow?.id) {
+          setStatusMessage('No brand profile found yet. Complete onboarding first.')
+          setLoading(false)
+          return
+        }
+
+        setBrandId(brandRow.id)
+        setCompanyName(brandRow.company_name || '')
+        setCompanyDescription(brandRow.bio || '')
+        setLogoUrl(brandRow.logo_url || '')
+        setIndustry(brandRow.industry || '')
+        setWebsiteUrl(brandRow.website || '')
+        setLoading(false)
+        return
+      }
+
+      if (!creatorRow?.id) {
+        setStatusMessage('No creator profile found yet. Complete onboarding first.')
+        setLoading(false)
+        return
+      }
+
+      setCreatorId(creatorRow.id)
+      const response = await fetch(`/api/creators/${creatorRow.id}`)
+      if (!response.ok) {
+        setStatusMessage('Could not load creator profile.')
+        setLoading(false)
+        return
+      }
+
+      const profile = (await response.json()) as CreatorProfileResponse
+      setFullName(profile.fullName || '')
+      setHandle(profile.handle || '')
+      setBio(profile.bio || '')
+      setMainPlatform(profile.mainPlatform || 'tiktok')
+      setFollowerRange(profile.followerRange || '')
+      setIncomeRange(profile.incomeRange || '')
+      setNicheInput(profile.nicheTags.join(', '))
+      setPortfolioItems(
+        (profile.portfolioItems || []).slice(0, 6).map((item) => ({
+          id: item.id,
+          url: item.url,
+          platform: (item.platform || profile.mainPlatform || 'tiktok').toLowerCase(),
+          caption: item.caption || '',
+        }))
+      )
       setLoading(false)
     }
-    load()
-  }, [])
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size > MAX_FILE_SIZE) { setMsg('Image must be under 5MB'); return }
-    setAvatarFile(file)
-    setAvatarPreview(URL.createObjectURL(file))
-  }
+    void load()
+  }, [router, supabase])
 
-  const uploadAvatar = async (userId: string, file: File): Promise<string | null> => {
-    const ext = file.name.split('.').pop()
-    const path = `avatars/${userId}/avatar.${ext}`
-    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-    if (error) throw new Error(`Avatar upload failed: ${error.message}`)
-    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-    return data.publicUrl
-  }
-
-  const upsertSocial = async (creatorId: string, platform: string, url: string) => {
-    const { data: existing } = await supabase
-      .from('creator_socials').select('id').eq('creator_id', creatorId).eq('platform', platform).single()
-    if (existing) {
-      if (url) await supabase.from('creator_socials').update({ url }).eq('id', existing.id)
-      else await supabase.from('creator_socials').delete().eq('id', existing.id)
-    } else if (url) {
-      await supabase.from('creator_socials').insert({ creator_id: creatorId, platform, url })
+  const canMoveForward = useMemo(() => {
+    if (role !== 'creator') return true
+    if (step === 0) {
+      return Boolean(fullName.trim() && handle.trim() && bio.trim() && mainPlatform)
     }
+    return true
+  }, [bio, fullName, handle, mainPlatform, role, step])
+
+  const addPortfolioItem = () => {
+    if (portfolioItems.length >= 6) return
+    setPortfolioItems((prev) => [
+      ...prev,
+      {
+        id: `new-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        url: '',
+        platform: mainPlatform || 'tiktok',
+        caption: '',
+      },
+    ])
   }
 
-  const syncCreatorTags = async (creatorId: string) => {
-    const skillTags = skills
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .slice(0, 12)
-    const hobbyTags = hobbiesInterests
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .slice(0, 12)
-
-    const desiredTags = [
-      ...skillTags.map(tag => `skill:${tag}`),
-      ...(experience.trim() ? [`exp:${experience.trim()}`] : []),
-      ...hobbyTags.map(tag => `hobby:${tag}`),
-    ]
-
-    const { data: existingTags } = await supabase
-      .from('creator_tags')
-      .select('id, tag')
-      .eq('creator_id', creatorId)
-
-    const managed = (existingTags || []).filter((t: { tag: string }) =>
-      t.tag.startsWith('skill:') || t.tag.startsWith('exp:') || t.tag.startsWith('hobby:')
-    )
-
-    if (managed.length > 0) {
-      await supabase.from('creator_tags').delete().in('id', managed.map((t: { id: string }) => t.id))
-    }
-
-    if (desiredTags.length > 0) {
-      await supabase.from('creator_tags').insert(
-        desiredTags.map(tag => ({ creator_id: creatorId, tag }))
-      )
-    }
+  const updatePortfolioItem = (id: string, key: keyof PortfolioDraft, value: string) => {
+    setPortfolioItems((prev) => prev.map((item) => (item.id === id ? { ...item, [key]: value } : item)))
   }
 
-  const handleSave = async () => {
-    if (!user) return
+  const removePortfolioItem = (id: string) => {
+    setPortfolioItems((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  const submitCreator = async () => {
+    if (!creatorId) return
     setSaving(true)
-    setMsg('')
+    setStatusMessage('')
 
-    try {
-      let avatarUrl = avatarPreview
-
-      // Upload avatar if changed
-      if (avatarFile) {
-        const url = await uploadAvatar(user.id, avatarFile)
-        if (!url) throw new Error('Could not upload profile photo.')
-        avatarUrl = url
-      }
-
-      if (!role) {
-        throw new Error('Could not determine account type. Please refresh and try again.')
-      }
-
-      if (role === 'creator') {
-        const { data: existing } = await supabase.from('creators').select('id').eq('user_id', user.id).single()
-        if (!existing) throw new Error('Creator profile not found.')
-        {
-          const { error: creatorUpdateError } = await supabase.from('creators').update({
-            display_name: displayName.trim() || null,
-            headline: headline.trim() || null,
-            bio: bio.trim() || null,
-            location: location.trim() || null,
-            hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
-            availability,
-            website: website.trim() || null,
-            avatar_url: avatarUrl || null,
-          }).eq('id', existing.id)
-          if (creatorUpdateError) throw new Error(`Creator save failed: ${creatorUpdateError.message}`)
-
-          await upsertSocial(existing.id, 'instagram', instagram)
-          await upsertSocial(existing.id, 'tiktok', tiktok)
-          await upsertSocial(existing.id, 'youtube', youtube)
-          await upsertSocial(existing.id, 'twitter', twitter)
-          await upsertSocial(existing.id, 'website', website)
-          await syncCreatorTags(existing.id)
-        }
-
-        // Update auth metadata
-        const { error: authUpdateError } = await supabase.auth.updateUser({ data: { display_name: displayName.trim(), role: 'creator' } })
-        if (authUpdateError) throw new Error(`Auth profile sync failed: ${authUpdateError.message}`)
-      } else if (role === 'brand') {
-        const { data: existing } = await supabase.from('brands').select('id').eq('user_id', user.id).single()
-        if (!existing) throw new Error('Brand profile not found.')
-        {
-          const { error: brandUpdateError } = await supabase.from('brands').update({
-            company_name: companyName.trim() || null,
-            website: websiteUrl.trim() || null,
-            industry: industry.trim() || null,
-            bio: companyBio.trim() || null,
-            logo_url: avatarUrl || null,
-          }).eq('id', existing.id)
-          if (brandUpdateError) throw new Error(`Brand save failed: ${brandUpdateError.message}`)
-        }
-        const { error: authUpdateError } = await supabase.auth.updateUser({ data: { company_name: companyName.trim(), role: 'brand' } })
-        if (authUpdateError) throw new Error(`Auth profile sync failed: ${authUpdateError.message}`)
-      }
-
-      setAvatarFile(null)
-      setMsg('Profile saved!')
-    } catch (err: unknown) {
-      setMsg(`Error saving: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const accessToken = sessionData.session?.access_token
+    if (!accessToken) {
+      setStatusMessage('You need to sign in again before saving.')
+      setSaving(false)
+      return
     }
+
+    const payload = {
+      fullName: fullName.trim(),
+      handle: handle.trim().replace(/^@+/, ''),
+      bio: bio.trim(),
+      mainPlatform,
+      followerRange,
+      incomeRange,
+      nicheTags: nicheInput
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+        .slice(0, 8),
+      portfolioItems: portfolioItems
+        .map((item) => ({
+          url: item.url.trim(),
+          platform: item.platform,
+          caption: item.caption.trim(),
+        }))
+        .filter((item) => item.url && item.platform)
+        .slice(0, 6),
+    }
+
+    const response = await fetch(`/api/creators/${creatorId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const result = (await response.json()) as { error?: string }
+    if (!response.ok) {
+      setStatusMessage(result.error || 'Could not save profile.')
+      setSaving(false)
+      return
+    }
+
     setSaving(false)
+    setStatusMessage('Profile updated.')
   }
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
-      <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
-    </div>
-  )
+  const submitBrand = async () => {
+    if (!brandId) return
+    setSaving(true)
+    setStatusMessage('')
 
-  return (
-    <div className="min-h-screen bg-[#fafaf9]">
-      <div className="max-w-3xl mx-auto px-6 pt-6 pb-16">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="section-label mb-2">Profile settings</p>
-            <h1 style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.0, letterSpacing: '-1.5px', color: '#363535' }}>
-              Edit Profile
-            </h1>
-            <p className="text-sm text-[#6b6b6b] mt-2">Tighten the details brands and creators actually see.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link href="/dashboard" className="btn-ghost text-sm">← Dashboard</Link>
-            {publicProfileHref && (
-              <Link href={publicProfileHref} target="_blank" className="btn-ghost text-sm">
-                View public profile ↗
-              </Link>
-            )}
-          </div>
-        </div>
+    const { data: sessionData } = await supabase.auth.getSession()
+    const accessToken = sessionData.session?.access_token
+    if (!accessToken) {
+      setStatusMessage('You need to sign in again before saving.')
+      setSaving(false)
+      return
+    }
 
-        {/* Avatar */}
-        <div className="card mb-6 fade-up">
-          <p className="text-xs font-semibold text-[#6b6b6b] mb-3">Profile Photo</p>
-          <div className="flex items-center gap-4">
-            <button onClick={() => fileRef.current?.click()}
-              className="w-16 h-16 rounded-2xl overflow-hidden bg-[#f0f0ec] border-2 border-dashed border-[#d0d0cc] flex items-center justify-center text-2xl hover:border-[#ccff00] transition-colors flex-shrink-0">
-              {avatarPreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
-              ) : '+'}
-            </button>
+    const payload = {
+      company_name: companyName,
+      bio: companyDescription,
+      logo_url: logoUrl,
+      industry,
+      website: websiteUrl,
+    }
+
+    const response = await fetch(`/api/brands/${brandId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const result = (await response.json()) as { error?: string }
+    if (!response.ok) {
+      setStatusMessage(result.error || 'Could not save brand profile.')
+      setSaving(false)
+      return
+    }
+
+    setSaving(false)
+    setStatusMessage('Brand profile updated.')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
+        <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (role === 'brand') {
+    return (
+      <div className="min-h-screen bg-[#fafaf9] text-[#1c1c1e]">
+        <div className="max-w-3xl mx-auto px-6 py-8">
+          <div className="mb-7 flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-sm font-medium text-[#363535]">Click to upload photo</p>
-              <p className="text-xs text-[#9a9a9a]">JPG, PNG or GIF · max 5MB · square works best</p>
-              <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+              <p className="section-label mb-1">Brand profile</p>
+              <h1 className="font-display text-[#1c1c1e]" style={{ fontSize: 'clamp(28px, 5vw, 40px)', letterSpacing: '-0.04em', lineHeight: 1.0 }}>
+                Edit profile
+              </h1>
             </div>
+            <Link href={brandId ? `/brands/${brandId}` : '/brands'} className="btn-ghost border border-[#e8e8e4]">View public profile</Link>
           </div>
-        </div>
 
-        {/* Creator fields */}
-        {role === 'creator' && (
-          <>
-            <div className="card mb-5">
-              <p className="text-xs font-semibold text-[#6b6b6b] mb-4">Basic Info</p>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs text-[#6b6b6b] mb-1">Display Name</label>
-                  <input value={displayName} onChange={e => setDisplayName(e.target.value)} type="text"
-                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#6b6b6b] mb-1">Headline <span className="text-[#9a9a9a]">(shown under your name)</span></label>
-                  <input value={headline} onChange={e => setHeadline(e.target.value)} type="text"
-                    placeholder="e.g. Tech UGC Creator · 500K+ TikTok"
-                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#6b6b6b] mb-1">Bio</label>
-                  <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
-                    placeholder="Tell brands who you are and what you make..."
-                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00] resize-none" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-[#6b6b6b] mb-1">Location</label>
-                    <input value={location} onChange={e => setLocation(e.target.value)} type="text"
-                      placeholder="e.g. London, UK"
-                      className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#6b6b6b] mb-1">Rate per video (£)</label>
-                    <input value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} type="number"
-                      placeholder="e.g. 150"
-                      className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-[#6b6b6b] mb-1">Availability</label>
-                  <select value={availability} onChange={e => setAvailability(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] focus:outline-none focus:ring-2 focus:ring-[#ccff00]">
-                    <option value="open">🟢 Open to work</option>
-                    <option value="limited">🟡 Limited availability</option>
-                    <option value="unavailable">⚫ Unavailable</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-[#6b6b6b] mb-1">Skills <span className="text-[#9a9a9a]">(comma separated)</span></label>
-                  <input
-                    value={skills}
-                    onChange={e => setSkills(e.target.value)}
-                    type="text"
-                    placeholder="UGC ads, Product demos, TikTok editing"
-                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#6b6b6b] mb-1">Experience</label>
-                  <textarea
-                    value={experience}
-                    onChange={e => setExperience(e.target.value)}
-                    rows={3}
-                    placeholder="Short summary of your creator experience and outcomes."
-                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00] resize-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-[#6b6b6b] mb-1">Hobbies & Interests <span className="text-[#9a9a9a]">(comma separated)</span></label>
-                  <input
-                    value={hobbiesInterests}
-                    onChange={e => setHobbiesInterests(e.target.value)}
-                    type="text"
-                    placeholder="Fitness tech, productivity, travel"
-                    className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
-                  />
-                </div>
-              </div>
+          <div className="card space-y-4">
+            <div>
+              <label className="block text-xs text-[#6b6b6b] mb-1">Brand name</label>
+              <input
+                value={companyName}
+                onChange={(event) => setCompanyName(event.target.value)}
+                className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+              />
             </div>
 
-            <div className="card mb-5">
-              <p className="text-xs font-semibold text-[#6b6b6b] mb-4">Social Links</p>
-              <div className="space-y-3">
-                {[
-                  { platform: 'TikTok', key: 'tiktok', value: tiktok, onChange: setTiktok, placeholder: 'https://tiktok.com/@yourhandle' },
-                  { platform: 'YouTube', key: 'youtube', value: youtube, onChange: setYoutube, placeholder: 'https://youtube.com/@yourchannel' },
-                  { platform: 'Instagram', key: 'instagram', value: instagram, onChange: setInstagram, placeholder: 'https://instagram.com/yourhandle' },
-                  { platform: 'Twitter / X', key: 'twitter', value: twitter, onChange: setTwitter, placeholder: 'https://x.com/yourhandle' },
-                  { platform: 'Portfolio link', key: 'website', value: website, onChange: setWebsite, placeholder: 'https://yourportfolio.com' },
-                ].map(({ platform, key, value, onChange, placeholder }) => {
-                  const label = key === 'tiktok' ? 'TT' : key === 'youtube' ? 'YT' : key === 'instagram' ? 'IG' : key === 'twitter' ? 'X' : ''
-                  return (
-                    <div key={key} className="flex items-center gap-3">
-                      {key === 'website' ? (
-                        <span className="w-7 h-7 rounded-lg bg-[#f0f0ec] flex items-center justify-center flex-shrink-0"><Globe size={13} /></span>
-                      ) : (
-                        <span className="w-7 h-7 rounded-lg bg-[#f0f0ec] flex items-center justify-center text-xs font-bold flex-shrink-0">{label}</span>
-                      )}
-                      <input value={value} onChange={e => onChange(e.target.value)} type="url"
-                        placeholder={placeholder}
-                        className="flex-1 px-3 py-2 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-xs text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
-                    </div>
-                  )
-                })}
-              </div>
+            <div>
+              <label className="block text-xs text-[#6b6b6b] mb-1">Company description</label>
+              <textarea
+                value={companyDescription}
+                onChange={(event) => setCompanyDescription(event.target.value)}
+                rows={5}
+                className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00] resize-none"
+              />
             </div>
-          </>
-        )}
 
-        {/* Brand fields */}
-        {role === 'brand' && (
-          <div className="card mb-5">
-            <p className="text-xs font-semibold text-[#6b6b6b] mb-4">Company Info</p>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs text-[#6b6b6b] mb-1">Company Name</label>
-                <input value={companyName} onChange={e => setCompanyName(e.target.value)} type="text"
-                  className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
-              </div>
-              <div>
-                <label className="block text-xs text-[#6b6b6b] mb-1">Website</label>
-                <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} type="url"
-                  placeholder="https://..."
-                  className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
-              </div>
+            <div>
+              <label className="block text-xs text-[#6b6b6b] mb-1">Logo URL</label>
+              <input
+                value={logoUrl}
+                onChange={(event) => setLogoUrl(event.target.value)}
+                placeholder="https://..."
+                className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+              />
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-[#6b6b6b] mb-1">Industry</label>
-                <input value={industry} onChange={e => setIndustry(e.target.value)} type="text"
-                  placeholder="e.g. SaaS, Fintech, AI Tools"
-                  className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
+                <input
+                  value={industry}
+                  onChange={(event) => setIndustry(event.target.value)}
+                  placeholder="SaaS, AI tools, Fintech..."
+                  className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                />
               </div>
+
               <div>
-                <label className="block text-xs text-[#6b6b6b] mb-1">About</label>
-                <textarea value={companyBio} onChange={e => setCompanyBio(e.target.value)} rows={3}
-                  placeholder="Tell creators about your brand..."
-                  className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00] resize-none" />
+                <label className="block text-xs text-[#6b6b6b] mb-1">Website URL</label>
+                <input
+                  value={websiteUrl}
+                  onChange={(event) => setWebsiteUrl(event.target.value)}
+                  placeholder="https://..."
+                  className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                />
               </div>
             </div>
           </div>
-        )}
 
-        {/* Save */}
-        {msg && (
-          <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-semibold ${msg.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-[#ccff00] text-[#1c1c1c]'}`}>
-            {msg}
+          {statusMessage && (
+            <div className={`mt-4 rounded-xl px-4 py-3 text-sm font-medium ${statusMessage.includes('updated') ? 'bg-[#ccff00] text-[#1c1c1e]' : 'bg-white border border-[#e8e8e4] text-[#6b6b6b]'}`}>
+              {statusMessage}
+            </div>
+          )}
+
+          <div className="mt-5 flex items-center justify-end">
+            <button onClick={submitBrand} disabled={saving} className="btn-primary disabled:opacity-40">
+              {saving ? 'Saving...' : 'Save profile'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[#fafaf9] text-[#1c1c1e]">
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        <div className="mb-7 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="section-label mb-1">Creator profile</p>
+            <h1 className="font-display text-[#1c1c1e]" style={{ fontSize: 'clamp(28px, 5vw, 40px)', letterSpacing: '-0.04em', lineHeight: 1.0 }}>
+              Edit profile
+            </h1>
+          </div>
+          <Link href={creatorId ? `/creators/${creatorId}` : '/creators'} className="btn-ghost border border-[#e8e8e4]">View public profile</Link>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-[#e8e8e4] bg-white p-4">
+          <div className="flex items-center gap-2">
+            {STEPS.map((stepLabel, index) => (
+              <div key={stepLabel} className="flex items-center gap-2 flex-1">
+                <div className={`h-8 w-8 rounded-full text-xs font-semibold flex items-center justify-center ${step >= index ? 'bg-[#ccff00] text-[#1c1c1e]' : 'bg-[#f0f0ec] text-[#8a8a86]'}`}>
+                  {index + 1}
+                </div>
+                <p className={`text-xs hidden sm:block ${step === index ? 'text-[#1c1c1e] font-semibold' : 'text-[#8a8a86]'}`}>{stepLabel}</p>
+                {index < STEPS.length - 1 && <div className="h-px flex-1 bg-[#ecece7]" />}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          {step === 0 && (
+            <div className="space-y-4">
+              <h2 className="font-display text-2xl text-[#1c1c1e]" style={{ letterSpacing: '-0.03em' }}>Basic info</h2>
+              <div>
+                <label className="block text-xs text-[#6b6b6b] mb-1">Full name</label>
+                <input value={fullName} onChange={(event) => setFullName(event.target.value)} className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
+              </div>
+              <div>
+                <label className="block text-xs text-[#6b6b6b] mb-1">Handle</label>
+                <input value={handle} onChange={(event) => setHandle(event.target.value)} placeholder="@yourhandle" className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
+              </div>
+              <div>
+                <label className="block text-xs text-[#6b6b6b] mb-1">Bio</label>
+                <textarea value={bio} onChange={(event) => setBio(event.target.value)} rows={4} className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00] resize-none" />
+              </div>
+              <div>
+                <label className="block text-xs text-[#6b6b6b] mb-1">Main platform</label>
+                <select value={mainPlatform} onChange={(event) => setMainPlatform(event.target.value)} className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]">
+                  {MAIN_PLATFORMS.map((platform) => (
+                    <option key={platform} value={platform}>{labelPlatform(platform)}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {step === 1 && (
+            <div className="space-y-4">
+              <h2 className="font-display text-2xl text-[#1c1c1e]" style={{ letterSpacing: '-0.03em' }}>Stats</h2>
+              <div>
+                <label className="block text-xs text-[#6b6b6b] mb-1">Follower count range</label>
+                <select value={followerRange} onChange={(event) => setFollowerRange(event.target.value)} className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]">
+                  <option value="">Select a range</option>
+                  {FOLLOWER_RANGES.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-[#6b6b6b] mb-1">Monthly UGC income range (optional)</label>
+                <select value={incomeRange} onChange={(event) => setIncomeRange(event.target.value)} className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]">
+                  <option value="">Select a range</option>
+                  {INCOME_RANGES.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-[#6b6b6b] mb-1">Niche tags</label>
+                <input
+                  value={nicheInput}
+                  onChange={(event) => setNicheInput(event.target.value)}
+                  placeholder="AI tools, SaaS, productivity"
+                  className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                />
+                <p className="text-xs text-[#9a9a9a] mt-1">Comma-separated</p>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="font-display text-2xl text-[#1c1c1e]" style={{ letterSpacing: '-0.03em' }}>Portfolio links</h2>
+                <button onClick={addPortfolioItem} disabled={portfolioItems.length >= 6} className="btn-ghost border border-[#e8e8e4] disabled:opacity-40">
+                  Add item ({portfolioItems.length}/6)
+                </button>
+              </div>
+
+              {portfolioItems.length === 0 && (
+                <div className="rounded-xl border border-dashed border-[#dbdbd5] bg-[#fcfcfa] p-4 text-sm text-[#6b6b6b]">
+                  Add up to 6 links from TikTok, Instagram, or YouTube.
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {portfolioItems.map((item, index) => (
+                  <div key={item.id} className="rounded-xl border border-[#e8e8e4] bg-white p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-wide">Item {index + 1}</p>
+                      <button onClick={() => removePortfolioItem(item.id)} className="text-xs text-[#8a8a86] hover:text-[#1c1c1e]">Remove</button>
+                    </div>
+                    <div className="space-y-3">
+                      <input
+                        value={item.url}
+                        onChange={(event) => updatePortfolioItem(item.id, 'url', event.target.value)}
+                        placeholder="https://..."
+                        className="w-full rounded-xl border border-[#e8e8e4] bg-[#fafaf9] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                      />
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <select
+                          value={item.platform}
+                          onChange={(event) => updatePortfolioItem(item.id, 'platform', event.target.value)}
+                          className="w-full rounded-xl border border-[#e8e8e4] bg-[#fafaf9] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                        >
+                          {MAIN_PLATFORMS.map((platform) => (
+                            <option key={platform} value={platform}>{labelPlatform(platform)}</option>
+                          ))}
+                        </select>
+                        <input
+                          value={item.caption}
+                          onChange={(event) => updatePortfolioItem(item.id, 'caption', event.target.value)}
+                          placeholder="Caption"
+                          className="w-full rounded-xl border border-[#e8e8e4] bg-[#fafaf9] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-4">
+              <h2 className="font-display text-2xl text-[#1c1c1e]" style={{ letterSpacing: '-0.03em' }}>Review</h2>
+              <div className="rounded-xl border border-[#e8e8e4] bg-white p-4 space-y-2 text-sm text-[#4f4f4f]">
+                <p><span className="font-semibold text-[#1c1c1e]">Name:</span> {fullName || '—'}</p>
+                <p><span className="font-semibold text-[#1c1c1e]">Handle:</span> @{handle.replace(/^@+/, '') || '—'}</p>
+                <p><span className="font-semibold text-[#1c1c1e]">Main platform:</span> {labelPlatform(mainPlatform)}</p>
+                <p><span className="font-semibold text-[#1c1c1e]">Followers:</span> {followerRange || 'Not set'}</p>
+                <p><span className="font-semibold text-[#1c1c1e]">Income:</span> {incomeRange || 'Not set'}</p>
+                <p><span className="font-semibold text-[#1c1c1e]">Portfolio links:</span> {portfolioItems.filter((item) => item.url.trim()).length}</p>
+              </div>
+              <p className="text-xs text-[#8a8a86]">This will save to your public creator profile.</p>
+            </div>
+          )}
+        </div>
+
+        {statusMessage && (
+          <div className={`mt-4 rounded-xl px-4 py-3 text-sm font-medium ${statusMessage.includes('updated') ? 'bg-[#ccff00] text-[#1c1c1e]' : 'bg-white border border-[#e8e8e4] text-[#6b6b6b]'}`}>
+            {statusMessage}
           </div>
         )}
 
-        <button onClick={handleSave} disabled={saving}
-          className="w-full btn-primary justify-center py-3 text-sm disabled:opacity-50">
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <button
+            onClick={() => setStep((prev) => Math.max(0, prev - 1))}
+            disabled={step === 0 || saving}
+            className="btn-ghost border border-[#e8e8e4] disabled:opacity-40"
+          >
+            Back
+          </button>
+
+          {step < STEPS.length - 1 ? (
+            <button
+              onClick={() => setStep((prev) => Math.min(STEPS.length - 1, prev + 1))}
+              disabled={!canMoveForward || saving}
+              className="btn-primary disabled:opacity-40"
+            >
+              Continue
+            </button>
+          ) : (
+            <button onClick={submitCreator} disabled={saving || !canMoveForward} className="btn-primary disabled:opacity-40">
+              {saving ? 'Saving...' : 'Save profile'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
