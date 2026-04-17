@@ -862,7 +862,8 @@ export default function OnboardingPage() {
                     setError('')
                     try {
                       const { data: { user } } = await supabase.auth.getUser()
-                      if (!user) { router.push('/login'); return }
+                      const { data: { session } } = await supabase.auth.getSession()
+                      if (!user || !session?.access_token) { router.push('/login'); return }
 
                       let finalAvatarUrl = avatarUrl
                       if (avatarFile) {
@@ -875,49 +876,30 @@ export default function OnboardingPage() {
                         finalAvatarUrl = urlData.publicUrl
                       }
 
-                      const { error: creatorError } = await supabase.from('creators').insert([{
-                        user_id: user.id,
-                        display_name: creator.display_name,
-                        headline: creator.headline,
-                        bio: creator.bio,
-                        location: creator.location || null,
-                        hourly_rate: creator.hourly_rate ? parseFloat(creator.hourly_rate) : null,
-                        website: creator.website || null,
-                        avatar_url: finalAvatarUrl || null,
-                      }])
-                      if (creatorError) throw creatorError
+                      const finishRes = await fetch('/api/onboarding/creator', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${session.access_token}`,
+                        },
+                        body: JSON.stringify({
+                          creator: {
+                            ...creator,
+                            avatar_url: finalAvatarUrl || null,
+                          },
+                          socials,
+                          skillsCsv,
+                          experienceSummary,
+                          hobbiesCsv,
+                          portfolioItems,
+                        }),
+                      })
 
-                      const { data: creatorData } = await supabase
-                        .from('creators').select('id').eq('user_id', user.id).single()
-
-                      if (creatorData) {
-                        const skills = skillsCsv.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12)
-                        const hobbies = hobbiesCsv.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12)
-                        const tagsPayload = [
-                          ...skills.map(tag => ({ creator_id: creatorData.id, tag: `skill:${tag}` })),
-                          ...(experienceSummary.trim() ? [{ creator_id: creatorData.id, tag: `exp:${experienceSummary.trim()}` }] : []),
-                          ...hobbies.map(tag => ({ creator_id: creatorData.id, tag: `hobby:${tag}` })),
-                        ]
-                        if (tagsPayload.length > 0) await supabase.from('creator_tags').insert(tagsPayload)
-
-                        const socialLinks = [
-                          ...socials.filter(s => s.url.trim()),
-                          { platform: 'website', url: creator.website.trim() },
-                        ]
-                        if (socialLinks.length > 0) {
-                          await supabase.from('creator_socials').insert(
-                            socialLinks.map(s => ({ creator_id: creatorData.id, platform: s.platform as string, url: s.url }))
-                          )
-                        }
-
-                        if (portfolioItems.length > 0) {
-                          await supabase.from('portfolio_items').insert(
-                            portfolioItems.map(p => ({ creator_id: creatorData.id, type: p.type, url: p.url, caption: p.caption || null }))
-                          )
-                        }
+                      const finishBody = await finishRes.json().catch(() => ({}))
+                      if (!finishRes.ok) {
+                        throw new Error(finishBody.error || 'Could not finish creator onboarding.')
                       }
 
-                      await supabase.from('users').update({ role: 'creator' }).eq('id', user.id)
                       setStep(5)
                     } catch (err: unknown) {
                       setError(err instanceof Error ? err.message : 'Something went wrong.')
