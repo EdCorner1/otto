@@ -55,8 +55,13 @@ type Creator = {
   id: string
   display_name: string
   headline: string
+  bio?: string | null
+  avatar_url?: string | null
+  website?: string | null
   skills: string[]
   creator_tags?: { tag: string }[]
+  creator_socials?: { platform: string; url: string }[]
+  portfolio_items?: { id: string }[]
 }
 
 type Deal = {
@@ -109,7 +114,7 @@ useEffect(() => {
         }
       } else if (resolvedRole === 'creator') {
         const { data: creatorData } = await supabase
-          .from('creators').select('*, creator_tags(tag)').eq('user_id', user.id).single()
+          .from('creators').select('*, creator_tags(tag), creator_socials(platform, url), portfolio_items(id)').eq('user_id', user.id).single()
         if (creatorData) {
           const skillTags = ((creatorData as Creator).creator_tags || [])
             .map(t => t.tag)
@@ -206,6 +211,20 @@ useEffect(() => {
     }
   }
 
+  const creatorPrimarySocialCount = (creatorProfile?.creator_socials || []).filter((social) =>
+    ['tiktok', 'instagram', 'youtube'].includes(social.platform) && social.url?.trim()
+  ).length
+  const creatorPortfolioCount = creatorProfile?.portfolio_items?.length || 0
+  const creatorChecklist = role === 'creator' ? [
+    { label: 'Profile photo', done: !!creatorProfile?.avatar_url },
+    { label: 'Short bio / why me', done: !!creatorProfile?.bio?.trim() },
+    { label: 'Portfolio link', done: !!creatorProfile?.website?.trim() },
+    { label: '1+ primary social', done: creatorPrimarySocialCount >= 1 },
+    { label: '3 videos uploaded', done: creatorPortfolioCount >= 3 },
+    { label: '6 videos for 100%', done: creatorPortfolioCount >= 6 },
+  ] : []
+  const creatorChecklistDone = creatorChecklist.filter((item) => item.done).length
+
   return (
     <div className="max-w-4xl mx-auto px-6">
 
@@ -236,6 +255,38 @@ useEffect(() => {
           <Link href={nextAction.href} className="btn-primary text-sm px-4 py-2">
             {nextAction.cta} →
           </Link>
+        </section>
+      )}
+
+      {role === 'creator' && creatorProfile && (
+        <section className="card mb-6 fade-up stagger-1">
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div>
+              <p className="section-label mb-2">Creator launch checklist</p>
+              <h2 className="text-xl font-semibold text-[#363535]" style={{ fontFamily: 'var(--font-bricolage)' }}>
+                Get your profile live fast
+              </h2>
+            </div>
+            <span className="inline-flex items-center rounded-full bg-[#f0f0ec] px-3 py-1 text-xs font-semibold text-[#6b6b6b]">
+              {creatorChecklistDone} / {creatorChecklist.length} complete
+            </span>
+          </div>
+
+          <div className="space-y-3 mb-5">
+            {creatorChecklist.map((item) => (
+              <div key={item.label} className="flex items-center justify-between gap-3 rounded-2xl border border-[#f0f0ec] bg-[#fafaf9] px-4 py-3">
+                <span className="text-sm text-[#363535]">{item.label}</span>
+                <span className={`text-xs font-semibold ${item.done ? 'text-green-700' : 'text-[#9a9a9a]'}`}>
+                  {item.done ? 'Done' : 'To do'}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Link href="/profile/edit" className="btn-ghost text-sm">Edit profile</Link>
+            {creatorProfile?.id && <Link href={`/explore/${creatorProfile.id}`} className="btn-primary text-sm">Preview public profile →</Link>}
+          </div>
         </section>
       )}
 

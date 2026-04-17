@@ -70,6 +70,7 @@ export default function ProfileEditPage() {
             if (s.platform === 'twitter') setTwitter(s.url)
             if (s.platform === 'website') setWebsite(s.url)
           })
+          setWebsite(((c as { website?: string }).website) || socials.find((s) => s.platform === 'website')?.url || '')
 
           const tags = ((c as { creator_tags?: Array<{ tag: string }> }).creator_tags ?? [])
           const skillTags = tags
@@ -193,6 +194,7 @@ export default function ProfileEditPage() {
             location: location.trim() || null,
             hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
             availability,
+            website: website.trim() || null,
             avatar_url: avatarUrl || null,
           }).eq('id', existing.id)
 
@@ -380,7 +382,7 @@ export default function ProfileEditPage() {
                   { platform: 'YouTube', key: 'youtube', value: youtube, onChange: setYoutube, placeholder: 'https://youtube.com/@yourchannel' },
                   { platform: 'Instagram', key: 'instagram', value: instagram, onChange: setInstagram, placeholder: 'https://instagram.com/yourhandle' },
                   { platform: 'Twitter / X', key: 'twitter', value: twitter, onChange: setTwitter, placeholder: 'https://x.com/yourhandle' },
-                  { platform: 'Website', key: 'website', value: website, onChange: setWebsite, placeholder: 'https://yoursite.com' },
+                  { platform: 'Portfolio link', key: 'website', value: website, onChange: setWebsite, placeholder: 'https://yourportfolio.com' },
                 ].map(({ platform, key, value, onChange, placeholder }) => {
                   const label = key === 'tiktok' ? 'TT' : key === 'youtube' ? 'YT' : key === 'instagram' ? 'IG' : key === 'twitter' ? 'X' : ''
                   return (

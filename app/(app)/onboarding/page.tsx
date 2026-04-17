@@ -59,14 +59,16 @@ export default function OnboardingPage() {
     { platform: 'tiktok', url: '' },
     { platform: 'youtube', url: '' },
     { platform: 'instagram', url: '' },
+    { platform: 'twitter', url: '' },
+    { platform: 'other', url: '' },
   ])
   const [portfolioItems, setPortfolioItems] = useState<Array<{ type: 'video' | 'image'; url: string; caption: string }>>([])
   const [uploadingVideo, setUploadingVideo] = useState(false)
   const [videoUploadProgress, setVideoUploadProgress] = useState('')
-  const [newPortfolioCaption, setNewPortfolioCaption] = useState('')
   const [addingPortfolio, setAddingPortfolio] = useState(false)
-  const [skippedPortfolio, setSkippedPortfolio] = useState(false)
   const videoInputRef = useRef<HTMLInputElement>(null)
+
+  const primarySocialCount = socials.filter(s => ['tiktok', 'instagram', 'youtube'].includes(s.platform) && s.url.trim()).length
 
   // ─── STEP 0: ROLE SELECTION ─────────────────────────
   if (step === 0) {
@@ -421,8 +423,12 @@ export default function OnboardingPage() {
                   <input type="text" value={creator.headline} onChange={e => setCreator({ ...creator, headline: e.target.value })} placeholder="Tech creator specializing in AI tools & productivity" maxLength={80} required className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07]" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#363535] mb-1.5">Bio * <span className="font-normal text-[#9a9a9a]">(2-4 sentences)</span></label>
-                  <textarea value={creator.bio} onChange={e => setCreator({ ...creator, bio: e.target.value })} placeholder="I make videos about AI tools and productivity software. 200K+ views across TikTok and YouTube. I've worked with Notion, Linear, and Raycast..." rows={4} required className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07] resize-none" />
+                  <label className="block text-sm font-semibold text-[#363535] mb-1.5">Why should a brand work with you? * <span className="font-normal text-[#9a9a9a]">(short bio / why me)</span></label>
+                  <textarea value={creator.bio} onChange={e => setCreator({ ...creator, bio: e.target.value })} placeholder="I make creator-led videos for AI tools, apps, and productivity brands. My content is quick to ship, product-first, and built to feel native on TikTok and Shorts." rows={4} required className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07] resize-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#363535] mb-1.5">Portfolio link * <span className="font-normal text-[#9a9a9a]">(drive, notion, website or reel)</span></label>
+                  <input type="url" value={creator.website} onChange={e => setCreator({ ...creator, website: e.target.value })} placeholder="https://yourportfolio.com" required className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07]" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -466,8 +472,8 @@ export default function OnboardingPage() {
                 </div>
                 <button
                   onClick={() => {
-                    if (!creator.display_name.trim() || !creator.headline.trim() || !creator.bio.trim()) {
-                      setError('Display name, headline, and bio are all required.');
+                    if (!creator.display_name.trim() || !creator.headline.trim() || !creator.bio.trim() || !creator.website.trim()) {
+                      setError('Display name, headline, portfolio link, and bio are all required.');
                       return;
                     }
                     if (!skillsCsv.trim() || !experienceSummary.trim() || !hobbiesCsv.trim()) {
@@ -579,13 +585,15 @@ export default function OnboardingPage() {
               <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Your social links.
               </h1>
-              <p className="text-[#6b6b6b] mb-2">Add at least one link so brands can see your audience.</p>
-              <p className="text-xs text-[#ccff00] font-semibold mb-8">Recommended: add 3+ for more visibility.</p>
+              <p className="text-[#6b6b6b] mb-2">Add at least one of TikTok, Instagram, or YouTube Shorts so brands can check your work fast.</p>
+              <p className="text-xs text-[#ccff00] font-semibold mb-8">Required to go live: 1 primary social. Recommended: 3+ total links.</p>
+
+              {error && <div className="mb-5 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">{error}</div>}
 
               <div className="space-y-3 mb-6">
                 {[
                   { platform: 'TikTok', key: 'tiktok' },
-                  { platform: 'YouTube', key: 'youtube' },
+                  { platform: 'YouTube Shorts', key: 'youtube' },
                   { platform: 'Instagram', key: 'instagram' },
                   { platform: 'Twitter / X', key: 'twitter' },
                   { platform: 'Other', key: 'other' },
@@ -614,14 +622,21 @@ export default function OnboardingPage() {
               <div className="mb-6 p-4 bg-white border border-[#e8e8e4] rounded-xl">
                 <div className="flex items-center justify-between text-sm mb-2">
                   <span className="text-[#6b6b6b]">Links added</span>
-                  <span className="font-semibold text-[#363535]">{socials.filter(s => s.url.trim()).length} / {socials.length}</span>
+                  <span className="font-semibold text-[#363535]">{primarySocialCount} / 1 required</span>
                 </div>
                 <div className="w-full h-1.5 bg-[#f0f0ec] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#ccff00] rounded-full transition-all" style={{ width: `${(socials.filter(s => s.url.trim()).length / socials.length) * 100}%` }} />
+                  <div className={`h-full rounded-full transition-all ${primarySocialCount >= 1 ? 'bg-[#ccff00]' : 'bg-[#6b6b6b]'}`} style={{ width: `${Math.min(primarySocialCount, 1) * 100}%` }} />
                 </div>
               </div>
 
-              <button onClick={() => setStep(4)} className="btn-primary w-full py-4 text-base">Continue →</button>
+              <button onClick={() => {
+                if (primarySocialCount < 1) {
+                  setError('Add at least one TikTok, Instagram, or YouTube link to continue.')
+                  return
+                }
+                setError('')
+                setStep(4)
+              }} className="btn-primary w-full py-4 text-base">Continue →</button>
             </div>
           </div>
         </div>
@@ -645,8 +660,8 @@ export default function OnboardingPage() {
               <h1 className="text-4xl font-display tracking-tight mb-2" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-4.5px', color: '#363535' }}>
                 Your portfolio.
               </h1>
-              <p className="text-[#6b6b6b] mb-2">Add 3–6 videos to publish your profile. Brands hire based on your work.</p>
-              <p className="text-xs font-semibold text-[#ccff00] mb-6">🎬 Video content gets 3x more proposals than image-only portfolios.</p>
+              <p className="text-[#6b6b6b] mb-2">Add your best 3–6 videos. 3 gets your profile live. 6 gets you to 100% completion.</p>
+              <p className="text-xs font-semibold text-[#ccff00] mb-6">🎬 Start with your strongest demos, reviews, or native-feeling UGC ads.</p>
 
               {/* Portfolio grid */}
               {portfolioItems.length > 0 && (
@@ -830,77 +845,11 @@ export default function OnboardingPage() {
               {error && <div className="mb-4 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">{error}</div>}
 
               <div className="space-y-3">
-                {/* Skip button */}
-                <button
-                  onClick={async () => {
-                    setLoading(true)
-                    setError('')
-                    try {
-                      const { data: { user } } = await supabase.auth.getUser()
-                      if (!user) { router.push('/login'); return }
-
-                      let finalAvatarUrl = avatarUrl
-                      if (avatarFile) {
-                        const ext = avatarFile.name.split('.').pop()
-                        const avatarPath = `${user.id}/avatar.${ext}`
-                        const { error: uploadError } = await supabase.storage
-                          .from('avatars').upload(avatarPath, avatarFile, { upsert: true })
-                        if (uploadError) throw uploadError
-                        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(avatarPath)
-                        finalAvatarUrl = urlData.publicUrl
-                      }
-
-                      const { error: creatorError } = await supabase.from('creators').insert([{
-                        user_id: user.id,
-                        display_name: creator.display_name,
-                        headline: creator.headline,
-                        bio: creator.bio,
-                        location: creator.location || null,
-                        hourly_rate: creator.hourly_rate ? parseFloat(creator.hourly_rate) : null,
-                        website: null,
-                        avatar_url: finalAvatarUrl || null,
-                      }])
-                      if (creatorError) throw creatorError
-
-                      const { data: creatorData } = await supabase
-                        .from('creators').select('id').eq('user_id', user.id).single()
-
-                      if (creatorData) {
-                        const skills = skillsCsv.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12)
-                        const hobbies = hobbiesCsv.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12)
-                        const tagsPayload = [
-                          ...skills.map(tag => ({ creator_id: creatorData.id, tag: `skill:${tag}` })),
-                          ...(experienceSummary.trim() ? [{ creator_id: creatorData.id, tag: `exp:${experienceSummary.trim()}` }] : []),
-                          ...hobbies.map(tag => ({ creator_id: creatorData.id, tag: `hobby:${tag}` })),
-                        ]
-                        if (tagsPayload.length > 0) await supabase.from('creator_tags').insert(tagsPayload)
-
-                        const socialLinks = socials.filter(s => s.url.trim())
-                        if (socialLinks.length > 0) {
-                          await supabase.from('creator_socials').insert(
-                            socialLinks.map(s => ({ creator_id: creatorData.id, platform: s.platform as string, url: s.url }))
-                          )
-                        }
-                      }
-
-                      await supabase.from('users').update({ role: 'creator' }).eq('id', user.id)
-                      setStep(5)
-                    } catch (err: unknown) {
-                      setError(err instanceof Error ? err.message : 'Something went wrong.')
-                    } finally {
-                      setLoading(false)
-                    }
-                  }}
-                  className="btn-ghost w-full py-4 text-sm"
-                >
-                  {loading ? 'Setting up...' : 'Skip for now — I\'ll add videos later'}
-                </button>
-
                 {/* Publish with portfolio */}
                 <button
                   onClick={async () => {
                     if (portfolioItems.length < 3 || portfolioItems.length > 6) {
-                      setError('Add at least 3 videos to publish with a portfolio, or use the skip button above.')
+                      setError('Add at least 3 videos before you can publish your creator profile.')
                       return
                     }
                     setLoading(true)
@@ -927,7 +876,7 @@ export default function OnboardingPage() {
                         bio: creator.bio,
                         location: creator.location || null,
                         hourly_rate: creator.hourly_rate ? parseFloat(creator.hourly_rate) : null,
-                        website: null,
+                        website: creator.website || null,
                         avatar_url: finalAvatarUrl || null,
                       }])
                       if (creatorError) throw creatorError
@@ -945,7 +894,10 @@ export default function OnboardingPage() {
                         ]
                         if (tagsPayload.length > 0) await supabase.from('creator_tags').insert(tagsPayload)
 
-                        const socialLinks = socials.filter(s => s.url.trim())
+                        const socialLinks = [
+                          ...socials.filter(s => s.url.trim()),
+                          { platform: 'website', url: creator.website.trim() },
+                        ]
                         if (socialLinks.length > 0) {
                           await supabase.from('creator_socials').insert(
                             socialLinks.map(s => ({ creator_id: creatorData.id, platform: s.platform as string, url: s.url }))
@@ -970,7 +922,7 @@ export default function OnboardingPage() {
                   disabled={loading}
                   className="btn-primary w-full py-4 text-base disabled:opacity-60"
                 >
-                  {loading ? 'Publishing...' : portfolioItems.length >= 3 ? 'Publish Profile with Portfolio →' : `Add ${Math.max(0, 3 - portfolioItems.length)} more videos →`}
+                  {loading ? 'Publishing...' : portfolioItems.length >= 6 ? 'Publish 100% Complete Profile →' : portfolioItems.length >= 3 ? 'Publish Live Profile →' : `Add ${Math.max(0, 3 - portfolioItems.length)} more videos →`}
                 </button>
               </div>
             </div>
@@ -999,8 +951,8 @@ export default function OnboardingPage() {
               <h1 className="text-4xl font-display tracking-tight mb-3" style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-0.5px', color: '#363535' }}>
                 Your profile is live.
               </h1>
-              <p className="text-[#6b6b6b] text-lg mb-2">Brands can now discover you and send briefs.</p>
-              <p className="text-[#6b6b6b] mb-6">Complete your social links and add more portfolio items any time from your dashboard.</p>
+              <p className="text-[#6b6b6b] text-lg mb-2">Brands can now discover you and review your best work straight away.</p>
+              <p className="text-[#6b6b6b] mb-6">Head to your dashboard to preview your profile, top it up to 6 videos, and get ready for your first brief.</p>
 
               {/* Fast pay promise */}
               <div className="mb-10 inline-flex items-center gap-3 px-5 py-3 bg-[#1c1c1e] rounded-2xl text-left">
