@@ -436,7 +436,7 @@ export default function OnboardingPage() {
                     <input type="text" value={creator.location} onChange={e => setCreator({ ...creator, location: e.target.value })} placeholder="London, UK" className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07]" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#363535] mb-1.5">Hourly rate <span className="font-normal text-[#9a9a9a]">(£, optional)</span></label>
+                    <label className="block text-sm font-semibold text-[#363535] mb-1.5">Rate per video <span className="font-normal text-[#9a9a9a]">(£, optional)</span></label>
                     <input type="number" value={creator.hourly_rate} onChange={e => setCreator({ ...creator, hourly_rate: e.target.value })} placeholder="150" min="0" className="w-full px-4 py-3.5 bg-white border border-[#e8e8e4] rounded-xl text-[#363535] placeholder-[#9a9a9a] transition-all focus:outline-none focus:border-[#ccff00] focus:ring-4 focus:ring-[#ccff00]/[0.07]" />
                   </div>
                 </div>

@@ -301,7 +301,7 @@ export default function CreatorProfilePage() {
                   {creator.headline && <p className="text-base text-[#6b6b6b] leading-relaxed max-w-2xl">{creator.headline}</p>}
                   <div className="mt-4 flex flex-wrap items-center gap-2.5 text-xs text-[#6b6b6b]">
                     {creator.location && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><MapPin size={12} /> {creator.location}</span>}
-                    {creator.hourly_rate && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><PoundSterling size={12} /> £{creator.hourly_rate}/hr</span>}
+                    {creator.hourly_rate && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><PoundSterling size={12} /> £{creator.hourly_rate}/video</span>}
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><Calendar size={12} /> Joined {formatDate(creator.created_at)}</span>
                     {creator.profile_views > 0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5">{creator.profile_views} profile views</span>}
                   </div>

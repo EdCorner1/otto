@@ -325,7 +325,7 @@ export default function ProfileEditPage() {
                       className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
                   </div>
                   <div>
-                    <label className="block text-xs text-[#6b6b6b] mb-1">Hourly Rate (£)</label>
+                    <label className="block text-xs text-[#6b6b6b] mb-1">Rate per video (£)</label>
                     <input value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} type="number"
                       placeholder="e.g. 150"
                       className="w-full px-4 py-2.5 bg-[#fafaf9] border border-[#e8e8e4] rounded-xl text-sm text-[#363535] placeholder-[#9a9a9a] focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />

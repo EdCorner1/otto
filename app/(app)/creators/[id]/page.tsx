@@ -187,7 +187,7 @@ export default function CreatorProfilePage() {
                 {availabilityLabel}
               </span>
               {creator.hourly_rate && (
-                <span className="text-xs text-[#6b6b6b]">{creator.hourly_rate}/hr</span>
+                <span className="text-xs text-[#6b6b6b]">£{creator.hourly_rate}/video</span>
               )}
               {creator.location && (
                 <span className="text-xs text-[#6b6b6b]">{creator.location}</span>
