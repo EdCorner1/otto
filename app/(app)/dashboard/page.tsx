@@ -64,6 +64,11 @@ type Creator = {
   portfolio_items?: { id: string }[]
 }
 
+type BrandProfile = {
+  id: string
+  company_name?: string | null
+}
+
 type Deal = {
   id: string; status: string; budget: number
   jobs: { title: string }; brands: { company_name: string }; creators: { display_name: string }
@@ -84,6 +89,8 @@ export default function DashboardPage() {
   const [creatorApps, setCreatorApps] = useState<Application[]>([])
   const [creatorDeals, setCreatorDeals] = useState<Deal[]>([])
   const [creatorProfile, setCreatorProfile] = useState<Creator | null>(null)
+  const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null)
+  const [welcomeHeadline, setWelcomeHeadline] = useState('Welcome back.')
   const supabase = createClient()
 
 useEffect(() => {
@@ -101,8 +108,9 @@ useEffect(() => {
 
       if (resolvedRole === 'brand') {
         const { data: brandData } = await supabase
-          .from('brands').select('id').eq('user_id', user.id).single()
+          .from('brands').select('id, company_name').eq('user_id', user.id).single()
         if (brandData) {
+          setBrandProfile(brandData as BrandProfile)
           const [{ data: jobsData }, { data: dealsData }] = await Promise.all([
             supabase.from('jobs').select('*, applications(id)')
               .eq('brand_id', brandData.id).order('created_at', { ascending: false }).limit(5),
@@ -141,13 +149,44 @@ useEffect(() => {
     getUser()
   }, [])
 
+  useEffect(() => {
+    if (loading || !user) return
+
+    const name = role === 'creator'
+      ? creatorProfile?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'there'
+      : role === 'brand'
+        ? brandProfile?.company_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'there'
+        : user.user_metadata?.full_name || user.email?.split('@')[0] || 'there'
+
+    const creatorMessages = [
+      `Let's make some money, ${name}.`,
+      `Welcome back, ${name}.`,
+      `Ready to make some money, ${name}?`,
+      `Your next brief could land today, ${name}.`,
+      `Time to turn good content into paid work, ${name}.`,
+    ]
+
+    const brandMessages = [
+      `Welcome back, ${name}.`,
+      `Ready to find your next creator, ${name}?`,
+      `Let's get your next campaign moving, ${name}.`,
+      `Time to turn briefs into content, ${name}.`,
+      `Let's ship something strong today, ${name}.`,
+    ]
+
+    const pool = role === 'brand' ? brandMessages : creatorMessages
+    const halfHourBucket = Math.floor(Date.now() / (1000 * 60 * 30))
+    const seed = `${user.id}-${role || 'user'}-${halfHourBucket}`
+    const hash = seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
+    setWelcomeHeadline(pool[hash % pool.length])
+  }, [loading, user, role, creatorProfile?.display_name, brandProfile?.company_name])
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
       <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
     </div>
   )
 
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there'
   const featuredJobs = DEMO_JOBS.slice(0, 5)
 
   let nextAction: { title: string; description: string; cta: string; href: string } | null = null
@@ -238,9 +277,9 @@ useEffect(() => {
 
       {/* Header */}
       <div className="mb-10 fade-up">
-        <h1 style={headlineStyle}>Welcome back, {displayName}.</h1>
+        <h1 style={headlineStyle}>{welcomeHeadline}</h1>
         <p className="text-[#6b6b6b] mt-2 text-sm">
-          {role === 'brand' ? 'Manage your briefs and track active work.' : 'Track your applications and active deals.'}
+          {role === 'brand' ? 'Manage your briefs, creator conversations, and active campaigns.' : 'Track your applications, active deals, and what to finish next.'}
         </p>
       </div>
 
