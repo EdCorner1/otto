@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -45,18 +45,26 @@ function formatTime(dateStr: string) {
 
 type Deal = {
   id: string
-  amount: number
-  budget?: number
+  amount: number | null
+  budget?: number | null
   status: string
   created_at: string
+  updated_at?: string
   job_id: string
   brand_id: string
   creator_id: string
-  jobs: { title: string }
-  brands: { company_name: string }
-  creators: { display_name: string; user_id: string }
+  jobs: { title: string } | null
+  brands: { company_name: string } | null
+  creators: { display_name: string; user_id: string } | null
   last_message?: string
-  last_message_at?: string
+  last_message_at?: string | null
+}
+
+type MessageRow = {
+  id: string
+  deal_id: string
+  content: string
+  created_at: string
 }
 
 export default function MessagesPage() {
@@ -64,15 +72,16 @@ export default function MessagesPage() {
   const [deals, setDeals] = useState<Deal[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
-    const getUser = async () => {
+    const loadConversations = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setUser(user)
 
       const role = user.user_metadata?.role
+      let rawDeals: Deal[] = []
 
       if (role === 'brand') {
         const { data: brandData } = await supabase.from('brands').select('id').eq('user_id', user.id).single()
@@ -82,9 +91,9 @@ export default function MessagesPage() {
           .from('deals')
           .select('*, jobs(title), creators(display_name, user_id), brands(company_name)')
           .eq('brand_id', brandData.id)
-          .order('created_at', { ascending: false })
+          .order('updated_at', { ascending: false })
 
-        setDeals((dealsData as Deal[]) || [])
+        rawDeals = (dealsData as Deal[]) || []
       } else if (role === 'creator') {
         const { data: creatorData } = await supabase.from('creators').select('id').eq('user_id', user.id).single()
         if (!creatorData) { router.push('/dashboard'); return }
@@ -93,15 +102,52 @@ export default function MessagesPage() {
           .from('deals')
           .select('*, jobs(title), creators(display_name, user_id), brands(company_name)')
           .eq('creator_id', creatorData.id)
-          .order('created_at', { ascending: false })
+          .order('updated_at', { ascending: false })
 
-        setDeals((dealsData as Deal[]) || [])
+        rawDeals = (dealsData as Deal[]) || []
       }
 
+      const dealIds = rawDeals.map((deal) => deal.id)
+      if (!dealIds.length) {
+        setDeals([])
+        setLoading(false)
+        return
+      }
+
+      const { data: messageRows } = await supabase
+        .from('messages')
+        .select('id, deal_id, content, created_at')
+        .in('deal_id', dealIds)
+        .order('created_at', { ascending: false })
+
+      const latestByDeal = new Map<string, MessageRow>()
+      for (const row of (messageRows as MessageRow[]) || []) {
+        if (!latestByDeal.has(row.deal_id)) {
+          latestByDeal.set(row.deal_id, row)
+        }
+      }
+
+      const enrichedDeals = rawDeals
+        .map((deal) => {
+          const latest = latestByDeal.get(deal.id)
+          return {
+            ...deal,
+            last_message: latest?.content || '',
+            last_message_at: latest?.created_at || null,
+          }
+        })
+        .sort((a, b) => {
+          const aTime = new Date(a.last_message_at || a.updated_at || a.created_at).getTime()
+          const bTime = new Date(b.last_message_at || b.updated_at || b.created_at).getTime()
+          return bTime - aTime
+        })
+
+      setDeals(enrichedDeals)
       setLoading(false)
     }
-    getUser()
-  }, [])
+
+    loadConversations()
+  }, [router, supabase])
 
   
 
@@ -138,11 +184,7 @@ export default function MessagesPage() {
               return (
                 <Link
                   key={deal.id}
-                  href={
-                    user?.user_metadata?.role === 'brand' && deal.status === 'submitted'
-                      ? `/deals/${deal.id}/brand-review`
-                      : `/messages/${deal.id}`
-                  }
+                  href={`/deals/${deal.id}`}
                   className={`card card-hover flex items-center gap-4 fade-up stagger-${Math.min(i + 1, 5)}`}
                 >
                   <div className="flex-1 min-w-0">
@@ -156,8 +198,8 @@ export default function MessagesPage() {
                     </p>
                   </div>
                   <div className="flex-shrink-0 text-right">
-                    <div className="text-sm font-semibold text-[#363535]">£{deal.budget}</div>
-                    <div className="text-xs text-[#9a9a9a] mt-0.5">{formatTime(deal.created_at)}</div>
+                    <div className="text-sm font-semibold text-[#363535]">£{deal.budget ?? deal.amount ?? 0}</div>
+                    <div className="text-xs text-[#9a9a9a] mt-0.5">{formatTime(deal.last_message_at || deal.updated_at || deal.created_at)}</div>
                   </div>
                 </Link>
               )

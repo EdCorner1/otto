@@ -16,6 +16,15 @@ type CreatorForm = {
   portfolioLinks: string[]
 }
 
+function formatPlatformValue(value: string) {
+  const normalized = value.trim().toLowerCase()
+  if (normalized.includes('youtube')) return 'youtube'
+  if (normalized.includes('instagram')) return 'instagram'
+  if (normalized.includes('tiktok')) return 'tiktok'
+  if (normalized.includes('twitter') || normalized === 'x') return 'twitter'
+  return normalized.replace(/\s*\/\s*/g, '-').replace(/\s+/g, '-') || 'other'
+}
+
 type BrandForm = {
   companyName: string
   website: string
@@ -110,7 +119,7 @@ export default function OnboardingPage() {
             profile: {
               name: creatorForm.name,
               handle: creatorForm.handle,
-              main_platform: creatorForm.mainPlatform,
+              main_platform: formatPlatformValue(creatorForm.mainPlatform),
               niche: creatorForm.niche,
               audience_size: creatorForm.audienceSize,
               portfolio_links: creatorForm.portfolioLinks.filter((link) => link.trim()).slice(0, 3),
@@ -278,8 +287,8 @@ export default function OnboardingPage() {
 
       {step === 3 && (
         <>
-          <h1 className="mb-2 text-3xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>Portfolio links</h1>
-          <p className="mb-6 text-sm text-[#6b6b6b]">Add up to 3 links to your best work.</p>
+          <h1 className="mb-2 text-3xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>Demo video links</h1>
+          <p className="mb-6 text-sm text-[#6b6b6b]">Add up to 3 links to your best videos. You can paste YouTube, Vimeo, TikTok, Instagram, or a direct video URL.</p>
 
           <div className="space-y-3">
             {creatorForm.portfolioLinks.map((link, idx) => (
@@ -291,7 +300,7 @@ export default function OnboardingPage() {
                   next[idx] = e.target.value
                   setCreatorForm((prev) => ({ ...prev, portfolioLinks: next }))
                 }}
-                placeholder={`Portfolio link ${idx + 1}`}
+                placeholder={`Video link ${idx + 1}`}
                 className="w-full rounded-xl border border-[#e8e8e4] px-4 py-3 outline-none focus:border-[#ccff00]"
               />
             ))}
@@ -302,7 +311,7 @@ export default function OnboardingPage() {
               onClick={() => setCreatorForm((prev) => ({ ...prev, portfolioLinks: [...prev.portfolioLinks, ''] }))}
               className="mt-3 text-sm text-[#1c1c1e] underline"
             >
-              + Add another link
+              + Add another video link
             </button>
           )}
 
