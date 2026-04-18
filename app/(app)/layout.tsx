@@ -241,8 +241,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     fetchUnreadCount()
     const intervalId = setInterval(fetchUnreadCount, 30000)
 
-    return () => clearInterval(intervalId)
-  }, [fetchUnreadCount, pathname, user])
+    const channel = supabase
+      .channel(`notifications:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => {
+          fetchUnreadCount()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      clearInterval(intervalId)
+      supabase.removeChannel(channel)
+    }
+  }, [fetchUnreadCount, pathname, supabase, user])
 
   const desktopNavItems = useMemo<NavItem[]>(() => {
     const base: NavItem[] = [
@@ -257,9 +271,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       },
       {
         label: 'Live Campaigns',
-        href: '/deals',
+        href: '/live-campaigns',
         icon: <CampaignIcon />,
-        activePrefixes: ['/deals'],
+        activePrefixes: ['/live-campaigns'],
       },
       { label: 'Payments', icon: <PaymentsIcon />, comingSoon: true },
       { label: 'Affiliates', icon: <AffiliateIcon />, comingSoon: true },

@@ -11,6 +11,14 @@ type DealRow = {
   id: string
   brand_id: string | null
   creator_id: string | null
+  jobs?: { title?: string | null } | Array<{ title?: string | null }> | null
+}
+
+type RawMessageRow = {
+  id: string
+  sender_id: string
+  content: string
+  created_at: string
 }
 
 function getEnv(name: string) {
@@ -49,7 +57,7 @@ async function getAuthContext(request: NextRequest) {
   const [{ data: brandRow }, { data: creatorRow }, { data: userRow }] = await Promise.all([
     admin.from('brands').select('id, company_name').eq('user_id', user.id).maybeSingle(),
     admin.from('creators').select('id, display_name').eq('user_id', user.id).maybeSingle(),
-    admin.from('users').select('role').eq('id', user.id).maybeSingle(),
+    admin.from('users').select('role, email').eq('id', user.id).maybeSingle(),
   ])
 
   let role = (user.user_metadata?.role as Role | undefined) || (userRow?.role as Role | undefined)
@@ -64,8 +72,52 @@ async function getAuthContext(request: NextRequest) {
     role,
     brandId: brandRow?.id || null,
     creatorId: creatorRow?.id || null,
-    senderName: role === 'brand' ? (brandRow?.company_name || 'Brand') : (creatorRow?.display_name || 'Creator'),
+    senderName:
+      role === 'brand'
+        ? (brandRow?.company_name || userRow?.email?.split('@')[0] || 'Brand')
+        : (creatorRow?.display_name || userRow?.email?.split('@')[0] || 'Creator'),
   }
+}
+
+async function resolveSenderNames(admin: any, messages: RawMessageRow[]) {
+  const senderIds = Array.from(new Set(messages.map((message) => message.sender_id).filter(Boolean)))
+  if (!senderIds.length) return []
+
+  const [{ data: users }, { data: brands }, { data: creators }] = await Promise.all([
+    admin.from('users').select('id, email').in('id', senderIds),
+    admin.from('brands').select('user_id, company_name').in('user_id', senderIds),
+    admin.from('creators').select('user_id, display_name').in('user_id', senderIds),
+  ])
+
+  const userNames = new Map<string, string>()
+
+  for (const row of users || []) {
+    if (row?.id) {
+      userNames.set(row.id, row.email?.split('@')[0] || 'User')
+    }
+  }
+
+  for (const row of brands || []) {
+    if (row?.user_id && row.company_name) {
+      userNames.set(row.user_id, row.company_name)
+    }
+  }
+
+  for (const row of creators || []) {
+    if (row?.user_id && row.display_name) {
+      userNames.set(row.user_id, row.display_name)
+    }
+  }
+
+  return messages.map((message) => ({
+    ...message,
+    sender_name: userNames.get(message.sender_id) || 'User',
+  }))
+}
+
+function getJobTitle(deal: DealRow) {
+  if (Array.isArray(deal.jobs)) return deal.jobs[0]?.title || null
+  return deal.jobs?.title || null
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -93,7 +145,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const { data: messages, error } = await auth.admin
       .from('messages')
-      .select('id, sender_id, sender_name, content, created_at')
+      .select('id, sender_id, content, created_at')
       .eq('deal_id', id)
       .order('created_at', { ascending: true })
       .limit(300)
@@ -102,7 +154,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ messages: messages || [] })
+    const hydratedMessages = await resolveSenderNames(auth.admin, (messages || []) as RawMessageRow[])
+    return NextResponse.json({ messages: hydratedMessages })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not fetch messages.'
     return NextResponse.json({ error: message }, { status: 500 })
@@ -139,19 +192,27 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Message content is required.' }, { status: 400 })
     }
 
-    const { data: message, error } = await auth.admin
+    if (content.length > 4000) {
+      return NextResponse.json({ error: 'Message is too long.' }, { status: 400 })
+    }
+
+    const { data: inserted, error } = await auth.admin
       .from('messages')
       .insert({
         deal_id: id,
         sender_id: auth.user.id,
-        sender_name: auth.senderName,
         content,
       })
-      .select('id, sender_id, sender_name, content, created_at')
+      .select('id, sender_id, content, created_at')
       .single()
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    const message = {
+      ...(inserted as RawMessageRow),
+      sender_name: auth.senderName,
     }
 
     const recipientProfileId = auth.role === 'brand' ? deal.creator_id : deal.brand_id
@@ -165,12 +226,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
         .maybeSingle()
 
       if (recipientRow?.user_id) {
-        const title = ((deal as any).jobs as { title?: string } | null)?.title
+        const title = getJobTitle(deal as DealRow)
         await createNotification(auth.admin, {
           userId: recipientRow.user_id,
           type: 'new_message',
           content: `${auth.senderName}: ${content.slice(0, 120)}${content.length > 120 ? '…' : ''}${title ? ` (${title})` : ''}`,
-          linkUrl: `/messages/${id}`,
+          linkUrl: `/deals/${id}`,
         })
       }
     }

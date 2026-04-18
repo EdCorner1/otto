@@ -15,7 +15,7 @@ type Deal = {
 }
 
 type Message = {
-  id: string; sender_id: string; sender_name: string; content: string; created_at: string
+  id: string; sender_id: string; content: string; created_at: string
 }
 
 const headlineStyle: React.CSSProperties = {
@@ -95,9 +95,8 @@ export default function DealReviewPage() {
 
   const sendRevisionNote = async () => {
     if (!revisionNotes.trim() || !deal) return
-    const senderName = brand?.company_name || 'Brand'
     await supabase.from('messages').insert({
-      deal_id: deal.id, sender_id: user!.id, sender_name: senderName,
+      deal_id: deal.id, sender_id: user!.id,
       content: `🔁 Revision requested: ${revisionNotes.trim()}`,
     })
     await updateDeal('in_progress')
@@ -108,9 +107,8 @@ export default function DealReviewPage() {
   const handleApprove = async () => {
     await updateDeal('approved')
     if (deal) {
-      const senderName = brand?.company_name || 'Brand'
       await supabase.from('messages').insert({
-        deal_id: deal.id, sender_id: user!.id, sender_name: senderName,
+        deal_id: deal.id, sender_id: user!.id,
         content: '✅ Work approved! Payment will be released shortly.',
       })
     }
@@ -188,7 +186,7 @@ export default function DealReviewPage() {
           <div className="card mb-6 text-center py-8">
             <div className="text-4xl mb-3">⏳</div>
             <p className="text-sm text-[#6b6b6b]">Waiting for the creator to submit their work.</p>
-            <Link href={`/messages/${deal.id}`} className="btn-ghost text-sm mt-4 inline-flex items-center gap-2">Message Creator →</Link>
+            <Link href={`/deals/${deal.id}`} className="btn-ghost text-sm mt-4 inline-flex items-center gap-2">Message Creator →</Link>
           </div>
         )}
 
@@ -239,7 +237,7 @@ export default function DealReviewPage() {
             </div>
             <h2 style={{ ...headlineStyle, fontSize: '22px' }} className="mb-2">Work Approved!</h2>
             <p className="text-sm text-[#6b6b6b]">Payment will be released to the creator. Reach out to confirm receipt.</p>
-            <Link href={`/messages/${deal.id}`} className="btn-primary inline-flex items-center gap-2 mt-5 px-6 py-3">
+            <Link href={`/deals/${deal.id}`} className="btn-primary inline-flex items-center gap-2 mt-5 px-6 py-3">
               Message Creator →
             </Link>
           </div>
@@ -273,7 +271,7 @@ export default function DealReviewPage() {
             <button onClick={() => setShowRevisionForm(true)} disabled={updating} className="btn-ghost disabled:opacity-50">
               Request Changes
             </button>
-            <Link href={`/messages/${deal.id}`} className="btn-ghost text-sm ml-auto">Message Creator →</Link>
+            <Link href={`/deals/${deal.id}`} className="btn-ghost text-sm ml-auto">Message Creator →</Link>
           </div>
         )}
       </div>

@@ -9,6 +9,15 @@ function getEnv(name: string) {
   return value
 }
 
+function isMissingRelationError(error: any) {
+  const message = String(error?.message || '').toLowerCase()
+  return (
+    message.includes("could not find the table 'public.notifications'") ||
+    message.includes('relation "public.notifications" does not exist') ||
+    message.includes('relation "notifications" does not exist')
+  )
+}
+
 async function getAuthContext(request: NextRequest) {
   const authHeader = request.headers.get('authorization') || ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
@@ -48,11 +57,17 @@ export async function GET(request: NextRequest) {
       .limit(500)
 
     if (error) {
+      if (isMissingRelationError(error)) {
+        return NextResponse.json({ notifications: [] })
+      }
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ notifications: data || [] })
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json({ notifications: [] })
+    }
     const message = error instanceof Error ? error.message : 'Could not fetch notifications.'
     return NextResponse.json({ error: message }, { status: 500 })
   }
@@ -77,6 +92,9 @@ export async function PATCH(request: NextRequest) {
         .eq('read', false)
 
       if (error) {
+        if (isMissingRelationError(error)) {
+          return NextResponse.json({ ok: true, all: true })
+        }
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
 
@@ -94,11 +112,17 @@ export async function PATCH(request: NextRequest) {
       .eq('user_id', auth.user.id)
 
     if (error) {
+      if (isMissingRelationError(error)) {
+        return NextResponse.json({ ok: true, id })
+      }
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true, id })
   } catch (error) {
+    if (isMissingRelationError(error)) {
+      return NextResponse.json({ ok: true })
+    }
     const message = error instanceof Error ? error.message : 'Could not update notification(s).'
     return NextResponse.json({ error: message }, { status: 500 })
   }

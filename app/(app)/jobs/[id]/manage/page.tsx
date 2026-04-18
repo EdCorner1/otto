@@ -95,7 +95,6 @@ export default function JobManagePage() {
       await supabase.from('messages').insert({
         deal_id: deal.id,
         sender_id: user.id,
-        sender_name: brandData.company_name || 'Brand',
         content: `You have been selected for "${job.title}". Head over to discuss the brief and get started.`,
       })
 

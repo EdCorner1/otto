@@ -56,6 +56,48 @@ function relationOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] || null : value
 }
 
+type MessageActivityRow = {
+  id: string
+  deal_id: string
+  sender_id: string | null
+  content: string | null
+  created_at: string
+}
+
+async function hydrateMessageActivity(admin: any, rows: MessageActivityRow[]) {
+  const senderIds = Array.from(new Set(rows.map((row) => row.sender_id).filter(Boolean))) as string[]
+
+  if (!senderIds.length) {
+    return rows.map((row) => ({
+      ...row,
+      sender_name: 'teammate',
+    }))
+  }
+
+  const [{ data: users }, { data: brands }, { data: creators }] = await Promise.all([
+    admin.from('users').select('id, email').in('id', senderIds),
+    admin.from('brands').select('user_id, company_name').in('user_id', senderIds),
+    admin.from('creators').select('user_id, display_name').in('user_id', senderIds),
+  ])
+
+  const nameByUserId = new Map<string, string>()
+
+  for (const user of users || []) {
+    if (user?.id) nameByUserId.set(user.id, user.email?.split('@')[0] || 'teammate')
+  }
+  for (const brand of brands || []) {
+    if (brand?.user_id && brand.company_name) nameByUserId.set(brand.user_id, brand.company_name)
+  }
+  for (const creator of creators || []) {
+    if (creator?.user_id && creator.display_name) nameByUserId.set(creator.user_id, creator.display_name)
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    sender_name: row.sender_id ? (nameByUserId.get(row.sender_id) || 'teammate') : 'teammate',
+  }))
+}
+
 async function getAuthContext(request: NextRequest) {
   const authHeader = request.headers.get('authorization') || ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
@@ -272,14 +314,16 @@ export async function GET(request: NextRequest) {
       }, 0)
 
       const dealIds = dealRows.map((deal) => deal.id)
-      const { data: messages } = dealIds.length
+      const { data: messageRows } = dealIds.length
         ? await auth.admin
           .from('messages')
-          .select('id, deal_id, sender_name, content, created_at')
+          .select('id, deal_id, sender_id, content, created_at')
           .in('deal_id', dealIds)
           .order('created_at', { ascending: false })
           .limit(20)
-        : { data: [] as Array<{ id: string; deal_id: string; sender_name: string | null; content: string | null; created_at: string }> }
+        : { data: [] as MessageActivityRow[] }
+
+      const messages = await hydrateMessageActivity(auth.admin, (messageRows || []) as MessageActivityRow[])
 
       const activity: ActivityItem[] = [
         ...(dealRows.slice(0, 8).map((deal) => {
@@ -301,7 +345,7 @@ export async function GET(request: NextRequest) {
           title: `New message from ${msg.sender_name || 'teammate'}`,
           description: (msg.content || 'New message').slice(0, 90),
           created_at: msg.created_at,
-          href: `/messages/${msg.deal_id}`,
+          href: `/deals/${msg.deal_id}`,
         }) satisfies ActivityItem),
         ...((notifications || []).map((item) => ({
           id: `notification-${item.id}`,
@@ -433,14 +477,16 @@ export async function GET(request: NextRequest) {
     }, 0)
 
     const dealIds = dealRows.map((deal) => deal.id)
-    const { data: messages } = dealIds.length
+    const { data: messageRows } = dealIds.length
       ? await auth.admin
         .from('messages')
-        .select('id, deal_id, sender_name, content, created_at')
+        .select('id, deal_id, sender_id, content, created_at')
         .in('deal_id', dealIds)
         .order('created_at', { ascending: false })
         .limit(20)
-      : { data: [] as Array<{ id: string; deal_id: string; sender_name: string | null; content: string | null; created_at: string }> }
+      : { data: [] as MessageActivityRow[] }
+
+    const messages = await hydrateMessageActivity(auth.admin, (messageRows || []) as MessageActivityRow[])
 
     const activity: ActivityItem[] = [
       ...(dealRows.slice(0, 8).map((deal) => {
@@ -475,7 +521,7 @@ export async function GET(request: NextRequest) {
         title: `New message from ${msg.sender_name || 'teammate'}`,
         description: (msg.content || 'New message').slice(0, 90),
         created_at: msg.created_at,
-        href: `/messages/${msg.deal_id}`,
+        href: `/deals/${msg.deal_id}`,
       }) satisfies ActivityItem),
       ...((notifications || []).map((item) => ({
         id: `notification-${item.id}`,

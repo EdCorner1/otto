@@ -52,7 +52,6 @@ export default function BrandDealReviewPage() {
     await supabase.from('messages').insert({
       deal_id: deal.id,
       sender_id: user!.id,
-      sender_name: deal.brands?.company_name || 'Brand',
       content: '✅ Work approved! Payment will be released shortly.',
     })
     setDeal(prev => prev ? { ...prev, status: 'approved' } : null)
@@ -67,7 +66,6 @@ export default function BrandDealReviewPage() {
     await supabase.from('messages').insert({
       deal_id: deal.id,
       sender_id: user!.id,
-      sender_name: deal.brands?.company_name || 'Brand',
       content: '🔁 I\'d like one round of revisions. Check the brief and let me know if you have questions.',
     })
     setDeal(prev => prev ? { ...prev, status: 'revision_requested' } : null)
@@ -216,7 +214,7 @@ export default function BrandDealReviewPage() {
             >
               {actioning && done === 'revision' ? 'Sending...' : <><RotateCcw size={16} /> Request revision</>}
             </button>
-            <Link href={`/messages/${deal.id}`} className="btn-ghost">Message creator</Link>
+            <Link href={`/deals/${deal.id}`} className="btn-ghost">Message creator</Link>
           </div>
         </div>
       )}
@@ -239,7 +237,7 @@ export default function BrandDealReviewPage() {
           <h2 style={{ fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-2">Revision requested</h2>
           <p className="text-sm text-[#6b6b6b] mb-6">The creator has been notified. Check messages for updates.</p>
-          <Link href={`/messages/${deal.id}`} className="btn-primary">Message creator</Link>
+          <Link href={`/deals/${deal.id}`} className="btn-primary">Message creator</Link>
         </div>
       )}
 
@@ -250,7 +248,7 @@ export default function BrandDealReviewPage() {
           <h2 style={{ fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-2">Work in progress</h2>
           <p className="text-sm text-[#6b6b6b] mb-6">The creator is still working on this. You&apos;ll be notified when it&apos;s submitted.</p>
-          <Link href={`/messages/${deal.id}`} className="btn-ghost">Message creator</Link>
+          <Link href={`/deals/${deal.id}`} className="btn-ghost">Message creator</Link>
         </div>
       )}
 

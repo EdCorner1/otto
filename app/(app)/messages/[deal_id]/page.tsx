@@ -139,12 +139,10 @@ export default function DealThreadPage() {
     if (!newMessage.trim() || sending) return
 
     setSending(true)
-    const senderName = role === 'brand' ? (deal?.brands?.company_name || 'Brand') : (deal?.creators?.display_name || 'Creator')
 
     await supabase.from('messages').insert({
       deal_id: dealId,
       sender_id: user!.id,
-      sender_name: senderName,
       content: newMessage.trim(),
     })
 
@@ -175,11 +173,9 @@ export default function DealThreadPage() {
     setDeal(prev => prev ? { ...prev, status: 'submitted' } : null)
     setShowSubmitForm(false)
 
-    const senderName = role === 'brand' ? (deal?.brands?.company_name || 'Brand') : (deal?.creators?.display_name || 'Creator')
     await supabase.from('messages').insert({
       deal_id: dealId,
       sender_id: user!.id,
-      sender_name: senderName,
       content: `Work submitted${submissionLink ? `: ${submissionLink}` : ''}${submissionNotes ? ` — ${submissionNotes}` : ''}`,
     })
 

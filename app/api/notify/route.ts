@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
             <h1 style="${HEADLINE_STYLE};font-size:28px;margin:0 0 16px">${creatorName} wants to work with you</h1>
             <p style="${BODY_STYLE};margin:0 0 8px"><strong>${jobTitle}</strong></p>
             <p style="${BODY_STYLE};color:#6b6b6b;font-size:14px">You have a new proposal waiting. Review it and accept or pass.</p>
-            ${ctaButton('Review Proposal', `${appUrl}/messages/${dealId}`)}
+            ${ctaButton('Review Proposal', `${appUrl}/deals/${dealId}`)}
           `)
           await sendEmail({ to: brandEmail, subject: `New proposal for "${jobTitle}"`, html })
         }
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
             <h1 style="${HEADLINE_STYLE};font-size:28px;margin:0 0 16px">${brandName} approved your work</h1>
             <p style="${BODY_STYLE};margin:0 0 8px"><strong>${jobTitle}</strong></p>
             <p style="${BODY_STYLE};color:#6b6b6b;font-size:14px">Great work — payment will be released shortly.</p>
-            ${ctaButton('View Deal', `${appUrl}/messages/${dealId}`)}
+            ${ctaButton('View Deal', `${appUrl}/deals/${dealId}`)}
           `)
           await sendEmail({ to: creatorEmail, subject: `Your work on "${jobTitle}" was approved! 🎉`, html })
         }
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
             <div style="background:#fafaf9;border-left:3px solid #ccff00;padding:12px 16px;border-radius:0 8px 8px 0">
               <p style="${BODY_STYLE};margin:0;font-size:14px">${revisionNotes}</p>
             </div>
-            ${ctaButton('View & Respond', `${appUrl}/messages/${dealId}`)}
+            ${ctaButton('View & Respond', `${appUrl}/deals/${dealId}`)}
           `)
           await sendEmail({ to: creatorEmail, subject: `Revision requested on "${jobTitle}"`, html })
         }
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
           <p style="margin:0 0 8px;font-size:13px;color:#6b6b6b">New Message</p>
           <h1 style="${HEADLINE_STYLE};font-size:28px;margin:0 0 16px">${senderName} sent you a message</h1>
           <p style="${BODY_STYLE};color:#6b6b6b;font-size:14px;margin:0 0 16px">"${preview.slice(0, 120)}${preview.length > 120 ? '…' : ''}"</p>
-          ${ctaButton('View Message', `${appUrl}/messages/${dealId}`)}
+          ${ctaButton('View Message', `${appUrl}/deals/${dealId}`)}
         `)
         await sendEmail({ to: recipientEmail, subject: `New message from ${senderName} — ${jobTitle}`, html })
         break

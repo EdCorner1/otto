@@ -92,7 +92,6 @@ async function insertSystemMessage(admin: any, dealId: string, senderId: string,
   await admin.from('messages').insert({
     deal_id: dealId,
     sender_id: senderId,
-    sender_name: senderName,
     content: `[SYSTEM:${type}] ${text}`,
   })
 }
@@ -227,7 +226,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           userId: creatorRow.user_id,
           type: 'application_accepted',
           content: `${auth.senderName} accepted your application${jobTitle ? ` for "${jobTitle}"` : ''}.`,
-          linkUrl: `/messages/${id}`,
+          linkUrl: `/deals/${id}`,
         })
       }
 
@@ -266,7 +265,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             userId: brandRow.user_id,
             type: 'deal_update',
             content: response === 'accept' ? `${auth.senderName} accepted your offer.` : `${auth.senderName} declined your offer.`,
-            linkUrl: `/messages/${id}`,
+            linkUrl: `/deals/${id}`,
           })
         }
       }
@@ -299,7 +298,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             userId: creatorRow.user_id,
             type: 'deal_update',
             content: `${auth.senderName} posted a new brief update.`,
-            linkUrl: `/messages/${id}`,
+            linkUrl: `/deals/${id}`,
           })
         }
       }
@@ -332,7 +331,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             userId: brandRow.user_id,
             type: 'deal_update',
             content: `${auth.senderName} shared new work for your review.`,
-            linkUrl: `/messages/${id}`,
+            linkUrl: `/deals/${id}`,
           })
         }
       }
@@ -373,7 +372,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             userId: brandRow.user_id,
             type: 'review_requested',
             content: `${auth.senderName} submitted work and requested review.`,
-            linkUrl: `/messages/${id}`,
+            linkUrl: `/deals/${id}`,
           })
         }
       }
@@ -400,7 +399,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             userId: creatorRow.user_id,
             type: 'deal_update',
             content: `${auth.senderName} approved your submission.`,
-            linkUrl: `/messages/${id}`,
+            linkUrl: `/deals/${id}`,
           })
         }
       }
@@ -426,7 +425,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             userId: creatorRow.user_id,
             type: 'payment_received',
             content: `${auth.senderName} marked this deal as paid.`,
-            linkUrl: `/messages/${id}`,
+            linkUrl: `/deals/${id}`,
           })
         }
       }
@@ -452,7 +451,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             userId: creatorRow.user_id,
             type: 'deal_update',
             content: `${auth.senderName} marked the deal complete.`,
-            linkUrl: `/messages/${id}`,
+            linkUrl: `/deals/${id}`,
           })
         }
       }

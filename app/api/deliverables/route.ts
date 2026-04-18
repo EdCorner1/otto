@@ -239,7 +239,6 @@ async function insertSystemMessage(admin: AdminClient, dealId: string, senderId:
   await admin.from('messages').insert({
     deal_id: dealId,
     sender_id: senderId,
-    sender_name: senderName,
     content: `[SYSTEM:${type}] ${JSON.stringify(payload)}`,
   })
 }
