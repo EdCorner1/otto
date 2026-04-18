@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -20,6 +20,7 @@ type CreatorProfileResponse = {
   fullName: string
   handle: string
   bio: string
+  avatarUrl: string | null
   mainPlatform: string
   followerRange: string
   incomeRange: string
@@ -62,6 +63,8 @@ export default function ProfileEditPage() {
   const [fullName, setFullName] = useState('')
   const [handle, setHandle] = useState('')
   const [bio, setBio] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const [mainPlatform, setMainPlatform] = useState<string>('tiktok')
   const [followerRange, setFollowerRange] = useState('')
   const [incomeRange, setIncomeRange] = useState('')
@@ -139,6 +142,7 @@ export default function ProfileEditPage() {
       setFullName(profile.fullName || '')
       setHandle(profile.handle || '')
       setBio(profile.bio || '')
+      setAvatarUrl(profile.avatarUrl || '')
       setMainPlatform(profile.mainPlatform || 'tiktok')
       setFollowerRange(profile.followerRange || '')
       setIncomeRange(profile.incomeRange || '')
@@ -186,6 +190,60 @@ export default function ProfileEditPage() {
     setPortfolioItems((prev) => prev.filter((item) => item.id !== id))
   }
 
+  const uploadCreatorAvatar = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file || !creatorId) return
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
+    if (!allowedTypes.includes(file.type)) {
+      setStatusMessage('Please upload a JPG, PNG, WebP, GIF, or AVIF image.')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setStatusMessage('Profile photos must be 5MB or smaller.')
+      return
+    }
+
+    setAvatarUploading(true)
+    setStatusMessage('')
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData.session?.access_token
+      if (!accessToken) {
+        setStatusMessage('You need to sign in again before uploading a profile photo.')
+        return
+      }
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch(`/api/creators/${creatorId}/avatar`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      })
+
+      const result = (await response.json()) as { error?: string; avatarUrl?: string | null }
+      if (!response.ok || !result.avatarUrl) {
+        setStatusMessage(result.error || 'Could not upload profile photo.')
+        return
+      }
+
+      setAvatarUrl(result.avatarUrl)
+      setStatusMessage('Profile photo uploaded. Save profile to keep it.')
+    } catch {
+      setStatusMessage('Could not upload profile photo.')
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
   const submitCreator = async () => {
     if (!creatorId) return
     setSaving(true)
@@ -203,6 +261,7 @@ export default function ProfileEditPage() {
       fullName: fullName.trim(),
       handle: handle.trim().replace(/^@+/, ''),
       bio: bio.trim(),
+      avatarUrl: avatarUrl.trim() || null,
       mainPlatform,
       followerRange,
       incomeRange,
@@ -404,6 +463,38 @@ export default function ProfileEditPage() {
           {step === 0 && (
             <div className="space-y-4">
               <h2 className="font-display text-2xl text-[#1c1c1e]" style={{ letterSpacing: '-0.03em' }}>Basic info</h2>
+              <div className="rounded-2xl border border-[#e8e8e4] bg-[#fcfcfa] p-4">
+                <div className="flex items-center gap-4 flex-wrap">
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt={fullName || 'Creator avatar'} className="h-20 w-20 rounded-full object-cover border border-[#e8e8e4] bg-white" />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-[#d8d8d2] bg-white text-xl font-semibold text-[#8a8a86]">
+                      {(fullName || handle || 'U').replace(/^@+/, '').charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#1c1c1e]">Profile photo</p>
+                    <p className="mt-1 text-xs text-[#6b6b6b]">Upload a square image. JPG, PNG, WebP, GIF, or AVIF up to 5MB.</p>
+                    <div className="mt-3 flex items-center gap-3 flex-wrap">
+                      <label className={`inline-flex cursor-pointer items-center rounded-xl border border-[#e8e8e4] bg-white px-4 py-2 text-sm font-medium text-[#1c1c1e] transition hover:border-[#ccff00] ${avatarUploading ? 'pointer-events-none opacity-60' : ''}`}>
+                        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="hidden" onChange={uploadCreatorAvatar} disabled={avatarUploading || saving} />
+                        {avatarUploading ? 'Uploading…' : avatarUrl ? 'Change photo' : 'Upload photo'}
+                      </label>
+                      {avatarUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setAvatarUrl('')}
+                          disabled={avatarUploading || saving}
+                          className="text-sm text-[#6b6b6b] hover:text-[#1c1c1e] disabled:opacity-40"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div>
                 <label className="block text-xs text-[#6b6b6b] mb-1">Full name</label>
                 <input value={fullName} onChange={(event) => setFullName(event.target.value)} className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />

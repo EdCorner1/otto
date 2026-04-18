@@ -15,6 +15,7 @@ type PatchPayload = {
   fullName?: string
   handle?: string
   bio?: string
+  avatarUrl?: string | null
   mainPlatform?: string
   followerRange?: string
   incomeRange?: string
@@ -34,6 +35,12 @@ function normalizeTag(value: string) {
 
 function cleanText(value: string) {
   return value.trim().replace(/\s+/g, ' ')
+}
+
+function cleanOptionalUrl(value: string | null | undefined) {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
 }
 
 function inferType(url: string) {
@@ -149,6 +156,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const fullName = cleanText(body.fullName || '')
     const handle = cleanText(body.handle || '').replace(/^@+/, '')
     const bio = (body.bio || '').trim()
+    const avatarUrl = cleanOptionalUrl(body.avatarUrl)
     const mainPlatform = normalizeTag(body.mainPlatform || '')
     const followerRange = (body.followerRange || '').trim()
     const incomeRange = (body.incomeRange || '').trim()
@@ -195,6 +203,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       .update({
         display_name: fullName,
         bio,
+        avatar_url: avatarUrl,
       })
       .eq('id', id)
 
