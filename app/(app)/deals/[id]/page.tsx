@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -13,6 +13,7 @@ type DealStatus =
   | 'in_progress'
   | 'submitted'
   | 'reviewed'
+  | 'revision_requested'
   | 'paid'
   | 'complete'
   | 'archived'
@@ -23,6 +24,7 @@ type DealStatus =
 type Deal = {
   id: string
   job_id: string | null
+  creator_id?: string | null
   status: DealStatus
   value: number | null
   submitted_url?: string | null
@@ -30,6 +32,20 @@ type Deal = {
   jobs?: { title?: string; description?: string } | null
   brands?: { company_name?: string } | null
   creators?: { display_name?: string; avatar_url?: string } | null
+}
+
+type DeliverableStatus = 'submitted' | 'approved' | 'revision_requested'
+
+type Deliverable = {
+  id: string
+  deal_id: string
+  creator_id: string
+  title: string
+  drive_link: string
+  notes?: string | null
+  status: DeliverableStatus
+  submitted_at: string
+  created_at: string
 }
 
 type Application = {
@@ -63,6 +79,11 @@ type MessagesResponse = {
   messages: Message[]
 }
 
+type DeliverablesResponse = {
+  deliverables: Deliverable[]
+  storage?: 'table' | 'messages_fallback'
+}
+
 const FLOW: DealStatus[] = [
   'application_sent',
   'under_review',
@@ -83,6 +104,7 @@ const STATUS_STYLES: Record<string, string> = {
   in_progress: 'bg-[#ccff00]/20 text-[#1c1c1e] border-[#d6ee76]',
   submitted: 'bg-amber-100 text-amber-700 border-amber-200',
   reviewed: 'bg-blue-100 text-blue-700 border-blue-200',
+  revision_requested: 'bg-orange-100 text-orange-700 border-orange-200',
   paid: 'bg-green-100 text-green-700 border-green-200',
   complete: 'bg-zinc-200 text-zinc-700 border-zinc-300',
   archived: 'bg-zinc-100 text-zinc-600 border-zinc-200',
@@ -99,6 +121,17 @@ function formatDate(value: string) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+function deliverableStatusLabel(status: DeliverableStatus) {
+  if (status === 'revision_requested') return 'Revision requested'
+  return status.charAt(0).toUpperCase() + status.slice(1)
+}
+
+function deliverableStatusClass(status: DeliverableStatus) {
+  if (status === 'approved') return 'bg-emerald-100 text-emerald-700 border-emerald-200'
+  if (status === 'revision_requested') return 'bg-orange-100 text-orange-700 border-orange-200'
+  return 'bg-amber-100 text-amber-700 border-amber-200'
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -137,6 +170,7 @@ export default function DealDetailPage() {
   const [deal, setDeal] = useState<Deal | null>(null)
   const [applications, setApplications] = useState<Application[]>([])
   const [messages, setMessages] = useState<Message[]>([])
+  const [deliverables, setDeliverables] = useState<Deliverable[]>([])
 
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
@@ -147,8 +181,10 @@ export default function DealDetailPage() {
   const [assetText, setAssetText] = useState('')
   const [assetUrl, setAssetUrl] = useState('')
   const [submissionUrl, setSubmissionUrl] = useState('')
-  const [submissionNotes, setSubmissionNotes] = useState('')
+  const [deliverableTitle, setDeliverableTitle] = useState('')
+  const [deliverableNotes, setDeliverableNotes] = useState('')
   const [chatInput, setChatInput] = useState('')
+  const chatContainerRef = useRef<HTMLDivElement | null>(null)
 
   const getHeaders = useCallback(() => ({ Authorization: `Bearer ${token}` }), [token])
 
@@ -180,10 +216,23 @@ export default function DealDetailPage() {
     setApplications(Array.isArray(payload.applications) ? payload.applications : [])
   }, [dealId])
 
+  const loadDeliverables = useCallback(async (authToken: string) => {
+    const response = await fetch(`/api/deliverables?deal_id=${encodeURIComponent(dealId)}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    const payload = (await response.json()) as Partial<DeliverablesResponse> & { error?: string }
+    if (!response.ok) {
+      throw new Error(payload.error || 'Could not load deliverables.')
+    }
+
+    setDeliverables(Array.isArray(payload.deliverables) ? payload.deliverables : [])
+  }, [dealId])
+
   const reload = useCallback(async () => {
     if (!token) return
-    await Promise.all([loadDeal(token), loadMessages(token)])
-  }, [loadDeal, loadMessages, token])
+    await Promise.all([loadDeal(token), loadMessages(token), loadDeliverables(token)])
+  }, [loadDeal, loadMessages, loadDeliverables, token])
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -204,6 +253,7 @@ export default function DealDetailPage() {
         await Promise.all([
           loadDeal(sessionData.session.access_token),
           loadMessages(sessionData.session.access_token),
+          loadDeliverables(sessionData.session.access_token),
         ])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not load deal.')
@@ -213,7 +263,37 @@ export default function DealDetailPage() {
     }
 
     bootstrap()
-  }, [loadDeal, loadMessages, router, supabase])
+  }, [loadDeal, loadDeliverables, loadMessages, router, supabase])
+
+  useEffect(() => {
+    if (!dealId || !userId) return
+
+    const channel = supabase
+      .channel(`deal-chat:${dealId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'messages', filter: `deal_id=eq.${dealId}` },
+        async () => {
+          if (!token) return
+          try {
+            await loadMessages(token)
+          } catch {
+            // ignore transient realtime refresh issues
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [dealId, loadMessages, supabase, token, userId])
+
+  useEffect(() => {
+    const node = chatContainerRef.current
+    if (!node) return
+    node.scrollTop = node.scrollHeight
+  }, [messages])
 
   const transition = async (action: string, extra: Record<string, unknown> = {}) => {
     if (!token) return
@@ -267,7 +347,6 @@ export default function DealDetailPage() {
       }
 
       setChatInput('')
-      await loadMessages(token)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send message.')
     } finally {
@@ -276,6 +355,7 @@ export default function DealDetailPage() {
   }
 
   const progressIndex = FLOW.indexOf(deal?.status || '')
+  const hasSubmittedDeliverables = deliverables.length > 0
   const briefItems = useMemo(
     () => messages.map((m) => ({ ...m, parsed: parseMessageType(m.content) })).filter((m) => m.parsed.type === 'brief'),
     [messages]
@@ -309,6 +389,79 @@ export default function DealDetailPage() {
   const otherPartyName = role === 'brand' ? deal.creators?.display_name : deal.brands?.company_name
   const valueLabel = deal.value != null ? `£${deal.value.toLocaleString()}` : '—'
   const statusAtLeast = (target: DealStatus) => FLOW.indexOf(deal.status) >= FLOW.indexOf(target)
+
+  const submitDeliverable = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!token || !deal || !deal.creator_id || !submissionUrl.trim() || working) return
+
+    setWorking(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/deliverables', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getHeaders(),
+        },
+        body: JSON.stringify({
+          deal_id: deal.id,
+          creator_id: deal.creator_id,
+          title: deliverableTitle.trim(),
+          drive_link: submissionUrl.trim(),
+          notes: deliverableNotes.trim(),
+          submitted_at: new Date().toISOString(),
+        }),
+      })
+
+      const payload = (await response.json()) as { error?: string }
+      if (!response.ok) {
+        throw new Error(payload.error || 'Could not submit deliverable.')
+      }
+
+      setSubmissionUrl('')
+      setDeliverableTitle('')
+      setDeliverableNotes('')
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not submit deliverable.')
+    } finally {
+      setWorking(false)
+    }
+  }
+
+  const reviewDeliverable = async (deliverableId: string, nextStatus: 'approved' | 'revision_requested') => {
+    if (!token || !deal || working) return
+
+    setWorking(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/deliverables', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getHeaders(),
+        },
+        body: JSON.stringify({
+          deal_id: deal.id,
+          deliverable_id: deliverableId,
+          status: nextStatus,
+        }),
+      })
+
+      const payload = (await response.json()) as { error?: string }
+      if (!response.ok) {
+        throw new Error(payload.error || 'Could not review deliverable.')
+      }
+
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not review deliverable.')
+    } finally {
+      setWorking(false)
+    }
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-2 md:px-4 py-4 md:py-8 space-y-5">
@@ -488,52 +641,94 @@ export default function DealDetailPage() {
 
           <div className="space-y-5">
             <div className="card">
-              <h2 className="text-lg font-semibold text-[#1c1c1e] mb-2">Submission</h2>
-              {role === 'creator' && (deal.status === 'accepted' || deal.status === 'in_progress') && (
-                <form
-                  onSubmit={async (event) => {
-                    event.preventDefault()
-                    await transition('mark_submitted', { submissionUrl, submissionNotes })
-                    setSubmissionUrl('')
-                    setSubmissionNotes('')
-                  }}
-                  className="space-y-2"
-                >
+              <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                <h2 className="text-lg font-semibold text-[#1c1c1e]">Deliver work</h2>
+                {hasSubmittedDeliverables && (
+                  <span className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-wider">
+                    {deliverables.length} submission{deliverables.length === 1 ? '' : 's'}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-[#6b6b6b] mb-4">Drop in a Google Drive link so the brand can view or download the finished video.</p>
+
+              {role === 'creator' && (deal.status === 'accepted' || deal.status === 'in_progress' || deal.status === 'revision_requested') && (
+                <form onSubmit={submitDeliverable} className="space-y-2">
                   <input
                     value={submissionUrl}
                     onChange={(event) => setSubmissionUrl(event.target.value)}
-                    placeholder="Submission URL"
+                    placeholder="Google Drive Link"
+                    className="w-full bg-white border border-[#e8e8e4] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                    required
+                  />
+                  <input
+                    value={deliverableTitle}
+                    onChange={(event) => setDeliverableTitle(event.target.value)}
+                    placeholder="Title / Description"
                     className="w-full bg-white border border-[#e8e8e4] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
                   />
                   <textarea
-                    value={submissionNotes}
-                    onChange={(event) => setSubmissionNotes(event.target.value)}
+                    value={deliverableNotes}
+                    onChange={(event) => setDeliverableNotes(event.target.value)}
                     rows={3}
-                    placeholder="Submission notes"
+                    placeholder="Optional notes"
                     className="w-full bg-white border border-[#e8e8e4] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
                   />
-                  <button type="submit" className="btn-primary text-sm" disabled={working}>Mark submitted</button>
+                  <button type="submit" className="btn-primary text-sm" disabled={working || !submissionUrl.trim()}>
+                    Submit Deliverable
+                  </button>
                 </form>
               )}
 
-              {(deal.submitted_url || deal.submitted_notes) && (
-                <div className="rounded-xl border border-[#ecece8] p-3 text-sm text-[#1c1c1e] mt-3">
-                  {deal.submitted_url && (
-                    <p>
-                      URL:{' '}
-                      <a href={deal.submitted_url} target="_blank" rel="noreferrer" className="underline break-all">
-                        {deal.submitted_url}
-                      </a>
-                    </p>
-                  )}
-                  {deal.submitted_notes && <p className="mt-2 whitespace-pre-wrap">{deal.submitted_notes}</p>}
+              {!hasSubmittedDeliverables ? (
+                <div className="rounded-xl border border-dashed border-[#dfe6b2] bg-[#fbfde9] p-4 mt-3 text-sm text-[#6b6b6b]">
+                  No videos submitted yet.
                 </div>
-              )}
+              ) : (
+                <div className="space-y-3 mt-4">
+                  {deliverables.map((item) => (
+                    <div key={item.id} className="rounded-2xl border border-[#ecece8] bg-white p-4">
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div>
+                          <p className="font-semibold text-[#1c1c1e]">{item.title || 'Video deliverable'}</p>
+                          <p className="text-xs text-[#8a8a88] mt-1">Submitted {formatDate(item.submitted_at)}</p>
+                        </div>
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${deliverableStatusClass(item.status)}`}>
+                          {deliverableStatusLabel(item.status)}
+                        </span>
+                      </div>
 
-              {role === 'brand' && deal.status === 'submitted' && (
-                <button onClick={() => transition('mark_reviewed')} className="btn-primary text-sm mt-3" disabled={working}>
-                  Mark reviewed / approved
-                </button>
+                      <a
+                        href={item.drive_link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex items-center rounded-xl bg-[#f5f5f1] px-3 py-2 text-sm font-medium text-[#1c1c1e] hover:bg-[#ecece8] break-all"
+                      >
+                        {item.drive_link}
+                      </a>
+
+                      {item.notes && <p className="mt-3 text-sm text-[#6b6b6b] whitespace-pre-wrap">{item.notes}</p>}
+
+                      {role === 'brand' && item.status === 'submitted' && (
+                        <div className="mt-4 flex gap-2 flex-wrap">
+                          <button
+                            onClick={() => reviewDeliverable(item.id, 'approved')}
+                            className="btn-primary text-sm"
+                            disabled={working}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => reviewDeliverable(item.id, 'revision_requested')}
+                            className="btn-ghost text-sm"
+                            disabled={working}
+                          >
+                            Request Revision
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -565,7 +760,7 @@ export default function DealDetailPage() {
 
       <section className="card">
         <h2 className="text-lg font-semibold text-[#1c1c1e] mb-4">Deal chat</h2>
-        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+        <div ref={chatContainerRef} className="space-y-2 max-h-80 overflow-y-auto pr-1">
           {chatMessages.length === 0 ? (
             <p className="text-sm text-[#6b6b6b]">No chat messages yet.</p>
           ) : (
