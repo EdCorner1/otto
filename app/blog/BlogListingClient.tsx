@@ -18,21 +18,36 @@ export default function BlogPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
     const load = async () => {
-      const [{ data: cats }, { data: published }] = await Promise.all([
-        supabase.from('blog_categories').select('*').order('name'),
-        supabase.from('blog_posts')
-          .select('*, blog_categories(name, slug)')
-          .eq('status', 'published')
-          .order('published_at', { ascending: false })
-          .limit(50),
-      ])
-      setCategories((cats as Category[]) || [])
-      setPosts((published as Post[]) || [])
-      setLoading(false)
+      try {
+        const [{ data: cats, error: catsErr }, { data: published, error: postsErr }] = await Promise.all([
+          supabase.from('blog_categories').select('*').order('name'),
+          supabase.from('blog_posts')
+            .select('*, blog_categories(name, slug)')
+            .eq('status', 'published')
+            .order('published_at', { ascending: false })
+            .limit(50),
+        ])
+
+        if (catsErr || postsErr) {
+          console.error('Blog load error:', catsErr || postsErr)
+          setError('Could not load posts. Please refresh.')
+          setLoading(false)
+          return
+        }
+
+        setCategories((cats as Category[]) || [])
+        setPosts((published as Post[]) || [])
+      } catch (err) {
+        console.error('Blog load exception:', err)
+        setError('Something went wrong loading the blog.')
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
@@ -85,6 +100,12 @@ export default function BlogPage() {
             {[1,2,3,4,5,6].map(i => (
               <div key={i} className="bg-white border border-[#e8e8e4] rounded-2xl h-72 animate-pulse" />
             ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <div className="text-5xl mb-4">⚠️</div>
+            <p className="text-[#6b6b6b]">{error}</p>
+            <button onClick={() => window.location.reload()} className="btn-primary mt-4 text-sm py-2 px-6">Refresh</button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
