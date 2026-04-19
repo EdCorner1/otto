@@ -2,6 +2,7 @@
 export const DIRECT_VIDEO_PLATFORM = 'direct'
 export const MAX_PORTFOLIO_VIDEOS = 6
 export const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024 // 100MB
+export const PORTFOLIO_VIDEO_BUCKET = 'portfolio-videos'
 
 // Platform detection
 export function detectPortfolioPlatform(url: string): string {
@@ -42,11 +43,7 @@ export function isManagedPortfolioVideoUrl(url: string): boolean {
 
 // Thumbnail inference for direct upload videos
 export async function inferPortfolioThumbnail(videoUrl: string, _platformHint?: string): Promise<string | null> {
-  // For Supabase Storage URLs, we can't auto-generate a thumbnail without a video processing service
-  // Return a placeholder gradient based on the URL hash as a fallback
-  if (isManagedPortfolioVideoUrl(videoUrl)) {
-    return null // Will use placeholder
-  }
+  if (isManagedPortfolioVideoUrl(videoUrl)) return null
   return null
 }
 
@@ -61,4 +58,16 @@ export function inferPortfolioType(url: string): 'video' | 'link' {
 export const VIDEO_MIME_TYPES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo']
 export function isValidVideoMimeType(mime: string): boolean {
   return VIDEO_MIME_TYPES.includes(mime)
+}
+
+// Format filename into a readable title
+export function formatVideoTitleFromFilename(filename: string): string {
+  const name = filename.replace(/\.(mp4|mov|webm|m4v|avi|mkv)$/i, '')
+  return name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
+// Extract the Supabase Storage public path from a full URL
+export function extractSupabasePublicPath(url: string, _bucket?: string): string | null {
+  const match = url.match(/portfolio-videos\/(.+)$/)
+  return match ? match[1] : null
 }
