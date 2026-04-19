@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Camera, Globe, Link2, Music4, Play } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 type Role = 'brand' | 'creator' | null
@@ -35,10 +36,16 @@ const NICHE_OPTIONS = ['all', 'SaaS & AI', 'Tech & Apps', 'Gaming', 'Fintech', '
 const CONTENT_TYPE_OPTIONS = ['all', 'Ad creative', 'Product review', 'Tutorial / demo', 'Lifestyle integrated']
 const INCOME_OPTIONS = ['all', 'Not sharing', '$0 – $500/mo', '$500 – $2K/mo', '$2K – $5K/mo', '$5K+/mo']
 
-const PLATFORM_ICON: Record<string, string> = {
-  tiktok: '🎵',
-  instagram: '📸',
-  youtube: '▶️',
+const platformIconClassName = 'h-3.5 w-3.5'
+
+function PlatformIcon({ platform }: { platform: string }) {
+  const normalized = platform.toLowerCase()
+
+  if (normalized === 'tiktok') return <Music4 className={platformIconClassName} />
+  if (normalized === 'instagram') return <Camera className={platformIconClassName} />
+  if (normalized === 'youtube') return <Play className={platformIconClassName} />
+  if (normalized === 'website') return <Globe className={platformIconClassName} />
+  return <Link2 className={platformIconClassName} />
 }
 
 function labelCase(value: string) {
@@ -78,7 +85,7 @@ function CreatorCard({ creator, role }: { creator: CreatorCardItem; role: Role }
             <div className="flex h-full items-center justify-center text-sm text-[#6b6b6b]">No portfolio thumbnail</div>
           )}
           <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#1c1c1e]/80 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">
-            <span>{PLATFORM_ICON[creator.mainPlatform] || '🔗'}</span>
+            <PlatformIcon platform={creator.mainPlatform} />
             <span>{labelCase(creator.mainPlatform)}</span>
           </span>
           {creator.followerRange && (

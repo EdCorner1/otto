@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -118,7 +119,7 @@ export default function CreatorsDiscoverPage() {
 
       {/* Search */}
       <div className="relative mb-6">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9a9a9a]">🔍</span>
+        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9a9a]" />
         <input
           type="text"
           value={search}
@@ -203,7 +204,7 @@ export default function CreatorsDiscoverPage() {
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="text-center py-20">
-          <div className="text-4xl mb-3">🔍</div>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#f0f0ec] text-[#6b6b6b]"><Search className="h-5 w-5" /></div>
           <p className="text-sm text-[#6b6b6b]">No creators match your filters.</p>
           <button
             onClick={() => { setPlatform('All'); setNiche('All'); setAudience('All'); setSearch('') }}

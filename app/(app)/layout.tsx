@@ -265,10 +265,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       { label: 'Notifications', href: '/notifications', icon: <BellIcon />, badgeCount: unreadCount, activePrefixes: ['/notifications'] },
       {
         label: role === 'brand' ? 'Brand Profile' : 'Portfolio',
-        href: role === 'brand' ? '/profile/edit' : '/profile/edit',
+        href: '/profile/edit',
         icon: <PortfolioIcon />,
-        activePrefixes: ['/profile/edit', '/explore'],
+        activePrefixes: ['/profile/edit'],
       },
+      ...(role === 'brand'
+        ? [
+            {
+              label: 'Discover Creators',
+              href: '/explore',
+              icon: <SearchIcon />,
+              activePrefixes: ['/explore', '/creators'],
+            } as NavItem,
+          ]
+        : []),
       {
         label: 'Live Campaigns',
         href: '/live-campaigns',

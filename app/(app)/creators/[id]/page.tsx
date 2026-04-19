@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { Camera, Globe, Link2, Music4, Play, Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 type CreatorProfileResponse = {
@@ -27,13 +28,17 @@ type CreatorProfileResponse = {
   }>
 }
 
-const PLATFORM_ICON: Record<string, string> = {
-  tiktok: '🎵',
-  instagram: '📸',
-  youtube: '▶️',
-  twitter: '✕',
-  x: '✕',
-  website: '🌐',
+const platformIconClassName = 'h-3.5 w-3.5'
+
+function PlatformIcon({ platform }: { platform: string }) {
+  const normalized = normalizePlatform(platform)
+
+  if (normalized === 'tiktok') return <Music4 className={platformIconClassName} />
+  if (normalized === 'instagram') return <Camera className={platformIconClassName} />
+  if (normalized === 'youtube') return <Play className={platformIconClassName} />
+  if (normalized === 'twitter' || normalized === 'x') return <span className="text-[11px] font-semibold leading-none">X</span>
+  if (normalized === 'website') return <Globe className={platformIconClassName} />
+  return <Link2 className={platformIconClassName} />
 }
 
 function platformLabel(value: string) {
@@ -128,7 +133,7 @@ export default function CreatorPublicProfilePage() {
         <div className="card max-w-lg text-center">
           <h1 className="font-display text-[#1c1c1e] text-3xl mb-2" style={{ letterSpacing: '-0.04em' }}>Creator not found</h1>
           <p className="text-sm text-[#6b6b6b] mb-5">This profile doesn&apos;t exist or has been removed.</p>
-          <Link href="/creators" className="btn-primary inline-flex">Back to creators</Link>
+          <Link href="/explore" className="btn-primary inline-flex">Back to marketplace</Link>
         </div>
       </div>
     )
@@ -138,7 +143,7 @@ export default function CreatorPublicProfilePage() {
     <div className="min-h-screen bg-[#fafaf9] text-[#1c1c1e]">
       <div className="max-w-5xl mx-auto px-6 py-10">
         <div className="mb-5">
-          <Link href="/creators" className="text-sm text-[#6b6b6b] hover:text-[#1c1c1e] transition-colors">← Back to creators</Link>
+          <Link href="/explore" className="inline-flex items-center gap-2 text-sm text-[#6b6b6b] hover:text-[#1c1c1e] transition-colors"><Search className="h-4 w-4" /> Back to marketplace</Link>
         </div>
 
         <section className="card mb-8">
@@ -170,7 +175,7 @@ export default function CreatorPublicProfilePage() {
               <div className="mt-4 flex flex-wrap gap-2.5">
                 {visiblePlatforms.map((platform) => (
                   <span key={platform} className="inline-flex items-center gap-1.5 rounded-full border border-[#e8e8e4] bg-white px-3 py-1.5 text-xs text-[#4f4f4f]">
-                    <span>{PLATFORM_ICON[platform] || '🔗'}</span>
+                    <PlatformIcon platform={platform} />
                     <span>{platformLabel(platform)}</span>
                   </span>
                 ))}
@@ -229,10 +234,10 @@ export default function CreatorPublicProfilePage() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={thumbnail} alt={item.caption || 'Portfolio sample'} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/70 text-sm">Video sample</div>
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-white/70 text-sm"><Play className="h-6 w-6" /><span>Video sample</span></div>
                       )}
                       <div className="absolute top-3 left-3 rounded-full bg-black/60 text-white text-[11px] px-2.5 py-1 inline-flex items-center gap-1.5">
-                        <span>{PLATFORM_ICON[platform] || '🔗'}</span>
+                        <PlatformIcon platform={platform} />
                         <span>{platformLabel(platform)}</span>
                       </div>
                     </div>
