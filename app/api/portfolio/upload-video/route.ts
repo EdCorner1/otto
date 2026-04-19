@@ -11,7 +11,7 @@ import {
 
 export const runtime = 'nodejs'
 
-const MAX_FILE_SIZE = 500 * 1024 * 1024
+const MAX_FILE_SIZE = 100 * 1024 * 1024
 const MAX_VIDEOS = 6
 const ALLOWED_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v'])
 const ALLOWED_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'm4v'])
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (fileValue.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'Video must be 500MB or smaller.' }, { status: 400 })
+      return NextResponse.json({ error: 'Video must be 100MB or smaller.' }, { status: 400 })
     }
 
     const url = getEnv('NEXT_PUBLIC_SUPABASE_URL')
