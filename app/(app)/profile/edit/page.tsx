@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Check, LoaderCircle, Play, Upload, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import {
@@ -135,6 +135,7 @@ function extractAvatarStoragePath(url: string) {
 export default function ProfileEditPage() {
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
+  const searchParams = useSearchParams()
   const videoInputRef = useRef<HTMLInputElement | null>(null)
   const saveSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -148,6 +149,7 @@ export default function ProfileEditPage() {
   const [creatorId, setCreatorId] = useState('')
 
   const [step, setStep] = useState(0)
+  const [activeTab, setActiveTab] = useState<'profile' | 'portfolio'>('profile')
   const [fullName, setFullName] = useState('')
   const [handle, setHandle] = useState('')
   const [bio, setBio] = useState('')
@@ -272,6 +274,13 @@ export default function ProfileEditPage() {
       setNicheInput(nextCreator.nicheInput)
       setPortfolioItems(nextPortfolioItems)
       setInitialCreatorSnapshot(createCreatorSnapshot(nextCreator))
+
+      // If coming from dashboard "Update portfolio" link, jump to portfolio tab/step
+      if (searchParams.get('tab') === 'portfolio') {
+        setActiveTab('portfolio')
+        setStep(2)
+      }
+
       setLoading(false)
     }
 
@@ -280,7 +289,7 @@ export default function ProfileEditPage() {
     return () => {
       if (saveSuccessTimeoutRef.current) clearTimeout(saveSuccessTimeoutRef.current)
     }
-  }, [router, supabase])
+  }, [router, supabase, searchParams])
 
   const canMoveForward = useMemo(() => {
     if (role !== 'creator') return true
@@ -731,6 +740,24 @@ export default function ProfileEditPage() {
           </div>
           <Link href={creatorId ? `/creators/${creatorId}` : '/creators'} className="btn-ghost border border-[#e8e8e4]">View public profile</Link>
         </div>
+
+        {/* Tab row for completed-creator manager view */}
+        {role === 'creator' && fullName && handle && (
+          <div className="mb-4 flex items-center gap-1 rounded-2xl border border-[#e8e8e4] bg-white p-1">
+            <button
+              onClick={() => { setActiveTab('profile'); setStep(0) }}
+              className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition ${activeTab === 'profile' ? 'bg-[#ccff00] text-[#1c1c1e]' : 'text-[#6b6b6b] hover:text-[#1c1c1e]'}`}
+            >
+              Edit Profile
+            </button>
+            <button
+              onClick={() => { setActiveTab('portfolio'); setStep(2) }}
+              className={`flex-1 rounded-xl px-4 py-2 text-sm font-medium transition ${activeTab === 'portfolio' ? 'bg-[#ccff00] text-[#1c1c1e]' : 'text-[#6b6b6b] hover:text-[#1c1c1e]'}`}
+            >
+              Update Portfolio
+            </button>
+          </div>
+        )}
 
         <div className="mb-6 rounded-2xl border border-[#e8e8e4] bg-white p-4">
           <div className="flex items-center gap-2">
