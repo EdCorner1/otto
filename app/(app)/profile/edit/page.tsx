@@ -496,7 +496,7 @@ export default function ProfileEditPage() {
         status: number
         body: { error?: string; videoUrl?: string; title?: string; platform?: string; thumbnailUrl?: string | null }
       }>((resolve, reject) => {
-        xhr.open('POST', '/api/portfolio/upload-video')
+        xhr.open('POST', '/api/portfolio/upload-video-cloudflare')
         xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
         xhr.responseType = 'json'
 

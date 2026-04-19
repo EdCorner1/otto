@@ -12,6 +12,8 @@ export function detectPortfolioPlatform(url: string, _platformHint?: string | nu
   if (lower.includes('tiktok.com')) return 'TikTok'
   if (lower.includes('instagram.com') || lower.includes('ig.me')) return 'Instagram'
   if (lower.includes('vimeo.com')) return 'Vimeo'
+  if (lower.includes('cloudflarestream.com') || lower.includes('playback.live-video.net')) return 'Cloudflare'
+  if (lower.includes('supabase.co') || lower.includes('vcoeayvzuranirnxavwn.supabase.co')) return 'Direct'
   return DIRECT_VIDEO_PLATFORM
 }
 
@@ -34,11 +36,17 @@ export function isDirectVideoUrl(url: string): boolean {
   return true
 }
 
-// Managed portfolio URL check (Supabase Storage)
+// Managed portfolio URL check (Supabase Storage or Cloudflare Stream)
 export function isManagedPortfolioVideoUrl(url: string, _platformHint?: string | null): boolean {
   if (!url) return false
   const lower = url.toLowerCase()
-  return lower.includes('supabase.co') || lower.includes('vcoeayvzuranirnxavwn.supabase.co')
+  return (
+    lower.includes('supabase.co') ||
+    lower.includes('vcoeayvzuranirnxavwn.supabase.co') ||
+    lower.includes('cloudflarestream.com') ||
+    lower.includes('playback.live-video.net') ||
+    lower.includes('videodelivery.net')
+  )
 }
 
 // Thumbnail inference — returns null (caller should fall back to placeholder)
