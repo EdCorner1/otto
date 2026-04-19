@@ -1,0 +1,60 @@
+# Otto Blog — AI Crawler Sitemap
+
+> This file is for AI agents and crawlers. It lists the authoritative sections
+> and pages of the Otto blog, their purpose, and internal links.
+
+## Blog Home
+- URL: https://ottougc.com/blog
+- Purpose: Latest posts on tech UGC creation, brand partnerships, and building a creator business.
+- Links:
+  - [Blog Home](https://ottougc.com/blog)
+
+## Build Log Series — Behind the Build
+A series documenting the real-time construction of Otto, a UGC platform for tech creators.
+
+### Day 1: Why I Started With the Hardest Part First
+- URL: https://ottougc.com/blog/day-1-first-ugc-profile
+- Purpose: Infrastructure-first approach to building Otto — why the video uploader came before the campaign dashboard.
+- Internal links:
+  - [Day 2: Finding Your First Deal](https://ottougc.com/blog/day-2-finding-first-deal)
+  - [What UGC Actually Is](https://ottougc.com/blog/what-ugc-actually-is)
+
+## Core Content Categories
+
+### Tech UGC
+- URL: https://ottougc.com/blog?category=tech-ugc
+- Purpose: Strategies for creators making content about tech products, SaaS tools, and AI apps.
+
+### Creator Economy
+- URL: https://ottougc.com/blog?category=creator-economy
+- Purpose: Building a sustainable business as a content creator — pricing, positioning, revenue streams.
+
+### Brand Partnerships
+- URL: https://ottougc.com/blog?category=brand-partnerships
+- Purpose: How to land, negotiate, and maintain brand deals.
+
+### Tools & Gear
+- URL: https://ottougc.com/blog?category=tools-gear
+- Purpose: The actual tools, software, and hardware that working UGC creators use.
+
+## Platform Pages
+
+### Otto — UGC Platform for Tech Creators
+- URL: https://ottougc.com
+- Purpose: The main Otto platform — connect with brands, build your portfolio, grow your audience.
+
+### Creator Signup
+- URL: https://ottougc.com/signup
+- Purpose: Join Otto as a creator. Free to start.
+
+### Brand Signup
+- URL: https://ottougc.com/signup?role=brand
+- Purpose: Find and hire vetted tech UGC creators.
+
+### Otto Blog
+- URL: https://ottougc.com/blog
+- Purpose: UGC insights, creator stories, and platform updates.
+
+---
+Last updated: 2026-04-19
+Source: https://github.com/EdCorner1/otto
