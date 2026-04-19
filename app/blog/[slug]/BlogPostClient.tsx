@@ -149,7 +149,7 @@ function renderBody(content: string): string {
       continue
     }
     if (line.includes('{{CTA}}')) { blocks.push(renderInlineCTA()); i++; continue }
-    if (line.startsWith('## ')) { blocks.push(`__SECTION__${line.slice(3).trim()}`); i++; continue }
+    if (line.startsWith('## ')) { blocks.push(`<h2>${escapeHtml(line.slice(3).trim())}</h2>`); i++; continue }
     if (line.startsWith('### ')) { blocks.push(`<h3>${escapeHtml(line.slice(4).trim())}</h3>`); i++; continue }
     if (line.match(/^[-*]\s/)) {
       const items: string[] = []
