@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getPublicCreatorPortfolioByHandle } from '@/lib/public-creator-portfolio'
 
 export const runtime = 'nodejs'
 
@@ -11,6 +12,11 @@ type PortfolioInput = {
   caption?: string
 }
 
+type SocialInput = {
+  platform: string
+  url: string
+}
+
 type PatchPayload = {
   fullName?: string
   handle?: string
@@ -20,6 +26,7 @@ type PatchPayload = {
   followerRange?: string
   incomeRange?: string
   nicheTags?: string[]
+  socials?: SocialInput[]
   portfolioItems?: PortfolioInput[]
 }
 
@@ -55,6 +62,14 @@ function inferThumbnail(url: string, platform: string) {
 
   if (inferType(url) === 'image') return url
   return null
+}
+
+function detectPortfolioPlatform(url: string, requestedPlatform: string) {
+  const normalizedUrl = url.toLowerCase()
+  if (normalizedUrl.includes('tiktok.com')) return 'tiktok'
+  if (normalizedUrl.includes('instagram.com')) return 'instagram'
+  if (normalizedUrl.includes('youtube.com') || normalizedUrl.includes('youtu.be')) return 'youtube'
+  return requestedPlatform
 }
 
 function parseCreatorMeta(tags: Array<{ tag: string }>) {
@@ -121,6 +136,8 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     })
 
+    const publicPortfolio = meta.handle ? await getPublicCreatorPortfolioByHandle(meta.handle) : null
+
     return NextResponse.json({
       id: data.id,
       userId: data.user_id,
@@ -134,6 +151,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       nicheTags: meta.nicheTags,
       socials: data.creator_socials || [],
       portfolioItems,
+      publicPortfolio,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not fetch creator profile.'
@@ -163,13 +181,25 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const nicheTags = Array.isArray(body.nicheTags)
       ? body.nicheTags.map((tag) => cleanText(tag)).filter(Boolean).slice(0, 8)
       : []
+    const socials = Array.isArray(body.socials)
+      ? body.socials
+          .map((social) => ({
+            platform: normalizeTag(String(social.platform || '')),
+            url: String(social.url || '').trim(),
+          }))
+          .filter((social) => social.platform && social.url)
+      : []
     const portfolioItems = Array.isArray(body.portfolioItems)
       ? body.portfolioItems
-          .map((item) => ({
-            url: String(item.url || '').trim(),
-            platform: normalizeTag(String(item.platform || '')),
-            caption: (item.caption || '').trim(),
-          }))
+          .map((item) => {
+            const url = String(item.url || '').trim()
+            const requestedPlatform = normalizeTag(String(item.platform || ''))
+            return {
+              url,
+              platform: detectPortfolioPlatform(url, requestedPlatform),
+              caption: (item.caption || '').trim(),
+            }
+          })
           .filter((item) => item.url && item.platform)
           .slice(0, 6)
       : []
@@ -237,6 +267,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (tagPayload.length > 0) {
       const { error: insertTagError } = await admin.from('creator_tags').insert(tagPayload)
       if (insertTagError) return NextResponse.json({ error: insertTagError.message }, { status: 500 })
+    }
+
+    const { error: deleteSocialsError } = await admin.from('creator_socials').delete().eq('creator_id', id)
+    if (deleteSocialsError) return NextResponse.json({ error: deleteSocialsError.message }, { status: 500 })
+
+    if (socials.length > 0) {
+      const socialPayload = socials.map((social) => ({
+        creator_id: id,
+        platform: social.platform,
+        url: social.url,
+      }))
+
+      const { error: insertSocialsError } = await admin.from('creator_socials').insert(socialPayload)
+      if (insertSocialsError) return NextResponse.json({ error: insertSocialsError.message }, { status: 500 })
     }
 
     const { error: deletePortfolioError } = await admin.from('portfolio_items').delete().eq('creator_id', id)
