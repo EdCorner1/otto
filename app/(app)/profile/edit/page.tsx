@@ -70,7 +70,7 @@ const FOLLOWER_RANGES = ['< 1K', '1K – 10K', '10K – 50K', '50K – 250K', '2
 const INCOME_RANGES = ['Not sharing', '$0 – $500/mo', '$500 – $2K/mo', '$2K – $5K/mo', '$5K+/mo']
 const STEPS = ['Basic Info', 'Stats', 'Portfolio', 'Review'] as const
 const MAX_PORTFOLIO_ITEMS = 6
-const MAX_VIDEO_SIZE = 500 * 1024 * 1024
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024
 const AVATAR_BUCKET = 'avatars'
 
 function labelPlatform(platform: string) {
@@ -470,7 +470,7 @@ export default function ProfileEditPage() {
     }
 
     if (file.size > MAX_VIDEO_SIZE) {
-      setStatusMessage('Videos must be 500MB or smaller.')
+      setStatusMessage('Videos must be 50MB or smaller.')
       return
     }
 
@@ -896,7 +896,7 @@ export default function ProfileEditPage() {
                   <div className="h-2 overflow-hidden rounded-full bg-[#ecece7]">
                     <div className="h-full rounded-full bg-[#ccff00] transition-all" style={{ width: `${videoUploadProgress}%` }} />
                   </div>
-                  <p className="mt-2 text-xs text-[#6b6b6b]">MP4, MOV, or WebM up to 500MB.</p>
+                  <p className="mt-2 text-xs text-[#6b6b6b]">MP4, MOV, or WebM up to 50MB.</p>
                 </div>
               )}
 

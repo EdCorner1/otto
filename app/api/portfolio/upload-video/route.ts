@@ -11,7 +11,7 @@ import {
 
 export const runtime = 'nodejs'
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024
+const MAX_FILE_SIZE = 50 * 1024 * 1024
 const MAX_VIDEOS = 6
 const ALLOWED_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v'])
 const ALLOWED_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'm4v'])
@@ -64,7 +64,7 @@ async function ensureVideosBucket(admin: StorageAdminClient) {
 
   const { error: createError } = await admin.storage.createBucket(PORTFOLIO_VIDEO_BUCKET, {
     public: true,
-    fileSizeLimit: MAX_FILE_SIZE,
+    fileSizeLimit: 52428800,
     allowedMimeTypes: Array.from(ALLOWED_TYPES),
   })
 
