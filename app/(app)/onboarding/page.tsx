@@ -15,7 +15,12 @@ import {
   Video,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { detectPortfolioPlatform, inferPortfolioThumbnail, isDirectVideoUrl } from '@/lib/portfolio-media'
+import {
+  detectPortfolioPlatform,
+  inferPortfolioThumbnail,
+  isDirectVideoUrl,
+  isRealPortfolioVideoUrl,
+} from '@/lib/portfolio-media'
 
 const TOTAL_STEPS = 5
 const ONBOARDING_STORAGE_KEY = 'otto:onboarding:current-step'
@@ -115,6 +120,10 @@ function normalizePlatformValue(value: string) {
   if (normalized.includes('instagram')) return 'instagram'
   if (normalized.includes('tiktok')) return 'tiktok'
   return normalized || 'tiktok'
+}
+
+function hasMinimumViablePortfolio(items: PortfolioItem[]) {
+  return items.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length >= 3
 }
 
 function blankDraft(): OnboardingDraft {
@@ -340,6 +349,10 @@ export default function OnboardingPage() {
 
   const creatorPreviewName = `${draft.firstName} ${draft.lastName}`.trim() || 'Your name'
   const creatorHandle = draft.handle.trim().replace(/^@+/, '') || 'your-handle'
+  const viablePortfolioCount = useMemo(
+    () => draft.portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length,
+    [draft.portfolioItems]
+  )
   const canGoNext = useMemo(() => {
     if (step === 1) return Boolean(role)
     if (step === 2) {
@@ -352,7 +365,7 @@ export default function OnboardingPage() {
     }
     if (step === 4) {
       if (role === 'brand') return true
-      return draft.portfolioItems.length > 0
+      return hasMinimumViablePortfolio(draft.portfolioItems)
     }
     return true
   }, [draft, role, step])
@@ -909,7 +922,7 @@ export default function OnboardingPage() {
                       Add the work you want brands to remember.
                     </h2>
                     <p className="mt-4 text-sm text-[#6b6b6b]">
-                      Upload up to 6 videos directly. These will appear on your public profile preview in the next step.
+                      Add at least 3 portfolio videos to continue. Upload up to 6 videos directly and Otto will use them on your public profile preview in the next step.
                     </p>
                   </div>
 
@@ -917,7 +930,7 @@ export default function OnboardingPage() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-lg font-semibold text-[#1c1c1e]">Portfolio uploads</p>
-                        <p className="mt-1 text-sm text-[#6b6b6b]">MP4, MOV, WebM, or M4V · up to 500MB each · {draft.portfolioItems.length}/{MAX_PORTFOLIO_ITEMS} added</p>
+                        <p className="mt-1 text-sm text-[#6b6b6b]">MP4, MOV, WebM, or M4V · up to 500MB each · {draft.portfolioItems.length}/{MAX_PORTFOLIO_ITEMS} added · {viablePortfolioCount}/3 ready</p>
                       </div>
                       <div>
                         <input
@@ -942,7 +955,13 @@ export default function OnboardingPage() {
                   </div>
 
                   {draft.portfolioItems.length > 0 ? (
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className="space-y-4">
+                      {viablePortfolioCount < 3 && (
+                        <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] px-4 py-3 text-sm text-[#6b6b6b]">
+                          Add at least 3 portfolio videos to continue. Right now you have {viablePortfolioCount} valid video{viablePortfolioCount === 1 ? '' : 's'} ready.
+                        </div>
+                      )}
+                      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                       {draft.portfolioItems.map((item, index) => (
                         <div key={`${item.url}-${index}`} className="space-y-3 rounded-[24px] border border-[#e8e8e4] bg-white p-3 shadow-sm">
                           <PreviewPortfolioCard item={item} />
@@ -965,10 +984,12 @@ export default function OnboardingPage() {
                           </button>
                         </div>
                       ))}
+                      </div>
                     </div>
                   ) : (
                     <div className="rounded-[28px] border border-[#e8e8e4] bg-[#fbfbf8] px-5 py-8 text-center text-sm text-[#6b6b6b]">
-                      No videos yet. Upload at least one so your preview feels real on the next step.
+                      <p className="text-base font-semibold text-[#1c1c1e]">Your portfolio starts here.</p>
+                      <p className="mt-2">Add at least 3 portfolio videos to continue. Upload your best product demos, UGC examples, or client work so brands can instantly see your style.</p>
                     </div>
                   )}
                 </div>

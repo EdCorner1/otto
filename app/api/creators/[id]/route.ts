@@ -10,6 +10,7 @@ type PortfolioInput = {
   url: string
   platform: string
   caption?: string
+  category?: string
 }
 
 type SocialInput = {

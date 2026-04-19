@@ -7,11 +7,14 @@ import { Check, LoaderCircle, Play, Upload, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import {
   DIRECT_VIDEO_PLATFORM,
+  PORTFOLIO_CATEGORIES,
   buildYouTubeEmbedUrl,
   detectPortfolioPlatform,
+  inferPortfolioCategory,
   inferPortfolioThumbnail,
   isDirectVideoUrl,
   isManagedPortfolioVideoUrl,
+  normalizePortfolioCategory,
 } from '@/lib/portfolio-media'
 
 type Role = 'creator' | 'brand'
@@ -21,6 +24,7 @@ type PortfolioDraft = {
   url: string
   platform: string
   caption: string
+  category: string
   thumbnailUrl?: string | null
 }
 
@@ -40,6 +44,7 @@ type CreatorProfileResponse = {
     url: string
     platform: string | null
     caption: string | null
+    category?: string | null
     thumbnail_url?: string | null
   }>
 }
@@ -53,7 +58,7 @@ type CreatorDraftSnapshot = {
   followerRange: string
   incomeRange: string
   nicheInput: string
-  portfolioItems: Array<{ url: string; platform: string; caption: string }>
+  portfolioItems: Array<{ url: string; platform: string; caption: string; category: string }>
 }
 
 type BrandDraftSnapshot = {
@@ -72,6 +77,7 @@ const STEPS = ['Basic Info', 'Stats', 'Portfolio', 'Review'] as const
 const MAX_PORTFOLIO_ITEMS = 6
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024
 const AVATAR_BUCKET = 'avatars'
+const PORTFOLIO_TAB_STORAGE_KEY = 'otto:profile:portfolio-active-tab'
 
 function labelPlatform(platform: string) {
   if (platform === 'tiktok') return 'TikTok'
@@ -87,6 +93,7 @@ function normalizePortfolioDrafts(items: PortfolioDraft[]) {
       url: item.url.trim(),
       platform: item.platform.trim().toLowerCase(),
       caption: item.caption.trim(),
+      category: normalizePortfolioCategory(item.category),
     }))
     .filter((item) => item.url && item.platform)
     .slice(0, MAX_PORTFOLIO_ITEMS)
@@ -161,6 +168,7 @@ export default function ProfileEditPage() {
   const [incomeRange, setIncomeRange] = useState('')
   const [nicheInput, setNicheInput] = useState('')
   const [portfolioItems, setPortfolioItems] = useState<PortfolioDraft[]>([])
+  const [portfolioFilterTab, setPortfolioFilterTab] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
   const [videoUploading, setVideoUploading] = useState(false)
   const [videoUploadProgress, setVideoUploadProgress] = useState(0)
 
@@ -172,6 +180,19 @@ export default function ProfileEditPage() {
 
   const [initialCreatorSnapshot, setInitialCreatorSnapshot] = useState('')
   const [initialBrandSnapshot, setInitialBrandSnapshot] = useState('')
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const storedTab = window.localStorage.getItem(PORTFOLIO_TAB_STORAGE_KEY)
+    if (storedTab && PORTFOLIO_CATEGORIES.includes(storedTab as (typeof PORTFOLIO_CATEGORIES)[number])) {
+      setPortfolioFilterTab(storedTab as (typeof PORTFOLIO_CATEGORIES)[number])
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(PORTFOLIO_TAB_STORAGE_KEY, portfolioFilterTab)
+  }, [portfolioFilterTab])
 
   useEffect(() => {
     const load = async () => {
@@ -248,6 +269,7 @@ export default function ProfileEditPage() {
         url: item.url,
         platform: detectPortfolioPlatform(item.url, item.platform || profile.mainPlatform || 'tiktok'),
         caption: item.caption || '',
+        category: normalizePortfolioCategory(item.category || inferPortfolioCategory({ caption: item.caption, platform: item.platform })),
         thumbnailUrl: item.thumbnail_url || null,
       }))
 
@@ -359,6 +381,7 @@ export default function ProfileEditPage() {
         url: '',
         platform: mainPlatform || 'tiktok',
         caption: '',
+        category: 'Tech & Apps',
         thumbnailUrl: null,
       },
     ])
@@ -383,6 +406,20 @@ export default function ProfileEditPage() {
     setSaveSuccess(false)
     setStatusMessage('')
   }
+
+  const filteredPortfolioItems = useMemo(() => {
+    if (portfolioFilterTab === 'All') return portfolioItems
+    return portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === portfolioFilterTab)
+  }, [portfolioFilterTab, portfolioItems])
+
+  const portfolioTabCounts = useMemo(() => {
+    return PORTFOLIO_CATEGORIES.reduce<Record<string, number>>((acc, tab) => {
+      acc[tab] = tab === 'All'
+        ? portfolioItems.length
+        : portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === tab).length
+      return acc
+    }, {})
+  }, [portfolioItems])
 
   const removePortfolioItem = async (id: string) => {
     const itemToRemove = portfolioItems.find((item) => item.id === id)
@@ -529,6 +566,7 @@ export default function ProfileEditPage() {
           url: uploadResult.body.videoUrl || '',
           platform: uploadResult.body.platform || DIRECT_VIDEO_PLATFORM,
           caption: uploadResult.body.title || 'Untitled video',
+          category: inferPortfolioCategory({ caption: uploadResult.body.title || 'Untitled video', platform: uploadResult.body.platform || DIRECT_VIDEO_PLATFORM }),
           thumbnailUrl: uploadResult.body.thumbnailUrl || null,
         },
       ].slice(0, MAX_PORTFOLIO_ITEMS))
@@ -907,7 +945,29 @@ export default function ProfileEditPage() {
               )}
 
               <div className="space-y-4">
-                {portfolioItems.map((item, index) => {
+                <div className="flex flex-wrap gap-2">
+                  {PORTFOLIO_CATEGORIES.map((tab) => {
+                    const active = portfolioFilterTab === tab
+                    const count = portfolioTabCounts[tab] || 0
+                    return (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setPortfolioFilterTab(tab)}
+                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${active ? 'border-[#ccff00] bg-[#ccff00] text-[#1c1c1e]' : 'border-[#e8e8e4] bg-white text-[#1c1c1e] hover:border-[#ccff00]'}`}
+                      >
+                        <span>{tab}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${active ? 'bg-[#1c1c1e] text-[#ccff00]' : 'bg-[#f0f0ec] text-[#6b6b6b]'}`}>{count}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {filteredPortfolioItems.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-[#dbdbd5] bg-[#fcfcfa] p-4 text-sm text-[#6b6b6b]">
+                    No portfolio videos in this category yet. Switch tabs or tag a video below.
+                  </div>
+                ) : filteredPortfolioItems.map((item, index) => {
                   const thumbnail = derivePortfolioThumbnail(item)
                   const youtubeEmbedUrl = buildYouTubeEmbedUrl(item.url)
                   const directVideo = isDirectVideoUrl(item.url)
@@ -948,10 +1008,18 @@ export default function ProfileEditPage() {
                             {directVideo && <p className="mt-1 text-xs text-[#8a8a86]">Direct-uploaded videos use a locked Supabase URL.</p>}
                           </div>
 
-                          <div className="grid sm:grid-cols-2 gap-3">
+                          <div className="grid sm:grid-cols-3 gap-3">
                             <div>
                               <label className="block text-xs text-[#6b6b6b] mb-1">Platform</label>
                               <input value={labelPlatform(item.platform)} readOnly className="w-full rounded-xl border border-[#e8e8e4] bg-[#f4f4f1] px-3 py-2.5 text-sm text-[#5f5f5a]" />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-[#6b6b6b] mb-1">Category</label>
+                              <select value={normalizePortfolioCategory(item.category)} onChange={(event) => updatePortfolioItem(item.id, 'category', event.target.value)} className="w-full rounded-xl border border-[#e8e8e4] bg-[#fafaf9] px-3 py-2.5 text-sm text-[#1c1c1e] focus:outline-none focus:ring-2 focus:ring-[#ccff00]">
+                                {PORTFOLIO_CATEGORIES.filter((tab) => tab !== 'All').map((category) => (
+                                  <option key={category} value={category}>{category}</option>
+                                ))}
+                              </select>
                             </div>
                             <div>
                               <label className="block text-xs text-[#6b6b6b] mb-1">Title</label>

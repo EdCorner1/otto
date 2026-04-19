@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Camera, Globe, Link2, Music4, Play, Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { buildYouTubeEmbedUrl, detectPortfolioPlatform, inferPortfolioThumbnail, isDirectVideoUrl } from '@/lib/portfolio-media'
+import { buildYouTubeEmbedUrl, detectPortfolioPlatform, inferPortfolioThumbnail, isDirectVideoUrl, isRealPortfolioVideoUrl } from '@/lib/portfolio-media'
 
 type CreatorProfileResponse = {
   id: string
@@ -114,6 +114,11 @@ export default function CreatorPublicProfilePage() {
     return Array.from(new Set(candidates.map((platform) => normalizePlatform(platform)).filter(Boolean))).slice(0, 4)
   }, [profile])
 
+  const viablePortfolioItems = useMemo(() => {
+    if (!profile) return []
+    return profile.portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || ''))
+  }, [profile])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
@@ -164,8 +169,11 @@ export default function CreatorPublicProfilePage() {
                 )}
               </div>
 
-              <p className="text-sm text-[#6b6b6b] mb-3">@{profile.handle || 'creator'}</p>
-              <p className="text-sm text-[#4f4f4f] whitespace-pre-wrap leading-relaxed max-w-3xl">{profile.bio}</p>
+              <p className="text-sm text-[#6b6b6b] mb-2">@{profile.handle || 'creator'}</p>
+              {profile.mainPlatform && (
+                <p className="text-sm font-medium text-[#1c1c1e] mb-3">{platformLabel(normalizePlatform(profile.mainPlatform))} creator</p>
+              )}
+              <p className="text-sm text-[#4f4f4f] whitespace-pre-wrap leading-relaxed max-w-3xl">{profile.bio || 'This creator is building out their Otto profile.'}</p>
 
               <div className="mt-4 flex flex-wrap gap-2.5">
                 {visiblePlatforms.map((platform) => (
@@ -187,15 +195,23 @@ export default function CreatorPublicProfilePage() {
               )}
             </div>
 
-            <div className="md:ml-auto w-full md:w-auto">
+            <div className="md:ml-auto w-full md:w-auto space-y-2">
               {isOwner ? (
                 <Link href="/profile/edit" className="btn-ghost w-full md:w-auto justify-center border border-[#e8e8e4]">Edit Profile</Link>
+              ) : isBrandViewer ? (
+                <button onClick={() => setShowInviteModal(true)} className="btn-primary w-full md:w-auto justify-center">
+                  Invite to apply
+                </button>
               ) : (
-                isBrandViewer && (
-                  <button onClick={() => setShowInviteModal(true)} className="btn-primary w-full md:w-auto justify-center">
-                    Invite to apply
-                  </button>
-                )
+                <Link href="/signup?type=brand" className="btn-ghost w-full md:w-auto justify-center border border-[#e8e8e4]">
+                  Hire this creator
+                </Link>
+              )}
+
+              {!isOwner && (
+                <Link href="/signup" className="inline-flex w-full md:w-auto justify-center rounded-xl px-4 py-2 text-sm font-medium text-[#6b6b6b] transition hover:text-[#1c1c1e]">
+                  View on Otto
+                </Link>
               )}
             </div>
           </div>
@@ -204,16 +220,21 @@ export default function CreatorPublicProfilePage() {
         <section>
           <div className="flex items-end justify-between mb-4">
             <h2 className="font-display text-[#1c1c1e] text-2xl" style={{ letterSpacing: '-0.035em' }}>UGC Samples</h2>
-            <span className="text-xs text-[#8a8a86]">{profile.portfolioItems.length} item{profile.portfolioItems.length === 1 ? '' : 's'}</span>
+            <span className="text-xs text-[#8a8a86]">{viablePortfolioItems.length} item{viablePortfolioItems.length === 1 ? '' : 's'}</span>
           </div>
 
-          {profile.portfolioItems.length === 0 ? (
-            <div className="card text-center py-12">
-              <p className="text-[#6b6b6b] text-sm">No portfolio items yet.</p>
+          {viablePortfolioItems.length < 3 ? (
+            <div className="card text-center py-12 px-6">
+              <p className="text-base font-semibold text-[#1c1c1e]">Creator is building their portfolio</p>
+              <p className="mt-2 text-[#6b6b6b] text-sm max-w-md mx-auto">Check back soon for more sample videos, or join Otto to connect with creators and post briefs directly.</p>
+              <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link href="/signup?type=brand" className="btn-primary inline-flex">Hire this creator</Link>
+                <Link href="/signup" className="btn-ghost inline-flex border border-[#e8e8e4]">View on Otto</Link>
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {profile.portfolioItems.map((item) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
+              {viablePortfolioItems.map((item) => {
                 const platform = detectPortfolioPlatform(item.url, item.platform)
                 const thumbnail = deriveThumbnail(item)
                 const youtubeEmbedUrl = buildYouTubeEmbedUrl(item.url)
@@ -222,7 +243,7 @@ export default function CreatorPublicProfilePage() {
                 return (
                   <div
                     key={item.id}
-                    className="overflow-hidden rounded-2xl border border-[#e8e8e4] bg-white shadow-sm"
+                    className="overflow-hidden rounded-2xl border border-[#e8e8e4] bg-white shadow-sm transition-transform hover:-translate-y-1"
                   >
                     <div className="relative aspect-[9/16] bg-[#1c1c1e]">
                       {directVideo ? (

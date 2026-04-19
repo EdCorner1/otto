@@ -4,6 +4,11 @@ export const MAX_PORTFOLIO_VIDEOS = 6
 export const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024 // 100MB
 export const PORTFOLIO_VIDEO_BUCKET = 'portfolio-videos'
 
+const DIRECT_VIDEO_FILE_PATTERN = /\.(mp4|mov|webm|m4v|avi|mkv)(\?|#|$)/i
+
+export const PORTFOLIO_CATEGORIES = ['All', 'Travel', 'Tech & Apps', 'AI', 'Health & Fitness'] as const
+export type PortfolioCategory = (typeof PORTFOLIO_CATEGORIES)[number]
+
 // Platform detection (url + optional platform hint for disambiguation)
 export function detectPortfolioPlatform(url: string, _platformHint?: string | null): string {
   if (!url) return DIRECT_VIDEO_PLATFORM
@@ -12,7 +17,7 @@ export function detectPortfolioPlatform(url: string, _platformHint?: string | nu
   if (lower.includes('tiktok.com')) return 'TikTok'
   if (lower.includes('instagram.com') || lower.includes('ig.me')) return 'Instagram'
   if (lower.includes('vimeo.com')) return 'Vimeo'
-  if (lower.includes('cloudflarestream.com') || lower.includes('playback.live-video.net')) return 'Cloudflare'
+  if (lower.includes('cloudflarestream.com') || lower.includes('playback.live-video.net') || lower.includes('videodelivery.net')) return 'Cloudflare'
   if (lower.includes('supabase.co') || lower.includes('vcoeayvzuranirnxavwn.supabase.co')) return 'Direct'
   return DIRECT_VIDEO_PLATFORM
 }
@@ -27,26 +32,65 @@ export function buildYouTubeEmbedUrl(url: string, _platformHint?: string | null)
   return ''
 }
 
+export function isYouTubeUrl(url: string): boolean {
+  if (!url) return false
+  const lower = url.toLowerCase()
+  return lower.includes('youtube.com') || lower.includes('youtu.be')
+}
+
+export function isCloudflareStreamUrl(url: string): boolean {
+  if (!url) return false
+  const lower = url.toLowerCase()
+  return lower.includes('cloudflarestream.com') || lower.includes('playback.live-video.net') || lower.includes('videodelivery.net')
+}
+
+export function isManagedDirectVideoUrl(url: string): boolean {
+  if (!url) return false
+  const lower = url.toLowerCase()
+  return lower.includes('supabase.co') || lower.includes('vcoeayvzuranirnxavwn.supabase.co')
+}
+
+export function isDirectVideoFileUrl(url: string): boolean {
+  if (!url) return false
+  return DIRECT_VIDEO_FILE_PATTERN.test(url)
+}
+
+export function isRealPortfolioVideoUrl(url: string): boolean {
+  const trimmed = url.trim()
+  if (!trimmed) return false
+  return isYouTubeUrl(trimmed) || isCloudflareStreamUrl(trimmed) || isManagedDirectVideoUrl(trimmed) || isDirectVideoFileUrl(trimmed)
+}
+
+export function normalizePortfolioCategory(value?: string | null): PortfolioCategory {
+  const normalized = (value || '').trim().toLowerCase()
+  if (normalized === 'travel') return 'Travel'
+  if (normalized === 'tech & apps' || normalized === 'tech-and-apps' || normalized === 'tech/apps' || normalized === 'tech') return 'Tech & Apps'
+  if (normalized === 'ai') return 'AI'
+  if (normalized === 'health and fitness' || normalized === 'health & fitness' || normalized === 'health-fitness' || normalized === 'fitness') return 'Health & Fitness'
+  return 'Tech & Apps'
+}
+
+export function inferPortfolioCategory(input: { caption?: string | null; platform?: string | null; category?: string | null }): PortfolioCategory {
+  const explicit = normalizePortfolioCategory(input.category)
+  if (input.category && input.category.trim()) return explicit
+
+  const source = `${input.caption || ''} ${input.platform || ''}`.toLowerCase()
+  if (/\bai\b|chatgpt|claude|openai|automation|llm|prompt/.test(source)) return 'AI'
+  if (/travel|hotel|flight|airbnb|trip|destination/.test(source)) return 'Travel'
+  if (/health|fitness|gym|wellness|supplement|workout/.test(source)) return 'Health & Fitness'
+  return 'Tech & Apps'
+}
+
 // Direct video URL check
 export function isDirectVideoUrl(url: string): boolean {
   if (!url) return false
-  const lower = url.toLowerCase()
-  if (lower.includes('youtube.com') || lower.includes('youtu.be')) return false
-  if (lower.includes('tiktok.com') || lower.includes('instagram.com') || lower.includes('vimeo.com')) return false
-  return true
+  return isRealPortfolioVideoUrl(url) && !isYouTubeUrl(url)
 }
 
 // Managed portfolio URL check (Supabase Storage or Cloudflare Stream)
 export function isManagedPortfolioVideoUrl(url: string, _platformHint?: string | null): boolean {
   if (!url) return false
-  const lower = url.toLowerCase()
-  return (
-    lower.includes('supabase.co') ||
-    lower.includes('vcoeayvzuranirnxavwn.supabase.co') ||
-    lower.includes('cloudflarestream.com') ||
-    lower.includes('playback.live-video.net') ||
-    lower.includes('videodelivery.net')
-  )
+  return isManagedDirectVideoUrl(url) || isCloudflareStreamUrl(url)
 }
 
 // Thumbnail inference — returns null (caller should fall back to placeholder)
@@ -58,7 +102,7 @@ export function inferPortfolioThumbnail(videoUrl: string, _platformHint?: string
 // Infer content type from URL or extension
 export function inferPortfolioType(url: string, _platformHint?: string | null): 'video' | 'link' {
   if (!url) return 'link'
-  if (isDirectVideoUrl(url) || url.match(/\.(mp4|mov|webm|avi|mkv)$/i)) return 'video'
+  if (isDirectVideoUrl(url) || DIRECT_VIDEO_FILE_PATTERN.test(url)) return 'video'
   return 'link'
 }
 
