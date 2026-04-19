@@ -41,7 +41,7 @@ export function isManagedPortfolioVideoUrl(url: string): boolean {
 }
 
 // Thumbnail inference for direct upload videos
-export async function inferPortfolioThumbnail(videoUrl: string): Promise<string | null> {
+export async function inferPortfolioThumbnail(videoUrl: string, _platformHint?: string): Promise<string | null> {
   // For Supabase Storage URLs, we can't auto-generate a thumbnail without a video processing service
   // Return a placeholder gradient based on the URL hash as a fallback
   if (isManagedPortfolioVideoUrl(videoUrl)) {
