@@ -46,7 +46,7 @@ export interface PublicCreatorPortfolio {
   niche_tags: string[]
   nicheTags: string[]
   main_platform: string | null
-  mainPlatform: string | null
+  mainPlatform?: string
   follower_count: string | null
   // Nested structures
   socials: PublicPortfolioSocial[]

@@ -508,8 +508,8 @@ export default function InternalPortfolioPage() {
                   <div>
                     <p className="text-sm text-white/65">Main platform</p>
                     <p className="mt-1 inline-flex items-center gap-2 text-lg font-semibold text-white">
-                      {platformIcon(portfolio.mainPlatform)}
-                      {platformLabel(portfolio.mainPlatform)}
+                      {platformIcon(portfolio.mainPlatform ?? '')}
+                      {platformLabel(portfolio.mainPlatform ?? '')}
                     </p>
                   </div>
                   <div>
