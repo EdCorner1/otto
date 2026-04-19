@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
 type Role = 'creator' | 'brand'
@@ -145,14 +145,34 @@ function formatDate(value: string) {
 
 export default function DashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [role, setRole] = useState<Role | null>(null)
   const [payload, setPayload] = useState<DashboardPayload | null>(null)
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
+    const onboarding = searchParams.get('onboarding')
+
+    if (onboarding === 'creator') {
+      const profileUrl = searchParams.get('profile')
+      const handle = searchParams.get('handle')
+      setSuccessMessage(
+        profileUrl
+          ? `Profile is live! Your portfolio page is at ${profileUrl}`
+          : handle
+            ? `Profile is live! Your portfolio page is at ottougc.com/${handle}`
+            : 'Profile is live!'
+      )
+    } else if (onboarding === 'brand') {
+      setSuccessMessage('Your brand profile is ready. Post your first job whenever you\'re ready.')
+    } else {
+      setSuccessMessage('')
+    }
+
     const load = async () => {
       try {
         const { data: userData } = await supabase.auth.getUser()
@@ -197,7 +217,7 @@ export default function DashboardPage() {
     }
 
     load()
-  }, [router, supabase])
+  }, [router, searchParams, supabase])
 
   const quickActions = useMemo(() => {
     if (role === 'brand') {
@@ -235,6 +255,12 @@ export default function DashboardPage() {
             : 'Track deals, applications, and new opportunities in one place.'}
         </p>
       </div>
+
+      {successMessage && (
+        <div className="mb-5 rounded-2xl border border-[#d7ec8a] bg-[#f7ffd4] p-4 text-sm font-medium text-[#1c1c1e]">
+          {successMessage}
+        </div>
+      )}
 
       {error && (
         <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">

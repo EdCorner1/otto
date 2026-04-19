@@ -26,7 +26,7 @@ export default function SignupPage() {
         data: {
           role,
         },
-        emailRedirectTo: `${window.location.origin}/onboarding`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
       },
     })
 
