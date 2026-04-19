@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import VideoThumbnail from '@/components/VideoThumbnail'
 import { Calendar, ExternalLink, MapPin, PoundSterling, Sparkles } from 'lucide-react'
+import { buildYouTubeEmbedUrl, detectPortfolioPlatform, inferPortfolioThumbnail, isDirectVideoUrl } from '@/lib/portfolio-media'
 
 type Social = { id: string; creator_id: string; platform: string; url: string }
 type PortfolioItem = {
@@ -75,8 +76,10 @@ function formatDate(dateStr: string) {
 }
 
 function formatPlatform(platform?: string | null) {
-  if (!platform) return 'Portfolio clip'
-  return socialLabels[platform] || platform.charAt(0).toUpperCase() + platform.slice(1)
+  const normalized = detectPortfolioPlatform('', platform)
+  if (!normalized) return 'Portfolio clip'
+  if (normalized === 'direct') return 'Direct upload'
+  return socialLabels[normalized] || normalized.charAt(0).toUpperCase() + normalized.slice(1)
 }
 
 function classifyPortfolioItem(item: PortfolioItem) {
@@ -89,8 +92,12 @@ function classifyPortfolioItem(item: PortfolioItem) {
 
 function PortfolioCard({ item }: { item: PortfolioItem }) {
   const category = classifyPortfolioItem(item)
-  const platformLabel = formatPlatform(item.platform)
+  const platform = detectPortfolioPlatform(item.url, item.platform)
+  const platformLabel = formatPlatform(platform)
   const caption = item.caption?.trim() || `${category} portfolio piece`
+  const youtubeEmbedUrl = buildYouTubeEmbedUrl(item.url)
+  const directVideo = isDirectVideoUrl(item.url)
+  const thumbnailUrl = inferPortfolioThumbnail(item.url, platform) || item.thumbnail_url
 
   return (
     <article className="overflow-hidden rounded-[24px] border border-[#e8e8e4] bg-white shadow-sm shadow-black/[0.03] transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-black/[0.06]">
@@ -105,10 +112,20 @@ function PortfolioCard({ item }: { item: PortfolioItem }) {
             className="h-full w-full"
             rounded="rounded-none"
           />
-        ) : item.thumbnail_url ? (
+        ) : directVideo ? (
+          <video src={item.url} controls className="h-full w-full object-cover" />
+        ) : youtubeEmbedUrl ? (
+          <iframe
+            src={youtubeEmbedUrl}
+            title={caption}
+            className="h-full w-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : thumbnailUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={item.thumbnail_url} alt={caption} className="h-full w-full object-cover" />
+            <img src={thumbnailUrl} alt={caption} className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-black/10" />
             <div className="absolute left-3 top-3">
               <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#363535]">
@@ -198,9 +215,9 @@ export default function CreatorProfilePage() {
     load()
   }, [creatorId, supabase])
 
-  const portfolio = creator?.portfolio_items || []
-  const socials = creator?.creator_socials || []
-  const tags = creator?.creator_tags || []
+  const portfolio = useMemo(() => creator?.portfolio_items || [], [creator?.portfolio_items])
+  const socials = useMemo(() => creator?.creator_socials || [], [creator?.creator_socials])
+  const tags = useMemo(() => creator?.creator_tags || [], [creator?.creator_tags])
 
   const skills = tags
     .map((t) => t.tag)

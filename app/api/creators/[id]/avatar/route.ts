@@ -40,7 +40,17 @@ async function getAuthUserIdFromToken(token: string) {
   return data.user.id
 }
 
-async function ensureAvatarBucket(admin: any) {
+type StorageAdminClient = {
+  storage: {
+    listBuckets: () => Promise<{ data: Array<{ name?: string; id?: string }> | null; error: { message: string } | null }>
+    createBucket: (
+      id: string,
+      options: { public: boolean; fileSizeLimit: number; allowedMimeTypes: string[] }
+    ) => Promise<{ error: { message: string } | null }>
+  }
+}
+
+async function ensureAvatarBucket(admin: StorageAdminClient) {
   const { data: buckets, error: listError } = await admin.storage.listBuckets()
   if (listError) throw new Error(listError.message)
 
@@ -123,25 +133,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { data: publicUrlData } = admin.storage.from(AVATAR_BUCKET).getPublicUrl(filePath)
     const avatarUrl = publicUrlData.publicUrl
 
-    const { error: updateError } = await admin
-      .from('creators')
-      .update({ avatar_url: avatarUrl })
-      .eq('id', id)
-
-    if (updateError) {
-      await admin.storage.from(AVATAR_BUCKET).remove([filePath]).catch(() => undefined)
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
-    }
-
-    const previousAvatarUrl = typeof creator.avatar_url === 'string' ? creator.avatar_url : null
-    if (previousAvatarUrl && previousAvatarUrl.includes(`/storage/v1/object/public/${AVATAR_BUCKET}/`)) {
-      const previousPath = previousAvatarUrl.split(`/storage/v1/object/public/${AVATAR_BUCKET}/`)[1]
-      if (previousPath) {
-        await admin.storage.from(AVATAR_BUCKET).remove([previousPath]).catch(() => undefined)
-      }
-    }
-
-    return NextResponse.json({ ok: true, avatarUrl })
+    return NextResponse.json({
+      ok: true,
+      avatarUrl,
+      previousAvatarUrl: typeof creator.avatar_url === 'string' ? creator.avatar_url : null,
+    })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not upload profile photo.'
     return NextResponse.json({ error: message }, { status: 500 })

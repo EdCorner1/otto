@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Camera, Globe, Link2, Music4, Play, Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { buildYouTubeEmbedUrl, detectPortfolioPlatform, inferPortfolioThumbnail, isDirectVideoUrl } from '@/lib/portfolio-media'
 
 type CreatorProfileResponse = {
   id: string
@@ -55,13 +56,7 @@ function normalizePlatform(value?: string | null) {
 }
 
 function deriveThumbnail(item: CreatorProfileResponse['portfolioItems'][number]) {
-  if (item.thumbnail_url) return item.thumbnail_url
-  if (item.type === 'image') return item.url
-  if ((item.platform || '').toLowerCase() === 'youtube') {
-    const youtubeMatch = item.url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
-    if (youtubeMatch?.[1]) return `https://img.youtube.com/vi/${youtubeMatch[1]}/hqdefault.jpg`
-  }
-  return ''
+  return inferPortfolioThumbnail(item.url, item.platform) || item.thumbnail_url || ''
 }
 
 export default function CreatorPublicProfilePage() {
@@ -219,22 +214,34 @@ export default function CreatorPublicProfilePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {profile.portfolioItems.map((item) => {
-                const platform = normalizePlatform(item.platform)
+                const platform = detectPortfolioPlatform(item.url, item.platform)
                 const thumbnail = deriveThumbnail(item)
+                const youtubeEmbedUrl = buildYouTubeEmbedUrl(item.url)
+                const directVideo = isDirectVideoUrl(item.url)
+
                 return (
-                  <a
+                  <div
                     key={item.id}
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="overflow-hidden rounded-2xl border border-[#e8e8e4] bg-white hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md"
+                    className="overflow-hidden rounded-2xl border border-[#e8e8e4] bg-white shadow-sm"
                   >
                     <div className="relative aspect-[9/16] bg-[#1c1c1e]">
-                      {thumbnail ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={thumbnail} alt={item.caption || 'Portfolio sample'} className="w-full h-full object-cover" />
+                      {directVideo ? (
+                        <video src={item.url} controls className="h-full w-full object-cover" />
+                      ) : youtubeEmbedUrl ? (
+                        <iframe
+                          src={youtubeEmbedUrl}
+                          title={item.caption || 'YouTube portfolio sample'}
+                          className="h-full w-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : thumbnail ? (
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="block h-full w-full">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={thumbnail} alt={item.caption || 'Portfolio sample'} className="w-full h-full object-cover" />
+                        </a>
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-white/70 text-sm"><Play className="h-6 w-6" /><span>Video sample</span></div>
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="w-full h-full flex flex-col items-center justify-center gap-2 text-white/70 text-sm"><Play className="h-6 w-6" /><span>Video sample</span></a>
                       )}
                       <div className="absolute top-3 left-3 rounded-full bg-black/60 text-white text-[11px] px-2.5 py-1 inline-flex items-center gap-1.5">
                         <PlatformIcon platform={platform} />
@@ -244,7 +251,7 @@ export default function CreatorPublicProfilePage() {
                     <div className="p-3">
                       <p className="text-sm text-[#363535] line-clamp-2">{item.caption || 'Untitled sample'}</p>
                     </div>
-                  </a>
+                  </div>
                 )
               })}
             </div>
