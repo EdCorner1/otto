@@ -242,6 +242,39 @@ function buildPortfolioItems(items: PortfolioRow[] | null | undefined) {
     })
 }
 
+function extractSocialLabel(platform: string, value: string) {
+  const raw = value.trim()
+  if (!raw) return labelPlatform(platform)
+
+  try {
+    const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+    const parsed = new URL(withProtocol)
+    const host = parsed.hostname.replace(/^www\./i, '')
+    const segments = parsed.pathname.split('/').filter(Boolean)
+
+    if (platform === 'website') {
+      return host
+    }
+
+    if (platform === 'youtube') {
+      const handleSegment = segments.find((segment) => segment.startsWith('@'))
+      if (handleSegment) return handleSegment
+      if (segments[0] && !['watch', 'shorts', 'embed', 'channel', 'user', 'c'].includes(segments[0])) {
+        return `@${segments[0].replace(/^@/, '')}`
+      }
+    }
+
+    const firstSegment = segments[0]
+    if (firstSegment) {
+      return `@${firstSegment.replace(/^@/, '')}`
+    }
+
+    return host
+  } catch {
+    return raw
+  }
+}
+
 function buildSocials(rows: CreatorSocialRow[] | null | undefined) {
   const order = ['tiktok', 'instagram', 'youtube', 'website']
 
@@ -258,7 +291,7 @@ function buildSocials(rows: CreatorSocialRow[] | null | undefined) {
     })
     .map((row) => ({
       ...row,
-      label: labelPlatform(row.platform),
+      label: extractSocialLabel(row.platform, row.url),
     }))
 }
 
