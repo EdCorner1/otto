@@ -265,9 +265,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       { label: 'Notifications', href: '/notifications', icon: <BellIcon />, badgeCount: unreadCount, activePrefixes: ['/notifications'] },
       {
         label: role === 'brand' ? 'Brand Profile' : 'Portfolio',
-        href: '/profile/edit',
+        href: role === 'brand' ? '/profile/edit' : '/portfolio',
         icon: <PortfolioIcon />,
-        activePrefixes: ['/profile/edit'],
+        activePrefixes: role === 'brand' ? ['/profile/edit'] : ['/portfolio'],
       },
       ...(role === 'brand'
         ? [
@@ -319,7 +319,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [user?.email])
 
   const isOnboardingRoute = pathname === '/onboarding'
-  const isPublicPortfolioRoute = !!pathname && /^\/[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(pathname) && !['/dashboard', '/messages', '/notifications', '/profile', '/jobs', '/live-campaigns', '/search', '/settings', '/explore', '/creators', '/brands', '/blog', '/resources', '/platform', '/login', '/signup', '/onboarding', '/ops', '/ed', '/auth', '/api'].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  const isPublicPortfolioRoute = !!pathname && /^\/[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(pathname) && !['/dashboard', '/messages', '/notifications', '/profile', '/portfolio', '/jobs', '/live-campaigns', '/search', '/settings', '/explore', '/creators', '/brands', '/blog', '/resources', '/platform', '/login', '/signup', '/onboarding', '/ops', '/ed', '/auth', '/api'].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 
   if (isPublicPortfolioRoute) {
     return <div className="min-h-screen bg-[#fafaf9]">{children}</div>

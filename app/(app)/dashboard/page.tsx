@@ -230,7 +230,8 @@ export default function DashboardPage() {
     return [
       { label: 'Find work', href: '/jobs', primary: true },
       { label: 'Update profile', href: '/profile/edit', primary: false },
-      { label: 'Update portfolio', href: '/profile/edit?tab=portfolio', primary: false },
+      { label: 'View portfolio', href: '/portfolio', primary: false },
+      { label: 'Edit portfolio', href: '/profile/edit?tab=portfolio', primary: false },
     ]
   }, [role])
 
