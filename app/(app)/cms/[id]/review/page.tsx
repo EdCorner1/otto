@@ -13,6 +13,14 @@ type Post = {
   created_at: string
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 function renderMarkdown(text: string): string {
   // Simple markdown renderer — paragraphs, bold, italic, headers, links, code
   if (!text) return ''
@@ -20,11 +28,12 @@ function renderMarkdown(text: string): string {
   let inList = false
   let html = ''
   for (const line of lines) {
-    if (line.startsWith('## ')) { html += `<h2>${line.slice(3)}</h2>`; inList = false }
-    else if (line.startsWith('# ')) { html += `<h1>${line.slice(2)}</h1>`; inList = false }
-    else if (line.startsWith('- ')) { if (!inList) { html += '<ul>'; inList = true } html += `<li>${line.slice(2)}</li>` }
-    else if (inList) { html += '</ul>'; inList = false; html += `<p>${line}</p>` }
-    else html += `<p>${line}</p>`
+    const escaped = escapeHtml(line)
+    if (line.startsWith('## ')) { html += `<h2>${escapeHtml(line.slice(3))}</h2>`; inList = false }
+    else if (line.startsWith('# ')) { html += `<h1>${escapeHtml(line.slice(2))}</h1>`; inList = false }
+    else if (line.startsWith('- ')) { if (!inList) { html += '<ul>'; inList = true } html += `<li>${escapeHtml(line.slice(2))}</li>` }
+    else if (inList) { html += '</ul>'; inList = false; html += `<p>${escaped}</p>` }
+    else html += `<p>${escaped}</p>`
   }
   if (inList) html += '</ul>'
   return html
