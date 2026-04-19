@@ -38,11 +38,41 @@ export async function middleware(request: NextRequest) {
     '/resources',
     '/explore',
     '/api/waitlist',
+    '/api/creators/handle',
   ]
+
+  const reservedPrefixes = [
+    '/dashboard',
+    '/messages',
+    '/notifications',
+    '/profile',
+    '/jobs',
+    '/live-campaigns',
+    '/search',
+    '/settings',
+    '/explore',
+    '/creators',
+    '/brands',
+    '/blog',
+    '/resources',
+    '/platform',
+    '/login',
+    '/signup',
+    '/onboarding',
+    '/ops',
+    '/ed',
+    '/auth',
+    '/api',
+  ]
+
+  const looksLikePublicHandle =
+    /^\/[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(pathname) &&
+    !reservedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 
   const isPublic =
     publicExactRoutes.includes(pathname) ||
-    publicPrefixes.some((prefix) => pathname.startsWith(prefix))
+    publicPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
+    looksLikePublicHandle
 
   if (isPublic) {
     return NextResponse.next()

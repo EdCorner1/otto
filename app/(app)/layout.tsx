@@ -149,12 +149,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       let resolvedRole: Role = (user.user_metadata?.role as Role) ?? null
 
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('role, onboarding_complete')
+        .eq('id', user.id)
+        .maybeSingle()
+
       if (!resolvedRole) {
-        const { data: userRow } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle()
         resolvedRole = (userRow?.role as Role) ?? null
       }
 
@@ -172,11 +173,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const onboardingComplete =
         isOwner
           ? true
-          : resolvedRole === 'brand'
-            ? !!brandRow
-            : resolvedRole === 'creator'
-              ? !!creatorRow
-              : false
+          : Boolean(userRow?.onboarding_complete || user.user_metadata?.onboarding_complete)
 
       if (cancelled) return
 
@@ -238,7 +235,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) return
 
-    fetchUnreadCount()
+    const initialTimeout = setTimeout(() => {
+      fetchUnreadCount()
+    }, 0)
     const intervalId = setInterval(fetchUnreadCount, 30000)
 
     const channel = supabase
@@ -253,6 +252,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       .subscribe()
 
     return () => {
+      clearTimeout(initialTimeout)
       clearInterval(intervalId)
       supabase.removeChannel(channel)
     }
@@ -319,6 +319,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [user?.email])
 
   const isOnboardingRoute = pathname === '/onboarding'
+  const isPublicPortfolioRoute = !!pathname && /^\/[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(pathname) && !['/dashboard', '/messages', '/notifications', '/profile', '/jobs', '/live-campaigns', '/search', '/settings', '/explore', '/creators', '/brands', '/blog', '/resources', '/platform', '/login', '/signup', '/onboarding', '/ops', '/ed', '/auth', '/api'].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+
+  if (isPublicPortfolioRoute) {
+    return <div className="min-h-screen bg-[#fafaf9]">{children}</div>
+  }
 
   if (loading) {
     return (
