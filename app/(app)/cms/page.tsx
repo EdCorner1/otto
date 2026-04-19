@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
 type BlogPost = {
@@ -27,9 +27,7 @@ interface UserState { id: string; email?: string; user_metadata?: Record<string,
 export default function CMSPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const searchParams = useSearchParams()
-  const initialFilter = searchParams.get('filter')
-  const [filter, setFilter] = useState<string>(['all', 'draft', 'in_review', 'published', 'archived'].includes(initialFilter || '') ? (initialFilter as string) : 'all')
+  const [filter, setFilter] = useState<string>('all')
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<UserState | null>(null)
   const router = useRouter()
