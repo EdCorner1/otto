@@ -1,13 +1,14 @@
 export const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID!
 export const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN!
 export const CLOUDFLARE_STREAM_ZONE = process.env.CLOUDFLARE_STREAM_ZONE || 'stream'
+export const CLOUDFLARE_STREAM_SUBDOMAIN = process.env.CLOUDFLARE_STREAM_SUBDOMAIN || 'customer-hl0vh4j6c5g7f8bb'
 
 /**
  * Build a Cloudflare Stream playback URL from a media ID.
  * The media ID is returned by the Cloudflare Stream API after upload.
  */
 export function buildCloudflareStreamUrl(mediaId: string): string {
-  return `https://customer-hl0vh4j6c5g7f8bb.playback.live-video.net/video/${mediaId}`
+  return `https://${CLOUDFLARE_STREAM_SUBDOMAIN}.playback.live-video.net/video/${mediaId}`
 }
 
 /**
@@ -28,7 +29,7 @@ export function extractCloudflareMediaId(url: string): string | null {
  * Build a thumbnail URL from a Cloudflare media ID.
  */
 export function buildCloudflareThumbnailUrl(mediaId: string): string {
-  return `https://customer-hl0vh4j6c5g7f8bb.cloudflarestream.com/${mediaId}/thumb.jpg`
+  return `https://${CLOUDFLARE_STREAM_SUBDOMAIN}.cloudflarestream.com/${mediaId}/thumb.jpg`
 }
 
 /**
