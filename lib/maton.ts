@@ -23,14 +23,14 @@ async function gateway<T = unknown>(path: string, options: RequestInit = {}): Pr
 
 // ── Resend (email) via Maton ──────────────────────────────────────
 // Resend path: POST /resend/emails
-// From address must be a verified domain (we use noreply@totallyremote.co)
+// From address must be a verified domain (ottougc.com must be added in Resend first)
 export async function sendEmail({ to, subject, html, from }: {
   to: string; subject: string; html: string; from?: string
 }) {
   return gateway(`/resend/emails`, {
     method: 'POST',
     body: JSON.stringify({
-      from: from || 'Otto <noreply@totallyremote.co>',
+      from: from || 'Otto <noreply@ottougc.com>',
       to,
       subject,
       html,
