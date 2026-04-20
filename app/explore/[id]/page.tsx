@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import VideoThumbnail from '@/components/VideoThumbnail'
-import { Calendar, ExternalLink, MapPin, PoundSterling, Sparkles } from 'lucide-react'
+import { ArrowRight, Calendar, Clapperboard, ExternalLink, MapPin, PoundSterling, Search } from 'lucide-react'
 import { buildYouTubeEmbedUrl, detectPortfolioPlatform, inferPortfolioThumbnail, isDirectVideoUrl } from '@/lib/portfolio-media'
 
 type Social = { id: string; creator_id: string; platform: string; url: string }
@@ -249,14 +249,18 @@ export default function CreatorProfilePage() {
   if (notFound || !creator) {
     return (
       <div className="min-h-screen bg-[#fafaf9] flex flex-col items-center justify-center px-6">
-        <div className="text-center max-w-md">
-          <div className="text-6xl mb-6">🔍</div>
+        <div className="card max-w-md text-center bg-white/90 backdrop-blur-sm shadow-sm shadow-black/[0.04]">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[20px] border border-[#e8e8e4] bg-[#f5f5f2] text-[#363535]">
+            <Search size={24} strokeWidth={2.2} />
+          </div>
+          <p className="section-label mb-3">Public profile</p>
           <h1 style={{ fontSize: 'clamp(28px, 5vw, 40px)', lineHeight: 1.0, letterSpacing: '-3px', color: '#363535' }} className="mb-3 font-display">
             Creator not found
           </h1>
-          <p className="text-[#6b6b6b] mb-8">This profile doesn&apos;t exist or has been removed.</p>
+          <p className="text-[#6b6b6b] mb-8 leading-relaxed">This profile link is no longer live, or the creator hasn&apos;t published their page yet.</p>
           <Link href="/explore" className="btn-primary inline-flex items-center gap-2 px-6 py-3">
-            Browse creators →
+            Browse creators
+            <ArrowRight size={16} />
           </Link>
         </div>
       </div>
@@ -320,7 +324,7 @@ export default function CreatorProfilePage() {
                     {creator.location && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><MapPin size={12} /> {creator.location}</span>}
                     {creator.hourly_rate && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><PoundSterling size={12} /> £{creator.hourly_rate}/video</span>}
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5"><Calendar size={12} /> Joined {formatDate(creator.created_at)}</span>
-                    {creator.profile_views > 0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5">{creator.profile_views} profile views</span>}
+                    {creator.profile_views > 0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f2] px-3 py-1.5">{creator.profile_views.toLocaleString()} profile view{creator.profile_views === 1 ? '' : 's'}</span>}
                   </div>
                 </div>
               </div>
@@ -413,7 +417,7 @@ export default function CreatorProfilePage() {
               <p className="text-sm text-[#6b6b6b] mt-2">Newest work first, organised into the categories brands care about most.</p>
             </div>
             <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8e8e4] px-3 py-1.5 text-xs text-[#6b6b6b]">
-              <Sparkles size={12} /> {filteredPortfolio.length} piece{filteredPortfolio.length !== 1 ? 's' : ''} in {activeTab}
+              <Clapperboard size={12} /> {filteredPortfolio.length} piece{filteredPortfolio.length !== 1 ? 's' : ''} in {activeTab}
             </div>
           </div>
 
@@ -441,12 +445,14 @@ export default function CreatorProfilePage() {
               ))}
             </div>
           ) : (
-            <div className="card py-14 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#f0f0ec] text-2xl">🎬</div>
+            <div className="card py-14 text-center bg-[#fcfcfb]">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[18px] border border-[#e8e8e4] bg-white text-[#363535] shadow-sm shadow-black/[0.03]">
+                <Clapperboard size={22} strokeWidth={2.1} />
+              </div>
               <h3 className="font-display text-[#363535] mb-2" style={{ fontSize: '24px', lineHeight: 1.0, letterSpacing: '-1px' }}>
-                No portfolio pieces in this category yet
+                Nothing in this category yet
               </h3>
-              <p className="text-sm text-[#6b6b6b]">Switch tabs or check back after more work gets uploaded.</p>
+              <p className="mx-auto max-w-md text-sm leading-relaxed text-[#6b6b6b]">Try another tab, or check back once more work has been added to this profile.</p>
             </div>
           )}
         </section>
