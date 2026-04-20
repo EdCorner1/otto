@@ -1,34 +1,29 @@
 /**
  * scripts/send-newsletter.ts
- * Sends a human-voiced platform update email to waitlist members (creators + brands separately).
- * Uses GitHub commit log for changelog. Queries waitlist via Maton→Supabase REST API.
+ * Sends the prepared newsletter editions from memory/newsletter-pending.md
+ * to both creator and brand waitlist segments.
  *
  * Usage:
  *   npx tsx scripts/send-newsletter.ts
  *   npx tsx scripts/send-newsletter.ts --dry-run
  *   npx tsx scripts/send-newsletter.ts --segment creators
- *   npx tsx scripts/send-newsletter.ts --changelog "• Built portfolio category tabs"
  */
 
+import * as fs from 'fs'
+import * as path from 'path'
+
 const DRY_RUN = process.argv.includes('--dry-run')
-const FORCE_CHANGELOG = (() => {
-  const idx = process.argv.indexOf('--changelog')
-  return idx >= 0 ? process.argv[idx + 1] : null
-})()
 const SEGMENT_ARG = (() => {
   const idx = process.argv.indexOf('--segment')
   return idx >= 0 ? process.argv[idx + 1] : null
 })()
 
-// ── Config ──────────────────────────────────────────────────────────
-const GATEWAY_TOKEN = process.env.MATON_API_KEY // Maton key, not the short gateway token
-const GATEWAY_BASE = 'https://gateway.maton.ai'
-const CREATORS_AUDIENCE_ID = process.env.RESEND_OTTO_CREATORS_AUDIENCE_ID!
-const BRANDS_AUDIENCE_ID = process.env.RESEND_OTTO_BRANDS_AUDIENCE_ID!
+const GATEWAY_TOKEN = process.env.MATON_API_KEY!
+const SUPABASE_GATEWAY = 'https://gateway.maton.ai/supabase/rest/v1'
+const RESEND_GATEWAY = 'https://gateway.maton.ai/resend'
 
-// ── HTTP helper ────────────────────────────────────────────────────
-async function gateway<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${GATEWAY_BASE}${path}`, {
+async function gateway<T = unknown>(base: string, urlPath: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${base}${urlPath}`, {
     ...options,
     headers: {
       'Authorization': `Bearer ${GATEWAY_TOKEN}`,
@@ -36,81 +31,64 @@ async function gateway<T = unknown>(path: string, options: RequestInit = {}): Pr
       ...options.headers,
     },
   })
-  if (!res.ok) throw new Error(`Gateway ${path} → ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error(`Gateway ${urlPath} → ${res.status}: ${await res.text()}`)
   return res.json()
 }
 
-// ── GitHub recent commits ──────────────────────────────────────────
-async function getRecentCommits(since: Date) {
-  const response = await fetch(
-    `https://api.github.com/repos/EdCorner1/otto/commits?since=${since.toISOString()}&per_page=15`,
-    {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'Otto-Platform',
-      },
-    }
-  )
-  if (!response.ok) return []
-  const commits = await response.json() as Array<{
-    sha: string; commit: { message: string; author: { name: string } }; html_url: string
-  }>
-  return commits.map(c => ({
-    sha: c.sha.slice(0, 7),
-    message: c.commit.message.split('\n')[0].trim(),
-    author: c.commit.author.name,
-    url: c.html_url,
-  }))
+async function supabase<T = unknown>(urlPath: string, options: RequestInit = {}) {
+  return gateway<T>(SUPABASE_GATEWAY, urlPath, options)
 }
 
-// ── Format changelog ──────────────────────────────────────────────
-function formatChangelog(commits: { message: string; sha: string; url: string }[]) {
-  return commits
-    .map(c => `• <a href="${c.url}" style="color:#363535;text-decoration:none;">${c.message}</a> <span style="color:#8a8a86;font-size:12px;">(${c.sha})</span>`)
-    .join('<br>')
+async function resend<T = unknown>(urlPath: string, options: RequestInit = {}) {
+  return gateway<T>(RESEND_GATEWAY, urlPath, options)
 }
 
-// ── Build email HTML ────────────────────────────────────────────────
-function buildEmailHtml({ segment, changelog, sentDate }: {
-  segment: string; changelog: string; sentDate: string
+function buildEmailHtml({ title, body, footerNote, sentDate }: {
+  title: string
+  body: string
+  footerNote: string
+  sentDate: string
 }) {
-  const greeting = segment === 'creators' ? 'Hey creator,' : 'Hey there,'
-  const intro = segment === 'creators'
-    ? 'Saw something cool on Reddit the other day, so we went and built it. Here\'s what shipped.'
-    : 'Quick update from the Otto shop — here\'s what\'s been added for brands.'
+  // Convert markdown-style bold headers to HTML
+  // Bricolage Grotesque for headlines (via Google Fonts import), Georgia for body
+  const htmlBody = body
+    .replace(/\*\*(.*?)\*\*/g, '<p style="margin:28px 0 10px;font-family:\'Bricolage Grotesque\',\'Bricolage Grotesque\',system-ui,sans-serif;font-size:18px;font-weight:700;color:#1c1c1e;letter-spacing:-0.5px;line-height:1.2;">$1</p>')
+    .replace(/\n\n/g, '</p><p style="margin:0 0 18px;font-family:Georgia,\'Georgia\',serif;font-size:16px;line-height:1.75;color:#363535;">')
+    .replace(/\n/g, '<br>')
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Otto — Platform Update</title>
+  <title>${title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700&display=swap" rel="stylesheet">
 </head>
 <body style="margin:0;padding:0;background:#f5f5f2;font-family:Georgia,serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f2;padding:40px 20px;">
     <tr>
       <td align="center">
         <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+          <!-- Header -->
           <tr>
-            <td style="background:#1c1c1e;padding:32px 40px;border-radius:12px 12px 0 0;">
-              <p style="margin:0;font-family:system-ui,sans-serif;font-size:22px;font-weight:700;color:#ccff00;letter-spacing:-0.5px;">Otto</p>
-              <p style="margin:8px 0 0;font-family:system-ui,sans-serif;font-size:13px;color:#8a8a86;">Platform Update · ${sentDate}</p>
+            <td style="background:#1c1c1e;padding:28px 40px;border-radius:12px 12px 0 0;">
+              <p style="margin:0;font-family:\'Bricolage Grotesque\',\'Bricolage Grotesque\',system-ui,sans-serif;font-size:22px;font-weight:700;color:#ccff00;letter-spacing:-0.5px;">Otto</p>
+              <p style="margin:6px 0 0;font-family:system-ui,sans-serif;font-size:12px;color:#8a8a86;">${sentDate}</p>
             </td>
           </tr>
+          <!-- Body -->
           <tr>
-            <td style="background:#ffffff;padding:40px 40px 32px;border-radius:0 0 12px 12px;">
-              <p style="margin:0 0 20px;font-family:Georgia,serif;font-size:17px;line-height:1.7;color:#363535;">${greeting}</p>
-              <p style="margin:0 0 24px;font-family:Georgia,serif;font-size:17px;line-height:1.7;color:#363535;">${intro}</p>
-              <div style="background:#f5f5f2;border-left:4px solid #ccff00;padding:20px 24px;margin:0 0 28px;border-radius:0 8px 8px 0;">
-                <p style="margin:0;font-family:system-ui,sans-serif;font-size:14px;line-height:2;color:#363535;">${changelog}</p>
-              </div>
-              <p style="margin:0 0 24px;font-family:Georgia,serif;font-size:17px;line-height:1.7;color:#363535;">We'll keep building. See you in the next one.</p>
-              <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.7;color:#363535;">— Otto<br><span style="font-size:13px;color:#8a8a86;">ottougc.com</span></p>
+            <td style="background:#ffffff;padding:36px 40px 32px;border-radius:0 0 12px 12px;">
+              <p style="margin:0;font-family:Georgia,serif;font-size:16px;line-height:1.75;color:#363535;">${htmlBody}</p>
             </td>
           </tr>
+          <!-- Unsubscribe -->
           <tr>
-            <td style="padding:20px 40px;text-align:center;">
-              <p style="margin:0;font-family:system-ui,sans-serif;font-size:12px;color:#8a8a86;">You're getting this because you joined the Otto waitlist.</p>
+            <td style="padding:20px 40px;text-align:center;background:#fafaf9;border-radius:0 0 12px 12px;">
+              <p style="margin:0 0 6px;font-family:system-ui,sans-serif;font-size:12px;color:#8a8a86;">${footerNote}</p>
+              <p style="margin:0;font-family:system-ui,sans-serif;font-size:12px;color:#8a8a86;">
+                <a href="{{{unsubscribeUrl}}}" style="color:#8a8a86;text-decoration:underline;">Unsubscribe</a> if this is no longer relevant.
+              </p>
             </td>
           </tr>
         </table>
@@ -121,90 +99,94 @@ function buildEmailHtml({ segment, changelog, sentDate }: {
 </html>`
 }
 
-// ── Send email via Maton → Resend ────────────────────────────────
 async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
-  return gateway(`/resend/emails`, {
+  return resend('/emails', {
     method: 'POST',
     body: JSON.stringify({
-      from: 'Otto <noreply@ottougc.com>',
+      from: 'Otto <hello@ottougc.com>',
       to: [to],
       subject,
       html,
+      text: html.replace(/<[^>]+>/g, ''), // plain text version
     }),
   })
 }
 
-// ── Waitlist emails via Maton → Supabase REST ─────────────────────
-async function getWaitlistEmails(role: 'creator' | 'brand') {
-  const params = new URLSearchParams({
-    select: 'email',
-    role: `eq.${role}`,
-
-    limit: '500',
-  })
-  const data = await gateway<Array<{ email: string }>>(`/supabase/rest/v1/waitlist?${params}`)
+interface WaitlistRow { email: string; role: string }
+async function getWaitlistEmails(role: string) {
+  const data = await supabase<WaitlistRow[]>(`/waitlist?select=email,role&role=eq.${role}&limit=500`)
   return (data ?? []).map(r => r.email)
 }
 
-// ── Main ────────────────────────────────────────────────────────────
 async function main() {
-  const since = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+  const pendingPath = path.join('/home/node/.openclaw/workspace/memory/newsletter-pending.md')
+  const raw = fs.readFileSync(pendingPath, 'utf8')
 
-  let changelog = FORCE_CHANGELOG
-  if (!changelog) {
-    console.log(`Fetching commits since ${since.toLocaleDateString('en-GB')}...`)
-    const commits = await getRecentCommits(since)
-    if (commits.length > 0) {
-      changelog = formatChangelog(commits)
-      console.log(`${commits.length} commits found`)
-    } else {
-      console.log('No commits in last 5 days. Use --changelog to override.')
-      process.exit(0)
-    }
-  } else {
-    console.log('Using forced changelog:', changelog)
+  // Extract creator and brand editions from markdown
+  const creatorMatch = raw.match(/## Creator Edition\s*\n([\s\S]*?)(?=\n---\s*\n## Brand Edition)/)
+  const brandMatch = raw.match(/## Brand Edition\s*\n([\s\S]*?)(?=\n---\s*\n## Recipients)/)
+
+  if (!creatorMatch || !brandMatch) {
+    console.error('Could not parse creator/brand editions from newsletter-pending.md')
+    process.exit(1)
   }
 
+  const creatorBody = creatorMatch[1].trim()
+  const brandBody = brandMatch[1].trim()
   const sentDate = new Date().toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 
-  const segments: Array<'creators' | 'brands'> =
-    SEGMENT_ARG === 'creators' || SEGMENT_ARG === 'brands'
-      ? [SEGMENT_ARG as 'creators' | 'brands']
-      : ['creators', 'brands']
+  const creatorHtml = buildEmailHtml({
+    title: 'Thanks for joining Otto',
+    body: creatorBody,
+    footerNote: 'You are receiving this because you joined the Otto creator waitlist.',
+    sentDate,
+  })
+
+  const brandHtml = buildEmailHtml({
+    title: 'Thanks for joining Otto',
+    body: brandBody,
+    footerNote: 'You are receiving this because you joined the Otto brand waitlist.',
+    sentDate,
+  })
+
+  const segments = SEGMENT_ARG
+    ? [{ key: SEGMENT_ARG, html: SEGMENT_ARG === 'creators' ? creatorHtml : brandHtml, role: SEGMENT_ARG === 'creators' ? 'creator' : 'brand' }]
+    : [
+        { key: 'creators', html: creatorHtml, role: 'creator' },
+        { key: 'brands', html: brandHtml, role: 'brand' },
+      ]
+
+  const subject = `Thanks for joining Otto — ${sentDate}`
 
   for (const seg of segments) {
-    const role = seg === 'creators' ? 'creator' : 'brand'
-    console.log(`${seg}: fetching waitlist...`)
-    const emails = await getWaitlistEmails(role)
+    const emails = await getWaitlistEmails(seg.role)
     if (emails.length === 0) {
-      console.log(`${seg}: no active subscribers, skipping`)
+      console.log(`${seg.key}: no subscribers, skipping`)
       continue
     }
-    console.log(`${seg}: ${emails.length} subscriber(s)`)
+
+    console.log(`${seg.key}: sending to ${emails.length} email(s)...`)
 
     if (DRY_RUN) {
       console.log(`[DRY RUN] Would send to: ${emails.slice(0, 3).join(', ')}${emails.length > 3 ? ` (+${emails.length - 3} more)` : ''}`)
       continue
     }
 
-    const html = buildEmailHtml({ segment: seg, changelog, sentDate })
-    const subject = `Otto update — ${sentDate}`
     let sent = 0, failed = 0
-
     for (const email of emails) {
       try {
-        await sendEmail({ to: email, subject, html })
+        await sendEmail({ to: email, subject, html: seg.html })
         sent++
         if (sent % 10 === 0) console.log(`  ${sent}/${emails.length} sent`)
       } catch (err) {
-        console.error(`Failed to ${email}:`, err instanceof Error ? err.message : err)
         failed++
+        console.error(`Failed to ${email}:`, err instanceof Error ? err.message : err)
       }
     }
 
-    console.log(`${seg}: ${sent} sent, ${failed} failed`)
+    console.log(`${seg.key}: ${sent} sent, ${failed} failed`)
   }
 
   console.log('Done.')
