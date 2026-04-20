@@ -199,6 +199,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
               url,
               platform: detectPortfolioPlatform(url, requestedPlatform),
               caption: (item.caption || '').trim(),
+              category: (item.category || null) as string | null,
             }
           })
           .filter((item) => item.url && item.platform)
@@ -296,6 +297,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         type: inferType(item.url),
         thumbnail_url: inferThumbnail(item.url, item.platform),
         sort_order: index,
+        category: item.category || null,
       }))
 
       const { error: insertPortfolioError } = await admin.from('portfolio_items').insert(portfolioPayload)

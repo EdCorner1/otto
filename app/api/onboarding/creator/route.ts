@@ -7,6 +7,7 @@ type PortfolioItemInput = {
   type: 'video' | 'image'
   url: string
   caption?: string | null
+  category?: string | null
 }
 
 type CreatorPayload = {
@@ -152,6 +153,7 @@ export async function POST(request: NextRequest) {
       url: item.url,
       caption: item.caption?.trim() || null,
       sort_order: index,
+      category: item.category || null,
     }))
 
     const { error: portfolioError } = await adminClient.from('portfolio_items').insert(portfolioPayload)
