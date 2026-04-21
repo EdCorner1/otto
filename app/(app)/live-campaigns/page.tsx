@@ -1,8 +1,11 @@
 'use client'
 
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Activity,
+  ArrowRight,
   CalendarDays,
   CircleDot,
   DollarSign,
@@ -154,6 +157,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 export default function LiveCampaignsPage() {
   const supabase = useMemo(() => createClient(), [])
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [payload, setPayload] = useState<LiveCampaignsPayload | null>(null)
@@ -161,7 +165,7 @@ export default function LiveCampaignsPage() {
   const [submitting, setSubmitting] = useState<string | null>(null)
   const [formState, setFormState] = useState<Record<string, LogFormState>>({})
 
-  const loadCampaigns = async () => {
+  const loadCampaigns = useCallback(async () => {
     try {
       setError('')
       const { data: sessionData } = await supabase.auth.getSession()
@@ -197,11 +201,17 @@ export default function LiveCampaignsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
 
   useEffect(() => {
     loadCampaigns()
-  }, [])
+  }, [loadCampaigns])
+
+  useEffect(() => {
+    const requestedDealId = searchParams.get('log')
+    if (!requestedDealId || !payload?.campaigns.some((campaign) => campaign.id === requestedDealId)) return
+    setOpenDealId(requestedDealId)
+  }, [payload, searchParams])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>, dealId: string) => {
     event.preventDefault()
@@ -403,6 +413,13 @@ export default function LiveCampaignsPage() {
                     <Plus className="h-4 w-4" />
                     Log today&apos;s content
                   </button>
+                  <Link
+                    href={`/live-campaigns/${campaign.id}`}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:-translate-y-0.5 hover:border-[#d7d7d2]"
+                  >
+                    Open campaign overview
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                   <div className="text-sm text-[#6b6b6b]">
                     {campaign.total_videos} total videos · {formatNumber(campaign.total_views)} total views
                   </div>
