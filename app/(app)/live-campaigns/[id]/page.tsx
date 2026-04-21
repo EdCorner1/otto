@@ -2,26 +2,33 @@
 
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowUpRight,
   CalendarDays,
   CheckCircle2,
   CircleDot,
   ClipboardList,
+  Clock3,
   DollarSign,
   Eye,
   Film,
   Globe,
   Link2,
+  Loader2,
   NotebookPen,
+  Plus,
   Target,
+  Trash2,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import type { LiveCampaignPlatform } from '@/lib/live-campaigns'
+import type { LiveCampaignPlatform, LiveCampaignTaskStatus } from '@/lib/live-campaigns'
 
 type CampaignStatus = 'on_track' | 'behind' | 'not_started'
+type ActionPriority = 'high' | 'medium' | 'low'
+type ActivityType = 'campaign_started' | 'content_logged' | 'task_created' | 'task_completed' | 'notes_updated' | 'status_snapshot'
 
 type LiveCampaignDetailPayload = {
   campaign: {
@@ -72,6 +79,44 @@ type LiveCampaignDetailPayload = {
     views: number
   }>
   notes: string[]
+  internal_notes: {
+    body: string
+    updated_at: string | null
+  }
+  tasks: Array<{
+    id: string
+    title: string
+    detail: string
+    due_date: string | null
+    status: LiveCampaignTaskStatus
+    created_at: string
+    completed_at: string | null
+  }>
+  task_summary: {
+    open_count: number
+    completed_count: number
+    overdue_count: number
+    completion_rate: number
+    upcoming_deadlines: Array<{
+      id: string
+      title: string
+      due_date: string | null
+    }>
+  }
+  next_actions: Array<{
+    id: string
+    title: string
+    detail: string
+    priority: ActionPriority
+  }>
+  activity_timeline: Array<{
+    id: string
+    type: ActivityType
+    title: string
+    detail: string
+    date: string
+    created_at: string
+  }>
   recent_logs: Array<{
     id: string
     platform: LiveCampaignPlatform
@@ -85,6 +130,12 @@ type LiveCampaignDetailPayload = {
     approvals: string
     client_feedback: string
   }
+}
+
+type TaskDraft = {
+  title: string
+  detail: string
+  due_date: string
 }
 
 const PLATFORM_COLORS: Record<LiveCampaignPlatform, string> = {
@@ -115,6 +166,21 @@ const STATUS_STYLES: Record<CampaignStatus, { label: string; dotClass: string; b
   },
 }
 
+const ACTION_PRIORITY_STYLES: Record<ActionPriority, string> = {
+  high: 'border-rose-200 bg-rose-50 text-rose-700',
+  medium: 'border-amber-200 bg-amber-50 text-amber-700',
+  low: 'border-[#e8e8e4] bg-[#fafaf9] text-[#6b6b6b]',
+}
+
+const ACTIVITY_ICON_STYLES: Record<ActivityType, { bg: string; icon: React.ReactNode }> = {
+  campaign_started: { bg: 'bg-[#f1f5f9] text-[#475569]', icon: <CalendarDays className="h-4 w-4" /> },
+  content_logged: { bg: 'bg-[#f5ffd9] text-[#3f6212]', icon: <Film className="h-4 w-4" /> },
+  task_created: { bg: 'bg-[#eef6ff] text-[#0a66c2]', icon: <Plus className="h-4 w-4" /> },
+  task_completed: { bg: 'bg-[#eefbf3] text-[#15803d]', icon: <CheckCircle2 className="h-4 w-4" /> },
+  notes_updated: { bg: 'bg-[#fff7ed] text-[#c2410c]', icon: <NotebookPen className="h-4 w-4" /> },
+  status_snapshot: { bg: 'bg-[#f5f5f4] text-[#57534e]', icon: <AlertCircle className="h-4 w-4" /> },
+}
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -135,6 +201,18 @@ function formatDate(value: string | null, withYear = false) {
     month: 'long',
     day: 'numeric',
     ...(withYear ? { year: 'numeric' } : {}),
+  })
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   })
 }
 
@@ -159,34 +237,110 @@ export default function LiveCampaignDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [payload, setPayload] = useState<LiveCampaignDetailPayload | null>(null)
+  const [savingNotes, setSavingNotes] = useState(false)
+  const [taskBusyId, setTaskBusyId] = useState<string | null>(null)
+  const [taskSubmitting, setTaskSubmitting] = useState(false)
+  const [notesDraft, setNotesDraft] = useState('')
+  const [taskDraft, setTaskDraft] = useState<TaskDraft>({ title: '', detail: '', due_date: '' })
+
+  const loadCampaign = async () => {
+    try {
+      setError('')
+      setLoading(true)
+
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      if (!token) throw new Error('Please log in again.')
+
+      const response = await fetch(`/api/ed/live-campaigns/${params.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Could not load campaign.')
+      const nextPayload = data as LiveCampaignDetailPayload
+      setPayload(nextPayload)
+      setNotesDraft(nextPayload.internal_notes.body || '')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load campaign.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const loadCampaign = async () => {
-      try {
-        setError('')
-        setLoading(true)
-
-        const { data: sessionData } = await supabase.auth.getSession()
-        const token = sessionData.session?.access_token
-        if (!token) throw new Error('Please log in again.')
-
-        const response = await fetch(`/api/ed/live-campaigns/${params.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: 'no-store',
-        })
-
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.error || 'Could not load campaign.')
-        setPayload(data as LiveCampaignDetailPayload)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not load campaign.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     if (params.id) loadCampaign()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id, supabase])
+
+  const updateCampaign = async (body: object) => {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    if (!token) throw new Error('Please log in again.')
+
+    const response = await fetch(`/api/ed/live-campaigns/${params.id}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(data.error || 'Could not update campaign.')
+  }
+
+  const handleNotesSave = async () => {
+    try {
+      setSavingNotes(true)
+      setError('')
+      await updateCampaign({ internal_notes: notesDraft })
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save notes.')
+    } finally {
+      setSavingNotes(false)
+    }
+  }
+
+  const handleTaskSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!taskDraft.title.trim()) return
+
+    try {
+      setTaskSubmitting(true)
+      setError('')
+      await updateCampaign({
+        task: {
+          action: 'create',
+          title: taskDraft.title,
+          detail: taskDraft.detail,
+          due_date: taskDraft.due_date || null,
+        },
+      })
+      setTaskDraft({ title: '', detail: '', due_date: '' })
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not add task.')
+    } finally {
+      setTaskSubmitting(false)
+    }
+  }
+
+  const handleTaskAction = async (taskId: string, action: 'toggle' | 'delete') => {
+    try {
+      setTaskBusyId(taskId)
+      setError('')
+      await updateCampaign({ task: { action, id: taskId } })
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update task.')
+    } finally {
+      setTaskBusyId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -196,7 +350,7 @@ export default function LiveCampaignDetailPage() {
     )
   }
 
-  if (error || !payload) {
+  if (error && !payload) {
     return (
       <div className="mx-auto max-w-5xl px-2 pb-10 md:px-4">
         <div className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
@@ -206,7 +360,9 @@ export default function LiveCampaignDetailPage() {
     )
   }
 
-  const { campaign, summary, goals, views_by_platform, notes, recent_logs, placeholders } = payload
+  if (!payload) return null
+
+  const { campaign, summary, goals, views_by_platform, notes, internal_notes, tasks, task_summary, next_actions, activity_timeline, recent_logs, placeholders } = payload
   const status = STATUS_STYLES[campaign.campaign_status]
 
   return (
@@ -217,6 +373,12 @@ export default function LiveCampaignDetailPage() {
           Back to live campaigns
         </Link>
       </div>
+
+      {error && (
+        <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          {error}
+        </div>
+      )}
 
       <section className="card shadow-sm">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -280,8 +442,145 @@ export default function LiveCampaignDetailPage() {
         <MetricCard label="Earned so far" value={formatCurrency(summary.earned_prorated)} hint={`${formatCurrency(campaign.monthly_rate)} monthly retainer`} icon={<DollarSign className="h-5 w-5" />} />
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_0.9fr]">
+      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.45fr_0.95fr]">
         <div className="space-y-6">
+          <div className="card shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="section-label mb-1">Next actions</p>
+                <h2 className="text-2xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>What needs your attention</h2>
+              </div>
+              <div className="text-sm text-[#6b6b6b]">{task_summary.open_count} open tasks</div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {next_actions.map((action) => (
+                <div key={action.id} className={`rounded-[24px] border p-4 ${ACTION_PRIORITY_STYLES[action.priority]}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em]">{action.priority} priority</p>
+                      <p className="mt-2 text-base font-semibold">{action.title}</p>
+                      <p className="mt-2 text-sm opacity-90">{action.detail}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="section-label mb-1">Tasks</p>
+                <h2 className="text-2xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>Client work checklist</h2>
+              </div>
+              <div className="text-sm text-[#6b6b6b]">{task_summary.completion_rate}% complete</div>
+            </div>
+
+            <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Open</p>
+                <p className="mt-2 text-xl font-semibold text-[#1c1c1e]">{task_summary.open_count}</p>
+              </div>
+              <div className="rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Completed</p>
+                <p className="mt-2 text-xl font-semibold text-[#1c1c1e]">{task_summary.completed_count}</p>
+              </div>
+              <div className="rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Overdue</p>
+                <p className="mt-2 text-xl font-semibold text-[#1c1c1e]">{task_summary.overdue_count}</p>
+              </div>
+              <div className="rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Due next</p>
+                <p className="mt-2 text-sm font-semibold text-[#1c1c1e]">{task_summary.upcoming_deadlines[0]?.due_date ? formatDate(task_summary.upcoming_deadlines[0].due_date) : 'No deadline set'}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleTaskSubmit} className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <label className="text-sm text-[#363535] md:col-span-2">
+                  <span className="mb-2 block font-medium">Task title</span>
+                  <input
+                    type="text"
+                    value={taskDraft.title}
+                    onChange={(event) => setTaskDraft((current) => ({ ...current, title: event.target.value }))}
+                    className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                    placeholder="Send 3 fresh hook options for next round"
+                    required
+                  />
+                </label>
+
+                <label className="text-sm text-[#363535] md:col-span-2">
+                  <span className="mb-2 block font-medium">Details</span>
+                  <textarea
+                    value={taskDraft.detail}
+                    onChange={(event) => setTaskDraft((current) => ({ ...current, detail: event.target.value }))}
+                    className="min-h-[104px] w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                    placeholder="What actually needs doing, context, or follow-up notes"
+                  />
+                </label>
+
+                <label className="text-sm text-[#363535] md:max-w-[240px]">
+                  <span className="mb-2 block font-medium">Due date</span>
+                  <input
+                    type="date"
+                    value={taskDraft.due_date}
+                    onChange={(event) => setTaskDraft((current) => ({ ...current, due_date: event.target.value }))}
+                    className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button type="submit" className="btn-primary" disabled={taskSubmitting}>
+                  {taskSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  Add task
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-5 space-y-3">
+              {tasks.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-[#e8e8e4] bg-[#fafaf9] px-6 py-10 text-sm text-[#6b6b6b]">
+                  No tasks yet. Add the next concrete piece of client work so the campaign has an active checklist.
+                </div>
+              ) : tasks.map((task) => {
+                const isDone = task.status === 'done'
+                const isBusy = taskBusyId === task.id
+                return (
+                  <div key={task.id} className={`rounded-[24px] border p-4 ${isDone ? 'border-[#d6f5df] bg-[#f5fcf7]' : 'border-[#ecece8] bg-[#fafaf9]'}`}>
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold ${isDone ? 'border-[#bbf7d0] bg-[#ecfdf3] text-[#166534]' : 'border-[#e8e8e4] bg-white text-[#57534e]'}`}>
+                            <CircleDot className={`h-3 w-3 ${isDone ? 'fill-[#22c55e] text-[#22c55e]' : 'fill-[#d6d3d1] text-[#d6d3d1]'}`} />
+                            {isDone ? 'Done' : 'To do'}
+                          </span>
+                          {task.due_date ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-[#6b6b6b]"><Clock3 className="h-3.5 w-3.5" /> Due {formatDate(task.due_date, true)}</span>
+                          ) : null}
+                        </div>
+                        <p className={`mt-3 text-base font-semibold ${isDone ? 'text-[#3f3f46] line-through' : 'text-[#1c1c1e]'}`}>{task.title}</p>
+                        {task.detail ? <p className="mt-2 text-sm text-[#6b6b6b]">{task.detail}</p> : null}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button type="button" className="btn-ghost border border-[#e8e8e4] bg-white px-3 py-2 text-sm" onClick={() => handleTaskAction(task.id, 'toggle')} disabled={isBusy}>
+                          {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                          {isDone ? 'Mark open' : 'Mark done'}
+                        </button>
+                        <button type="button" className="btn-ghost border border-[#f1d6d6] bg-white px-3 py-2 text-sm text-[#a61b1b]" onClick={() => handleTaskAction(task.id, 'delete')} disabled={isBusy}>
+                          <Trash2 className="h-4 w-4" />
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
           <div className="card shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <div>
@@ -346,15 +645,51 @@ export default function LiveCampaignDetailPage() {
                           <ArrowUpRight className="h-4 w-4 shrink-0" />
                         </a>
                       </div>
-                      <div className="rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-right">
-                        <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Views</p>
-                        <p className="mt-1 text-lg font-semibold text-[#1c1c1e]">{formatNumber(log.views)}</p>
+                      <div className="grid grid-cols-2 gap-3 sm:flex sm:items-stretch">
+                        <div className="rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-right">
+                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Views</p>
+                          <p className="mt-1 text-lg font-semibold text-[#1c1c1e]">{formatNumber(log.views)}</p>
+                        </div>
+                        <div className="rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-right">
+                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Logged</p>
+                          <p className="mt-1 text-sm font-semibold text-[#1c1c1e]">{formatDateTime(log.created_at)}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="card shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="section-label mb-1">Activity timeline</p>
+                <h2 className="text-2xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>Everything that moved this campaign</h2>
+              </div>
+              <div className="text-sm text-[#6b6b6b]">{activity_timeline.length} events</div>
+            </div>
+
+            <div className="space-y-4">
+              {activity_timeline.map((item) => {
+                const iconStyle = ACTIVITY_ICON_STYLES[item.type]
+                return (
+                  <div key={item.id} className="flex gap-3 rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${iconStyle.bg}`}>
+                      {iconStyle.icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm font-semibold text-[#1c1c1e]">{item.title}</p>
+                        <p className="text-xs text-[#9a9a9a]">{formatDate(item.date, true)}</p>
+                      </div>
+                      <p className="mt-1 text-sm text-[#6b6b6b]">{item.detail}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
 
@@ -386,6 +721,27 @@ export default function LiveCampaignDetailPage() {
                   <p className="mt-1 text-xs text-[#6b6b6b]">Started {formatDate(campaign.start_date)}</p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="card shadow-sm">
+            <p className="section-label mb-1">Internal notes</p>
+            <h2 className="text-2xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>Client context for yourself</h2>
+            <p className="mt-3 text-sm text-[#6b6b6b]">Keep quick notes on feedback, blockers, angles that worked, revisions, and anything you need to remember next time.</p>
+
+            <textarea
+              value={notesDraft}
+              onChange={(event) => setNotesDraft(event.target.value)}
+              className="mt-5 min-h-[220px] w-full rounded-[24px] border border-[#e8e8e4] bg-[#fafaf9] px-4 py-4 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+              placeholder="Example: Client liked the quick app demo angle, wants stronger hook in first 2 seconds, avoid mentioning pricing until the CTA frame..."
+            />
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-[#9a9a9a]">Last updated: {formatDateTime(internal_notes.updated_at)}</p>
+              <button type="button" className="btn-primary" onClick={handleNotesSave} disabled={savingNotes}>
+                {savingNotes ? <Loader2 className="h-4 w-4 animate-spin" /> : <NotebookPen className="h-4 w-4" />}
+                Save notes
+              </button>
             </div>
           </div>
 

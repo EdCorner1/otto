@@ -1,6 +1,7 @@
 export const LIVE_CAMPAIGN_PLATFORMS = ['TikTok', 'Instagram', 'YouTube', 'LinkedIn'] as const
 
 export type LiveCampaignPlatform = (typeof LIVE_CAMPAIGN_PLATFORMS)[number]
+export type LiveCampaignTaskStatus = 'todo' | 'done'
 
 export type LiveCampaignLog = {
   id: string
@@ -11,9 +12,19 @@ export type LiveCampaignLog = {
   created_at: string
 }
 
+export type LiveCampaignTask = {
+  id: string
+  title: string
+  detail: string
+  due_date: string | null
+  status: LiveCampaignTaskStatus
+  created_at: string
+  completed_at: string | null
+}
+
 export type LiveCampaignMetadata = {
   kind: 'live_campaign'
-  version: 1
+  version: 1 | 2
   seed_key: string
   client_name: string
   start_date: string
@@ -22,6 +33,9 @@ export type LiveCampaignMetadata = {
   daily_target: number
   platforms: LiveCampaignPlatform[]
   logs: LiveCampaignLog[]
+  internal_notes: string
+  notes_updated_at: string | null
+  tasks: LiveCampaignTask[]
 }
 
 export type LiveCampaignSeed = {
@@ -113,6 +127,44 @@ export function normalizePlatform(input: unknown): LiveCampaignPlatform | null {
   return null
 }
 
+export function normalizeTaskStatus(input: unknown): LiveCampaignTaskStatus {
+  return input === 'done' ? 'done' : 'todo'
+}
+
+function parseTask(input: unknown): LiveCampaignTask | null {
+  if (!input || typeof input !== 'object') return null
+
+  const task = input as Partial<LiveCampaignTask>
+  const title = typeof task.title === 'string' ? task.title.trim() : ''
+  if (!title) return null
+
+  const status = normalizeTaskStatus(task.status)
+  const createdAt = typeof task.created_at === 'string' && task.created_at ? task.created_at : new Date().toISOString()
+  const completedAt = status === 'done'
+    ? typeof task.completed_at === 'string' && task.completed_at ? task.completed_at : new Date().toISOString()
+    : null
+
+  return {
+    id: typeof task.id === 'string' && task.id ? task.id : crypto.randomUUID(),
+    title,
+    detail: typeof task.detail === 'string' ? task.detail.trim() : '',
+    due_date: typeof task.due_date === 'string' && task.due_date ? task.due_date : null,
+    status,
+    created_at: createdAt,
+    completed_at: completedAt,
+  }
+}
+
+export function sortTasks(tasks: LiveCampaignTask[]) {
+  return [...tasks].sort((a, b) => {
+    if (a.status !== b.status) return a.status === 'todo' ? -1 : 1
+    if (a.due_date && b.due_date && a.due_date !== b.due_date) return a.due_date.localeCompare(b.due_date)
+    if (a.due_date && !b.due_date) return -1
+    if (!a.due_date && b.due_date) return 1
+    return b.created_at.localeCompare(a.created_at)
+  })
+}
+
 export function parseLiveCampaignMetadata(input: string | null | undefined): LiveCampaignMetadata | null {
   if (!input) return null
 
@@ -120,7 +172,7 @@ export function parseLiveCampaignMetadata(input: string | null | undefined): Liv
     const parsed = JSON.parse(input) as Partial<LiveCampaignMetadata>
 
     if (parsed?.kind !== 'live_campaign') return null
-    if (parsed.version !== 1) return null
+    if (parsed.version !== 1 && parsed.version !== 2) return null
     if (!parsed.client_name || !parsed.start_date || !parsed.seed_key) return null
 
     const platforms = Array.isArray(parsed.platforms)
@@ -131,7 +183,7 @@ export function parseLiveCampaignMetadata(input: string | null | undefined): Liv
 
     return {
       kind: 'live_campaign',
-      version: 1,
+      version: parsed.version,
       seed_key: parsed.seed_key,
       client_name: parsed.client_name,
       start_date: parsed.start_date,
@@ -157,6 +209,14 @@ export function parseLiveCampaignMetadata(input: string | null | undefined): Liv
           } satisfies LiveCampaignLog]
         })
         : [],
+      internal_notes: typeof parsed.internal_notes === 'string' ? parsed.internal_notes : '',
+      notes_updated_at: typeof parsed.notes_updated_at === 'string' && parsed.notes_updated_at ? parsed.notes_updated_at : null,
+      tasks: Array.isArray(parsed.tasks)
+        ? sortTasks(parsed.tasks.flatMap((task) => {
+          const parsedTask = parseTask(task)
+          return parsedTask ? [parsedTask] : []
+        }))
+        : [],
     }
   } catch {
     return null
@@ -166,7 +226,7 @@ export function parseLiveCampaignMetadata(input: string | null | undefined): Liv
 export function createLiveCampaignMetadata(seed: LiveCampaignSeed, logs: LiveCampaignLog[] = []): LiveCampaignMetadata {
   return {
     kind: 'live_campaign',
-    version: 1,
+    version: 2,
     seed_key: seed.seedKey,
     client_name: seed.clientName,
     start_date: seed.startDate,
@@ -175,6 +235,19 @@ export function createLiveCampaignMetadata(seed: LiveCampaignSeed, logs: LiveCam
     daily_target: seed.dailyTarget,
     platforms: [...seed.platforms],
     logs,
+    internal_notes: '',
+    notes_updated_at: null,
+    tasks: [
+      {
+        id: crypto.randomUUID(),
+        title: 'Confirm this week’s posting plan',
+        detail: 'Use this as a running checklist for creator-side campaign management.',
+        due_date: seed.startDate,
+        status: 'todo',
+        created_at: new Date(`${seed.startDate}T12:00:00Z`).toISOString(),
+        completed_at: null,
+      },
+    ],
   }
 }
 
@@ -195,7 +268,6 @@ export function computeLiveCampaignStats(metadata: LiveCampaignMetadata, now = n
   const monthStart = startOfMonth(now)
   const weekStart = addDays(today, -6)
   const campaignStart = toUtcDateOnly(metadata.start_date)
-  const activeStart = campaignStart > today ? campaignStart : campaignStart
   const daysActive = Math.max(0, Math.floor((today.getTime() - campaignStart.getTime()) / 86400000) + 1)
   const daysActiveWithinMonth = campaignStart > monthStart
     ? Math.max(0, Math.floor((today.getTime() - campaignStart.getTime()) / 86400000) + 1)
