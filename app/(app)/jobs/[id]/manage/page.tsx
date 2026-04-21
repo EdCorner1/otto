@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle, ClipboardList } from 'lucide-react'
+import { CheckCircle, ClipboardList, MapPin } from 'lucide-react'
 
 type Application = {
   id: string; message: string; proposed_rate?: number; status: string; created_at: string
@@ -323,7 +323,7 @@ function ApplicationCard({
             <p className="text-xs text-[#6b6b6b] mt-0.5">{creator.headline}</p>
           )}
           {creator?.location && (
-            <p className="text-xs text-[#9a9a9a] mt-0.5">📍 {creator.location}</p>
+            <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-[#9a9a9a]"><MapPin className="h-3.5 w-3.5" /> {creator.location}</p>
           )}
         </div>
       </div>

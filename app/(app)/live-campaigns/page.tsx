@@ -79,22 +79,22 @@ const PLATFORM_COLORS: Record<LiveCampaignPlatform, string> = {
   LinkedIn: 'bg-[#eef6ff] text-[#0a66c2]',
 }
 
-const STATUS_STYLES: Record<CampaignStatus, { label: string; dot: string; bar: string; chip: string }> = {
+const STATUS_STYLES: Record<CampaignStatus, { label: string; dotClass: string; bar: string; chip: string }> = {
   on_track: {
     label: 'On Track',
-    dot: '🟢',
+    dotClass: 'fill-[#84cc16] text-[#84cc16]',
     bar: '#ccff00',
     chip: 'bg-[#f5ffd9] text-[#2d3a00] border-[#dcef8b]',
   },
   behind: {
     label: 'Behind',
-    dot: '🔴',
+    dotClass: 'fill-[#ef4444] text-[#ef4444]',
     bar: '#ef4444',
     chip: 'bg-[#fff1f1] text-[#a61b1b] border-[#fecaca]',
   },
   not_started: {
     label: 'Not Started',
-    dot: '⚪',
+    dotClass: 'fill-[#d6d3d1] text-[#d6d3d1]',
     bar: '#d6d3d1',
     chip: 'bg-[#f5f5f4] text-[#57534e] border-[#e7e5e4]',
   },
@@ -351,7 +351,7 @@ export default function LiveCampaignsPage() {
                   </div>
 
                   <span className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${status.chip}`}>
-                    <span>{status.dot}</span>
+                    <CircleDot className={`h-3.5 w-3.5 ${status.dotClass}`} />
                     <span>{status.label}</span>
                   </span>
                 </div>

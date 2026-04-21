@@ -97,7 +97,7 @@ export default function DealReviewPage() {
     if (!revisionNotes.trim() || !deal) return
     await supabase.from('messages').insert({
       deal_id: deal.id, sender_id: user!.id,
-      content: `🔁 Revision requested: ${revisionNotes.trim()}`,
+      content: `Revision requested: ${revisionNotes.trim()}`,
     })
     await updateDeal('in_progress')
     setRevisionNotes('')
@@ -109,7 +109,7 @@ export default function DealReviewPage() {
     if (deal) {
       await supabase.from('messages').insert({
         deal_id: deal.id, sender_id: user!.id,
-        content: '✅ Work approved! Payment will be released shortly.',
+        content: 'Work approved. Payment will be released shortly.',
       })
     }
     setApproved(true)
@@ -147,7 +147,7 @@ export default function DealReviewPage() {
         {submissionMsg && (
           <div className="card mb-6">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-[#ccff00] flex items-center justify-center text-sm">🎬</div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ccff00] text-[#1c1c1e]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg></div>
               <div>
                 <p className="font-semibold text-sm text-[#363535]">{creator?.display_name} submitted their work</p>
                 <p className="text-xs text-[#9a9a9a]">{new Date(submissionMsg.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
@@ -184,7 +184,7 @@ export default function DealReviewPage() {
 
         {!submissionMsg && deal.status !== 'approved' && (
           <div className="card mb-6 text-center py-8">
-            <div className="text-4xl mb-3">⏳</div>
+            <div className="mb-3 flex justify-center"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f2f2ee]"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c7c75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2h12"/><path d="M6 22h12"/><path d="M8 2v6a4 4 0 0 0 1.17 2.83L12 13.66l2.83-2.83A4 4 0 0 0 16 8V2"/><path d="M16 22v-6a4 4 0 0 0-1.17-2.83L12 10.34l-2.83 2.83A4 4 0 0 0 8 16v6"/></svg></div></div>
             <p className="text-sm text-[#6b6b6b]">Waiting for the creator to submit their work.</p>
             <Link href={`/deals/${deal.id}`} className="btn-ghost text-sm mt-4 inline-flex items-center gap-2">Message Creator →</Link>
           </div>

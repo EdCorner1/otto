@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { AlertCircle, FileText } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 type Post = {
@@ -103,13 +104,13 @@ export default function BlogPage() {
           </div>
         ) : error ? (
           <div className="text-center py-20">
-            <div className="text-5xl mb-4">⚠️</div>
+            <div className="mb-4 flex justify-center"><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f6eeed] text-[#c25555]"><AlertCircle className="h-6 w-6" /></div></div>
             <p className="text-[#6b6b6b]">{error}</p>
             <button onClick={() => window.location.reload()} className="btn-primary mt-4 text-sm py-2 px-6">Refresh</button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-5xl mb-4">📝</div>
+            <div className="mb-4 flex justify-center"><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f2f2ee] text-[#6b6b6b]"><FileText className="h-6 w-6" /></div></div>
             <p className="text-[#6b6b6b]">No posts published yet. Check back soon.</p>
           </div>
         ) : (

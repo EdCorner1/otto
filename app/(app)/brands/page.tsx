@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 type Brand = {
@@ -97,7 +98,7 @@ export default function BrandDiscoveryPage() {
 
       <div className="grid gap-3 md:grid-cols-[1fr_auto] mb-5">
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9a9a9a]">🔍</span>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9a9a9a]"><Search className="h-4 w-4" /></span>
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}

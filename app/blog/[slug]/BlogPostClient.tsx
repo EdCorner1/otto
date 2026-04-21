@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { FileSearch } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
@@ -128,10 +129,15 @@ function renderBody(content: string): string {
         i++
       }
       const type = raw[0]?.match(/^(TIP|NOTE|WARNING|EXAMPLE):?/i)?.[1]?.toLowerCase() || 'note'
-      const icons: Record<string, string> = { tip: '💡', note: '📌', warning: '⚠️', example: '📖' }
       const titles: Record<string, string> = { tip: 'Tip', note: 'Note', warning: 'Important', example: 'Example' }
+      const iconHtml: Record<string, string> = {
+        tip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-.6.7-1.2 1.1-1.7A6 6 0 1 0 8 12.3c.4.5.9 1.1 1.1 1.7"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
+        note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10a3 3 0 1 1 6 0c0 2-3 3-3 3"/><circle cx="12" cy="12" r="10"/></svg>',
+        warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+        example: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
+      }
       const stripped = raw.join(' ').replace(/^(TIP|NOTE|WARNING|EXAMPLE):?\s*/i, '')
-      blocks.push(`<div class="callout callout-${type}"><div class="callout-header"><span>${icons[type]}</span><strong>${titles[type]}</strong></div><div class="callout-body">${formatInline(stripped)}</div></div>`)
+      blocks.push(`<div class="callout callout-${type}"><div class="callout-header"><span class="callout-icon" aria-hidden="true">${iconHtml[type]}</span><strong>${titles[type]}</strong></div><div class="callout-body">${formatInline(stripped)}</div></div>`)
       continue
     }
     if (line.match(/^!\[\[(.+?)\]\((.+?)\)\]/)) {
@@ -176,7 +182,7 @@ function renderBody(content: string): string {
 
 function renderInlineCTA(): string {
   return `<div class="inline-cta">
-    <span>🚀</span>
+    <span class="inline-cta-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 4.5-2 4.5s3.24-.5 4.5-2c.72-.85.7-2.12-.06-2.88-.76-.76-2.03-.78-2.88-.06Z"/><path d="m12 15-3-3a27 27 0 0 1 6.37-10.21 2.1 2.1 0 0 1 2.96 0l3.88 3.88a2.1 2.1 0 0 1 0 2.96A27 27 0 0 1 12 15Z"/><path d="M9 12H4a2 2 0 0 0-2 2v3"/><path d="M12 15v5a2 2 0 0 0 2 2h3"/></svg></span>
     <div>
       <strong>Want to follow along as Otto gets built?</strong>
       <p>Join the Otto signup — the newsletter for tech UGC creators who mean business.</p>
@@ -318,7 +324,7 @@ export default function BlogPostClient({ slug }: { slug: string }) {
   if (notFound || !post) return (
     <div className="min-h-screen bg-[#fafaf9] flex flex-col items-center justify-center px-6">
       <div className="text-center">
-        <div className="text-6xl mb-6">🔍</div>
+        <div className="mb-6 flex justify-center"><div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f1f1ec] text-[#6b6b6b]"><FileSearch className="h-7 w-7" /></div></div>
         <h1 className="text-4xl font-bold mb-3" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-2.5px', color: '#363535' }}>Post not found</h1>
         <p className="text-[#6b6b6b] mb-8">This post doesn&apos;t exist or has been removed.</p>
         <Link href="/blog" className="btn-primary inline-flex items-center gap-2 px-6 py-3">← Back to Blog</Link>
@@ -554,6 +560,8 @@ export default function BlogPostClient({ slug }: { slug: string }) {
         .callout-warning { background: #fff9e6; border-color: #f59e0b; }
         .callout-example { background: #f0f9ff; border-color: #3b82f6; }
         .callout-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .callout-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex-shrink: 0; }
+        .callout-icon svg { width: 16px; height: 16px; }
         .callout-note .callout-header { color: #363535; }
         .callout-tip .callout-header { color: #4a7c0f; }
         .callout-warning .callout-header { color: #b45309; }
@@ -564,7 +572,8 @@ export default function BlogPostClient({ slug }: { slug: string }) {
         .article-figure img { width: 100%; border-radius: 12px; border: 1px solid #e8e8e4; }
         .article-figure figcaption { font-size: 13px; color: #9a9a9a; text-align: center; margin-top: 8px; font-style: italic; }
         .inline-cta { display: flex; align-items: center; gap: 16px; background: #1c1c1e; border-radius: 16px; padding: 20px 24px; margin: 2.5em 0; flex-wrap: wrap; }
-        .inline-cta span { font-size: 28px; flex-shrink: 0; }
+        .inline-cta-icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 14px; background: rgba(204,255,0,0.12); color: #ccff00; flex-shrink: 0; }
+        .inline-cta-icon svg { width: 22px; height: 22px; }
         .inline-cta div { flex: 1; min-width: 180px; }
         .inline-cta strong { display: block; font-family: var(--font-bricolage); font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.3px; margin-bottom: 3px; }
         .inline-cta p { font-size: 13px; color: rgba(255,255,255,0.5); margin: 0; }

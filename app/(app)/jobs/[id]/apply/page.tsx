@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle } from 'lucide-react'
 import { getDemoJobById } from '@/lib/demo-jobs'
 
 
@@ -187,7 +187,7 @@ export default function ApplyPage() {
 
       {submitError && (
         <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-start gap-3">
-          <span className="text-red-400 mt-0.5">⚠</span>
+          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400" />
           <span>{submitError}</span>
         </div>
       )}

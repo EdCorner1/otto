@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ExternalLink, CheckCircle, RotateCcw } from 'lucide-react'
+import { ExternalLink, CheckCircle, RotateCcw, Package, Hourglass } from 'lucide-react'
 
 type Deal = {
   id: string; status: string; budget: number | null
@@ -52,7 +52,7 @@ export default function BrandDealReviewPage() {
     await supabase.from('messages').insert({
       deal_id: deal.id,
       sender_id: user!.id,
-      content: '✅ Work approved! Payment will be released shortly.',
+      content: 'Work approved. Payment will be released shortly.',
     })
     setDeal(prev => prev ? { ...prev, status: 'approved' } : null)
     setDone('approved')
@@ -66,7 +66,7 @@ export default function BrandDealReviewPage() {
     await supabase.from('messages').insert({
       deal_id: deal.id,
       sender_id: user!.id,
-      content: '🔁 I\'d like one round of revisions. Check the brief and let me know if you have questions.',
+      content: 'I\'d like one round of revisions. Check the brief and let me know if you have questions.',
     })
     setDeal(prev => prev ? { ...prev, status: 'revision_requested' } : null)
     setDone('revision')
@@ -167,7 +167,7 @@ export default function BrandDealReviewPage() {
       {deal.status === 'submitted' && (
         <div className="card mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-xl">📦</span>
+            <Package className="h-5 w-5 text-[#6b6b6b]" />
             <h2 style={{ fontSize: '18px', letterSpacing: '-0.5px', color: '#1c1c1e',
             }}>
               Submitted work
@@ -244,7 +244,7 @@ export default function BrandDealReviewPage() {
       {/* In progress */}
       {!['submitted', 'approved', 'revision_requested'].includes(deal.status) && (
         <div className="card text-center py-8">
-          <div className="text-4xl mb-3">⏳</div>
+          <div className="mb-3 flex justify-center"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f2f2ee]"><Hourglass className="h-6 w-6 text-[#7c7c75]" /></div></div>
           <h2 style={{ fontSize: '22px', letterSpacing: '-0.5px', color: '#1c1c1e',
           }} className="mb-2">Work in progress</h2>
           <p className="text-sm text-[#6b6b6b] mb-6">The creator is still working on this. You&apos;ll be notified when it&apos;s submitted.</p>
