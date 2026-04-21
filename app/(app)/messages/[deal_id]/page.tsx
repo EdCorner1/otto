@@ -18,11 +18,16 @@ interface UserState { id: string; email?: string; user_metadata?: Record<string,
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     proposed: 'bg-blue-50 text-blue-600',
+    application_sent: 'bg-sky-100 text-sky-700',
+    under_review: 'bg-indigo-100 text-indigo-700',
+    offered: 'bg-violet-100 text-violet-700',
     accepted: 'bg-green-100 text-green-700',
     in_progress: 'bg-[#ccff00]/20 text-[#363535]',
     submitted: 'bg-amber-100 text-amber-700',
+    reviewed: 'bg-blue-100 text-blue-700',
     approved: 'bg-green-100 text-green-700',
     paid: 'bg-green-100 text-green-700',
+    complete: 'bg-zinc-100 text-zinc-700',
     disputed: 'bg-red-50 text-red-600',
   }
   return (
@@ -233,6 +238,11 @@ export default function DealThreadPage() {
               <div className="flex gap-2 mt-4 pt-4 border-t border-[#e8e8e4]">
                 <button onClick={() => updateDealStatus('in_progress')} className="btn-primary text-sm">Accept Deal</button>
                 <button onClick={() => updateDealStatus('declined')} className="btn-ghost text-sm">Decline</button>
+              </div>
+            )}
+            {deal.status === 'offered' && role === 'creator' && (
+              <div className="mt-4 pt-4 border-t border-[#e8e8e4]">
+                <Link href={`/deals/${dealId}`} className="btn-primary text-sm inline-flex">Open deal workspace</Link>
               </div>
             )}
             {deal.status === 'in_progress' && role === 'creator' && !showSubmitForm && (

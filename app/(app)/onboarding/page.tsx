@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   BriefcaseBusiness,
   Check,
@@ -223,6 +223,7 @@ function PreviewPortfolioCard({ item }: { item: PortfolioItem }) {
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])
   const avatarInputRef = useRef<HTMLInputElement | null>(null)
   const portfolioInputRef = useRef<HTMLInputElement | null>(null)
@@ -238,6 +239,11 @@ export default function OnboardingPage() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [portfolioUploading, setPortfolioUploading] = useState(false)
   const [error, setError] = useState('')
+
+  const requestedRole = useMemo<Role>(() => {
+    const raw = (searchParams.get('role') || searchParams.get('type') || '').trim().toLowerCase()
+    return raw === 'brand' ? 'brand' : 'creator'
+  }, [searchParams])
 
   const role = draft.role
   const creatorProfileUrl = creatorId ? `/creators/${creatorId}` : ''
@@ -329,7 +335,11 @@ export default function OnboardingPage() {
         }
 
         const serverDraft = mergeDraft(blankDraft(), result.profile)
-        const merged = mergeDraft(serverDraft, parsedLocalDraft)
+        const localDraftWithRequestedRole = mergeDraft(blankDraft(), {
+          ...(parsedLocalDraft || {}),
+          role: parsedLocalDraft?.role || requestedRole,
+        })
+        const merged = mergeDraft(serverDraft, localDraftWithRequestedRole)
         const resumedStep = Math.min(TOTAL_STEPS, Math.max(result.nextStep || 1, localStep || 1))
 
         setDraft(merged)
@@ -345,7 +355,7 @@ export default function OnboardingPage() {
     }
 
     void boot()
-  }, [persistLocalDraft, router, supabase])
+  }, [persistLocalDraft, requestedRole, router, supabase])
 
   const creatorPreviewName = `${draft.firstName} ${draft.lastName}`.trim() || 'Your name'
   const creatorHandle = draft.handle.trim().replace(/^@+/, '') || 'your-handle'

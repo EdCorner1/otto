@@ -1,18 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function SignupPage() {
+function SignupPageInner() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'creator' | 'brand'>('creator')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
+
+  const requestedRole = useMemo<'creator' | 'brand'>(() => {
+    const raw = (searchParams.get('type') || searchParams.get('role') || '').trim().toLowerCase()
+    return raw === 'brand' ? 'brand' : 'creator'
+  }, [searchParams])
+
+  useEffect(() => {
+    setRole(requestedRole)
+  }, [requestedRole])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +36,7 @@ export default function SignupPage() {
         data: {
           role,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/onboarding?role=${requestedRole}`)}`,
       },
     })
 
@@ -42,7 +52,7 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     setLoading(true)
     const callbackUrl = new URL('/auth/callback', window.location.origin)
-    callbackUrl.searchParams.set('next', '/onboarding')
+    callbackUrl.searchParams.set('next', `/onboarding?role=${requestedRole}`)
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -165,11 +175,29 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-sm text-gray-500">
           Already have an account?{' '}
-          <Link href="/login" className="font-medium text-[#84cc16] hover:underline">
+          <Link href={`/login?redirectTo=${encodeURIComponent(`/onboarding?role=${requestedRole}`)}`} className="font-medium text-[#84cc16] hover:underline">
             Sign in
           </Link>
         </p>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+            <div className="flex justify-center py-8">
+              <div className="w-8 h-8 border-4 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <SignupPageInner />
+    </Suspense>
   )
 }

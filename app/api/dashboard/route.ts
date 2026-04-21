@@ -40,7 +40,7 @@ function isSettledStatus(status: string) {
 }
 
 function isPendingStatus(status: string) {
-  return ['proposed', 'accepted', 'in_progress', 'submitted', 'reviewed', 'approved'].includes(status)
+  return ['proposed', 'application_sent', 'under_review', 'offered', 'accepted', 'in_progress', 'submitted', 'reviewed', 'approved'].includes(status)
 }
 
 function isActiveDealStatus(status: string) {

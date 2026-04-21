@@ -6,6 +6,25 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle, ClipboardList, MapPin } from 'lucide-react'
 
+function extractAcceptedDealId(input: unknown): string | null {
+  if (!input || typeof input !== 'object') return null
+
+  const row = input as Record<string, unknown>
+  const directId = typeof row.id === 'string' ? row.id : null
+  if (directId) return directId
+
+  for (const value of Object.values(row)) {
+    if (Array.isArray(value) && value.length > 0) {
+      const first = value[0]
+      if (first && typeof first === 'object' && typeof (first as Record<string, unknown>).id === 'string') {
+        return (first as Record<string, unknown>).id as string
+      }
+    }
+  }
+
+  return null
+}
+
 type Application = {
   id: string; message: string; proposed_rate?: number; status: string; created_at: string
   creators: {
@@ -21,6 +40,12 @@ type Job = {
   applications?: { id: string }[]
 }
 
+type DealLookupRow = {
+  id: string
+  creator_id: string | null
+  status: string | null
+}
+
 export default function JobManagePage() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -32,6 +57,7 @@ export default function JobManagePage() {
   const [accepting, setAccepting] = useState<string | null>(null)
   const [rejecting, setRejecting] = useState<string | null>(null)
   const [dealCreated, setDealCreated] = useState<string | null>(null)
+  const [dealId, setDealId] = useState<string | null>(null)
   const [actionError, setActionError] = useState('')
   const posted = searchParams.get('posted') === '1'
   const router = useRouter()
@@ -57,6 +83,24 @@ export default function JobManagePage() {
         .from('applications').select('*, creators(*)')
         .eq('job_id', jobId).order('created_at', { ascending: true })
       setApps((appsData as Application[]) || [])
+
+      const acceptedApplication = ((appsData as Application[]) || []).find((app) => app.status === 'accepted')
+      if (acceptedApplication?.creators?.id) {
+        setDealCreated(acceptedApplication.creators.id)
+
+        const { data: acceptedDeal } = await supabase
+          .from('deals')
+          .select('id')
+          .eq('job_id', jobId)
+          .eq('creator_id', acceptedApplication.creators.id)
+          .order('created_at', { ascending: false })
+          .maybeSingle()
+
+        if (acceptedDeal?.id) {
+          setDealId(acceptedDeal.id)
+        }
+      }
+
       setLoading(false)
     }
     getUser()
@@ -68,37 +112,92 @@ export default function JobManagePage() {
     setActionError('')
 
     try {
-      // Re-verify job ownership before any action
-      const { data: brandData } = await supabase
-        .from('brands').select('id, company_name').eq('user_id', user.id).single()
-      if (!brandData) throw new Error('Brand profile not found.')
+      const { data: { session } } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+      if (!accessToken) {
+        router.push('/login')
+        return
+      }
 
-      const { data: jobData } = await supabase
-        .from('jobs').select('brand_id').eq('id', job.id).single()
-      if (!jobData || jobData.brand_id !== brandData.id) throw new Error('Unauthorized.')
+      const { data: existingDealRows, error: existingDealError } = await supabase
+        .from('deals')
+        .select('id, creator_id, status')
+        .eq('job_id', job.id)
+        .limit(10)
 
-      const { data: deal, error: dealError } = await supabase.from('deals').insert({
-        job_id: job.id,
-        brand_id: brandData.id,
-        creator_id: app.creators.id,
-        budget: app.proposed_rate || null,
-        status: 'proposed',
-      }).select().single()
+      if (existingDealError) throw existingDealError
 
-      if (dealError) throw dealError
+      const dealRows = (existingDealRows || []) as DealLookupRow[]
 
-      await supabase.from('applications').update({ status: 'rejected' })
-        .eq('job_id', job.id).neq('id', app.id)
-      await supabase.from('applications').update({ status: 'accepted' })
-        .eq('id', app.id)
-      await supabase.from('jobs').update({ status: 'filled' }).eq('id', job.id)
-      await supabase.from('messages').insert({
-        deal_id: deal.id,
-        sender_id: user.id,
-        content: `You have been selected for "${job.title}". Head over to discuss the brief and get started.`,
+      const acceptedDeal = dealRows.find((row) => row.creator_id === app.creators.id)
+      if (acceptedDeal?.id) {
+        setDealCreated(app.creators.id)
+        setDealId(acceptedDeal.id)
+        setJob((prev) => (prev ? { ...prev, status: 'filled' } : null))
+        setApps((prev) => prev.map((a) => ({
+          ...a,
+          status: a.id === app.id ? 'accepted' : a.status === 'accepted' ? 'rejected' : a.status,
+        })))
+        return
+      }
+
+      const competingDeal = dealRows.find((row) => row.creator_id && row.creator_id !== app.creators.id)
+      if (competingDeal?.id) {
+        throw new Error('A creator has already been selected for this brief.')
+      }
+
+      let dealRow: DealLookupRow | null = dealRows.find((row) => !row.creator_id) || null
+
+      if (!dealRow?.id) {
+        const { data: insertedDeal, error: insertDealError } = await supabase
+          .from('deals')
+          .insert({
+            job_id: job.id,
+            status: 'application_sent',
+          })
+          .select('id, creator_id, status')
+          .single()
+
+        if (insertDealError || !insertedDeal?.id) {
+          throw insertDealError || new Error('Could not prepare deal.')
+        }
+
+        dealRow = insertedDeal as DealLookupRow
+      }
+
+      if (!dealRow?.id) {
+        throw new Error('Could not prepare deal.')
+      }
+
+      const response = await fetch(`/api/deals/${dealRow.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          action: 'brand_accept_application',
+          applicationId: app.id,
+        }),
       })
 
+      const payload = await response.json().catch(() => ({})) as { error?: string; status?: string }
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Could not select this creator.')
+      }
+
+      const { data: refreshedDeals, error: refreshError } = await supabase
+        .from('deals')
+        .select('id, creator_id, status')
+        .eq('job_id', job.id)
+        .eq('creator_id', app.creators.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (refreshError) throw refreshError
+
       setDealCreated(app.creators.id)
+      setDealId(extractAcceptedDealId(refreshedDeals?.[0]) || dealRow.id)
       setJob(prev => prev ? { ...prev, status: 'filled' } : null)
       setApps(prev => prev.map(a => ({
         ...a,
@@ -214,8 +313,8 @@ export default function JobManagePage() {
       {dealCreated && (
         <div className="mb-6 p-5 bg-green-50 border border-green-200 rounded-xl">
           <p className="text-sm font-semibold text-green-800 mb-1 flex items-center gap-1"><CheckCircle size={14} /> Creator selected</p>
-          <p className="text-xs text-green-700 mb-3">A conversation has been started. Head to Messages to discuss next steps.</p>
-          <Link href="/messages" className="text-xs font-semibold text-green-800 underline">Go to Messages →</Link>
+          <p className="text-xs text-green-700 mb-3">An offer has been sent and the deal thread is ready for next steps.</p>
+          <Link href={dealId ? `/deals/${dealId}` : '/messages'} className="text-xs font-semibold text-green-800 underline">Open deal thread →</Link>
         </div>
       )}
 

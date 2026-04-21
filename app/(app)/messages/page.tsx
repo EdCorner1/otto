@@ -18,11 +18,16 @@ const headlineStyle: React.CSSProperties = {
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     proposed: 'bg-blue-50 text-blue-600',
+    application_sent: 'bg-sky-100 text-sky-700',
+    under_review: 'bg-indigo-100 text-indigo-700',
+    offered: 'bg-violet-100 text-violet-700',
     accepted: 'bg-green-100 text-green-700',
     in_progress: 'bg-[#ccff00]/20 text-[#363535]',
     submitted: 'bg-amber-100 text-amber-700',
+    reviewed: 'bg-blue-100 text-blue-700',
     approved: 'bg-green-100 text-green-700',
     paid: 'bg-green-100 text-green-700',
+    complete: 'bg-zinc-100 text-zinc-700',
     disputed: 'bg-red-50 text-red-600',
   }
   return (
