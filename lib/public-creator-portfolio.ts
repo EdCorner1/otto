@@ -5,8 +5,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-// ─── Shared types ────────────────────────────────────────────────────────────
-
 export interface PublicPortfolioSocial {
   platform: string
   url: string
@@ -29,7 +27,6 @@ export interface PublicPortfolioVideo {
 }
 
 export interface PublicCreatorPortfolio {
-  // Flat fields
   id: string
   handle: string
   fullName: string
@@ -48,7 +45,6 @@ export interface PublicCreatorPortfolio {
   main_platform: string | null
   mainPlatform?: string
   follower_count: string | null
-  // Nested structures
   socials: PublicPortfolioSocial[]
   social_links: PublicPortfolioSocial[]
   portfolioItems: PublicPortfolioVideo[]
@@ -67,88 +63,187 @@ export interface PublicCreatorPortfolio {
   isOwner: boolean
 }
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
-
-function normalizeHandle(handle: string) {
-  return handle.startsWith('@') ? handle.slice(1) : handle
+type CreatorTagRow = { tag: string }
+type CreatorSocialRow = { platform: string; url: string }
+type CreatorRow = {
+  id: string
+  user_id: string
+  display_name: string | null
+  bio: string | null
+  avatar_url: string | null
+  availability: string | null
+  creator_tags?: CreatorTagRow[] | null
+  creator_socials?: CreatorSocialRow[] | null
 }
 
-// ─── Main query ────────────────────────────────────────────────────────────────
+type PortfolioItemRow = {
+  id: string
+  url: string | null
+  video_url?: string | null
+  title?: string | null
+  type?: string | null
+  platform?: string | null
+  caption?: string | null
+  thumbnail_url?: string | null
+  created_at: string
+  sort_order?: number | null
+  views?: number | null
+}
+
+function normalizeHandle(handle: string) {
+  return handle.trim().replace(/^@+/, '').toLowerCase()
+}
+
+function normalizePlatform(value: string | null | undefined) {
+  return (value || '').trim().toLowerCase()
+}
+
+function parseCreatorMeta(tags: CreatorTagRow[]) {
+  const read = (prefix: string) => tags.find((t) => t.tag.startsWith(prefix))?.tag.replace(prefix, '').trim() || ''
+
+  return {
+    handle: read('handle:'),
+    mainPlatform: normalizePlatform(read('main_platform:')),
+    followerRange: read('followers:'),
+    incomeRange: read('income:'),
+    nicheTags: tags
+      .filter((t) => t.tag.startsWith('niche:'))
+      .map((t) => t.tag.replace('niche:', '').trim())
+      .filter(Boolean),
+  }
+}
+
+function inferPlatformFromUrl(url: string) {
+  const normalized = url.toLowerCase()
+  if (normalized.includes('tiktok.com')) return 'tiktok'
+  if (normalized.includes('instagram.com')) return 'instagram'
+  if (normalized.includes('youtube.com') || normalized.includes('youtu.be')) return 'youtube'
+  if (normalized.includes('facebook.com')) return 'facebook'
+  return ''
+}
+
+function getYoutubeId(url: string) {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return match?.[1]
+}
+
+function inferThumbnail(url: string, platform: string, explicitThumbnail: string | null | undefined) {
+  if (explicitThumbnail) return explicitThumbnail
+  if (platform === 'youtube') {
+    const youtubeId = getYoutubeId(url)
+    if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`
+  }
+  return null
+}
+
+async function findCreatorIdByHandle(normalizedHandle: string) {
+  const tagValue = `handle:${normalizedHandle}`
+
+  const { data: tagRow } = await supabase
+    .from('creator_tags')
+    .select('creator_id')
+    .eq('tag', tagValue)
+    .maybeSingle()
+
+  if (tagRow?.creator_id) return tagRow.creator_id as string
+
+  const { data: legacyCreator } = await supabase
+    .from('creators')
+    .select('id')
+    .ilike('handle', normalizedHandle)
+    .maybeSingle()
+
+  return (legacyCreator?.id as string | undefined) || null
+}
 
 export async function getPublicCreatorPortfolioByHandle(
   handle: string,
   currentUserId?: string
 ): Promise<PublicCreatorPortfolio | null> {
   const normalizedHandle = normalizeHandle(handle)
+  if (!normalizedHandle) return null
 
-  const { data: creator, error } = await supabase
+  const creatorId = await findCreatorIdByHandle(normalizedHandle)
+  if (!creatorId) return null
+
+  const { data: creator, error: creatorError } = await supabase
     .from('creators')
-    .select('*')
-    .ilike('handle', normalizedHandle)
+    .select('id, user_id, display_name, bio, avatar_url, availability, creator_tags(tag), creator_socials(platform, url)')
+    .eq('id', creatorId)
     .single()
 
-  if (error || !creator) return null
+  if (creatorError || !creator) return null
 
   const { data: items } = await supabase
     .from('portfolio_items')
     .select('*')
-    .eq('creator_id', creator.id)
+    .eq('creator_id', creatorId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(6)
 
-  const videos: PublicPortfolioVideo[] = (items || []).map(i => {
-    const url = i.video_url || i.url || ''
-    const platform = i.platform || ''
-    const isYoutube = url.includes('youtube.com') || url.includes('youtu.be')
-    const isMux = !isYoutube && !url.includes('http')
-    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  const creatorRow = creator as CreatorRow
+  const tags = (creatorRow.creator_tags || []) as CreatorTagRow[]
+  const socialsRaw = (creatorRow.creator_socials || []) as CreatorSocialRow[]
+  const meta = parseCreatorMeta(tags)
+
+  const socials: PublicPortfolioSocial[] = socialsRaw
+    .map((social) => ({
+      platform: normalizePlatform(social.platform),
+      url: social.url,
+    }))
+    .filter((social) => social.platform && social.url)
+
+  const videos: PublicPortfolioVideo[] = ((items || []) as PortfolioItemRow[]).map((item) => {
+    const url = String(item.video_url || item.url || '').trim()
+    const platform = normalizePlatform(item.platform) || inferPlatformFromUrl(url) || meta.mainPlatform || 'portfolio'
+    const youtubeId = getYoutubeId(url)
+    const isYoutube = Boolean(youtubeId)
+    const isMux = !isYoutube && !!url && !/^https?:\/\//i.test(url)
+
     return {
-      id: i.id,
+      id: item.id,
       video_url: url,
       url,
-      title: i.title || 'Untitled',
+      title: item.title?.trim() || item.caption?.trim() || 'Untitled',
       platform,
       kind: isYoutube ? 'youtube' : isMux ? 'mux' : 'direct',
-      youtubeId: ytMatch ? ytMatch[1] : undefined,
+      youtubeId: youtubeId || undefined,
       playbackId: isMux ? url : undefined,
-      thumbnailUrl: i.thumbnail_url || null,
-      caption: (i.caption || i.title) as string | null,
-      viewCount: i.views || 0,
-      createdAt: i.created_at,
+      thumbnailUrl: inferThumbnail(url, platform, item.thumbnail_url),
+      caption: item.caption?.trim() || item.title?.trim() || null,
+      viewCount: typeof item.views === 'number' ? item.views : 0,
+      createdAt: item.created_at,
     }
   })
 
-  const totalViews = videos.reduce((sum, v) => sum + v.viewCount, 0)
+  const totalViews = videos.reduce((sum, video) => sum + video.viewCount, 0)
   const totalVideos = videos.length
 
-  const socials: PublicPortfolioSocial[] = []
-  if (creator.tiktok_url) socials.push({ platform: 'TikTok', url: creator.tiktok_url })
-  if (creator.instagram_url) socials.push({ platform: 'Instagram', url: creator.instagram_url })
-  if (creator.youtube_url) socials.push({ platform: 'YouTube', url: creator.youtube_url })
-  if (creator.facebook_url) socials.push({ platform: 'Facebook', url: creator.facebook_url })
-
-  const availability = creator.availability || null
-  const isAvailable = availability === 'available'
+  const socialUrl = (platform: string) => socials.find((social) => social.platform === platform)?.url || null
+  const availability = creatorRow.availability || null
+  const isAvailable = availability === 'open' || availability === 'available'
+  const fullName = creatorRow.display_name?.trim() || meta.handle || normalizedHandle
 
   return {
-    id: creator.id,
-    handle: creator.handle,
-    fullName: creator.full_name || creator.handle,
-    bio: creator.bio || null,
-    avatarUrl: creator.avatar_url || null,
-    userId: creator.user_id,
+    id: creatorRow.id,
+    handle: meta.handle || normalizedHandle,
+    fullName,
+    bio: creatorRow.bio || null,
+    avatarUrl: creatorRow.avatar_url || null,
+    userId: creatorRow.user_id,
     availability,
     isAvailable,
     location: null,
-    tiktok_url: creator.tiktok_url || null,
-    instagram_url: creator.instagram_url || null,
-    youtube_url: creator.youtube_url || null,
-    facebook_url: creator.facebook_url || null,
-    niche_tags: creator.niche_tags || [],
-    nicheTags: creator.niche_tags || [],
-    main_platform: creator.main_platform || undefined,
-    mainPlatform: creator.main_platform || undefined,
-    follower_count: creator.follower_count || null,
+    tiktok_url: socialUrl('tiktok'),
+    instagram_url: socialUrl('instagram'),
+    youtube_url: socialUrl('youtube'),
+    facebook_url: socialUrl('facebook'),
+    niche_tags: meta.nicheTags,
+    nicheTags: meta.nicheTags,
+    main_platform: meta.mainPlatform || null,
+    mainPlatform: meta.mainPlatform || undefined,
+    follower_count: meta.followerRange || null,
     socials,
     social_links: socials,
     portfolioItems: videos,
@@ -164,6 +259,6 @@ export async function getPublicCreatorPortfolioByHandle(
       onTimeRate: 100,
       onTimePercentage: null,
     },
-    isOwner: currentUserId === creator.user_id,
+    isOwner: currentUserId === creatorRow.user_id,
   }
 }
