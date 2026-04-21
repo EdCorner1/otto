@@ -45,10 +45,9 @@ function getAllowedEmails() {
   const fromEnv = process.env.OTTO_PLATFORM_ALLOWED_EMAILS
     ?.split(',')
     .map((email) => email.trim().toLowerCase())
-    .filter(Boolean)
+    .filter(Boolean) ?? []
 
-  if (fromEnv?.length) return fromEnv
-  return DEFAULT_ED_EMAILS
+  return Array.from(new Set([...DEFAULT_ED_EMAILS, ...fromEnv]))
 }
 
 export function toMonthStartIso(date = new Date()) {

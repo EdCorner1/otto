@@ -1,4 +1,8 @@
-export const DEFAULT_ED_EMAILS = ['edcorner1@gmail.com']
+export const DEFAULT_ED_EMAILS = [
+  'edcorner1@gmail.com',
+  'edcorner1+creator@gmail.com',
+  'edcorner1+brand@gmail.com',
+]
 
 export type AuthLikeUser = {
   id: string

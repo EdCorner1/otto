@@ -1,15 +1,19 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const DEFAULT_ALLOWED_EMAILS = ['edcorner1@gmail.com']
+const DEFAULT_ALLOWED_EMAILS = [
+  'edcorner1@gmail.com',
+  'edcorner1+creator@gmail.com',
+  'edcorner1+brand@gmail.com',
+]
 
 function getAllowedEmails() {
   const fromEnv = process.env.OTTO_PLATFORM_ALLOWED_EMAILS
     ?.split(',')
     .map((email) => email.trim().toLowerCase())
-    .filter(Boolean)
+    .filter(Boolean) ?? []
 
-  return fromEnv?.length ? fromEnv : DEFAULT_ALLOWED_EMAILS
+  return Array.from(new Set([...DEFAULT_ALLOWED_EMAILS, ...fromEnv]))
 }
 
 export async function proxy(request: NextRequest) {
