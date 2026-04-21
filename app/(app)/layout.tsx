@@ -448,18 +448,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   ], [role, unreadCount])
 
   const orderedNavItems = useMemo(() => {
-    const roleKey = role === 'brand' ? 'brand:' : 'creator:'
     return itemOrder
       .filter((key) => {
-        if (key === 'live-campaigns' && role === 'creator') return false
         if (key === 'payments' || key === 'affiliates') return true
         if (key === 'portfolio') return true
-        if (key === 'dashboard' || key === 'messages' || key === 'notifications') return true
+        if (key === 'dashboard' || key === 'messages' || key === 'notifications' || key === 'live-campaigns') return true
         return true
       })
       .map((key) => baseNavItems.find((item) => item.key === key))
       .filter(Boolean) as NavItem[]
-  }, [itemOrder, baseNavItems, role])
+  }, [itemOrder, baseNavItems])
 
   const quickLinks = useMemo(() => [
     { href: '/profile/edit', label: 'Edit profile' },
