@@ -13,11 +13,12 @@ import {
   Film,
   Link2,
   Loader2,
+  MessageSquareQuote,
   Plus,
   Target,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import type { LiveCampaignPlatform } from '@/lib/live-campaigns'
+import type { LiveCampaignLogStatus, LiveCampaignPlatform } from '@/lib/live-campaigns'
 
 type CampaignStatus = 'on_track' | 'behind' | 'not_started'
 
@@ -30,6 +31,12 @@ type CampaignLog = {
   views: number
   date: string
   created_at: string
+  status: LiveCampaignLogStatus
+  notes: {
+    hook: string
+    concept: string
+    context: string
+  }
 }
 
 type CampaignCard = {
@@ -73,6 +80,12 @@ type LogFormState = {
   video_url: string
   views: string
   date: string
+  status: LiveCampaignLogStatus
+  notes: {
+    hook: string
+    concept: string
+    context: string
+  }
 }
 
 const PLATFORM_COLORS: Record<LiveCampaignPlatform, string> = {
@@ -101,6 +114,13 @@ const STATUS_STYLES: Record<CampaignStatus, { label: string; dotClass: string; b
     bar: '#d6d3d1',
     chip: 'bg-[#f5f5f4] text-[#57534e] border-[#e7e5e4]',
   },
+}
+
+const LOG_STATUS_META: Record<LiveCampaignLogStatus, { label: string; chip: string }> = {
+  drafted: { label: 'Drafted', chip: 'border-[#e5e7eb] bg-white text-[#57534e]' },
+  posted: { label: 'Posted', chip: 'border-[#bbf7d0] bg-[#ecfdf3] text-[#166534]' },
+  sent_for_approval: { label: 'Sent for approval', chip: 'border-[#fde68a] bg-[#fffbeb] text-[#92400e]' },
+  approved: { label: 'Approved', chip: 'border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]' },
 }
 
 function formatCurrency(value: number) {
@@ -146,11 +166,18 @@ function SummaryCard({ label, value, hint, icon }: { label: string; value: strin
   )
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, tone = 'default' }: { label: string; value: string; tone?: 'default' | 'success' | 'warning' | 'danger' }) {
+  const tones = {
+    default: 'border-[#f1f1ec] bg-[#fafaf9] text-[#1c1c1e]',
+    success: 'border-[#bbf7d0] bg-[#ecfdf3] text-[#166534]',
+    warning: 'border-[#fde68a] bg-[#fffbeb] text-[#92400e]',
+    danger: 'border-[#fecaca] bg-[#fff1f1] text-[#a61b1b]',
+  } as const
+
   return (
-    <div className="rounded-2xl border border-[#f1f1ec] bg-[#fafaf9] px-4 py-3">
-      <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-[#1c1c1e]">{value}</p>
+    <div className={`rounded-2xl border px-4 py-3 ${tones[tone]}`}>
+      <p className="text-xs uppercase tracking-[0.14em] opacity-70">{label}</p>
+      <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
   )
 }
@@ -191,6 +218,12 @@ export default function LiveCampaignsPage() {
               video_url: '',
               views: '',
               date: startOfTodayKey(),
+              status: 'posted',
+              notes: {
+                hook: '',
+                concept: '',
+                context: '',
+              },
             }
           }
         }
@@ -238,6 +271,8 @@ export default function LiveCampaignsPage() {
           video_url: draft.video_url,
           views: Number(draft.views || 0),
           date: draft.date,
+          status: draft.status,
+          notes: draft.notes,
         }),
       })
 
@@ -251,6 +286,12 @@ export default function LiveCampaignsPage() {
           video_url: '',
           views: '',
           date: startOfTodayKey(),
+          status: 'posted',
+          notes: {
+            hook: '',
+            concept: '',
+            context: '',
+          },
         },
       }))
 
@@ -313,13 +354,13 @@ export default function LiveCampaignsPage() {
         <SummaryCard
           label="Videos posted"
           value={formatNumber(summary?.total_videos_posted || 0)}
-          hint="All logged videos across both live campaigns"
+          hint="Only posted + approved content counts toward pacing"
           icon={<Film className="h-5 w-5" />}
         />
         <SummaryCard
           label="Views this month"
           value={formatNumber(summary?.total_views || 0)}
-          hint="Running total from the content log"
+          hint="Running total from posted and approved content logs"
           icon={<Eye className="h-5 w-5" />}
         />
         <SummaryCard
@@ -336,6 +377,10 @@ export default function LiveCampaignsPage() {
           const isOpen = openDealId === campaign.id
           const draft = formState[campaign.id]
           const postedTargetLabel = `${campaign.videos_this_month}/${campaign.monthly_target_to_date || campaign.daily_target}`
+          const draftCount = campaign.logs.filter((log) => log.status === 'drafted').length
+          const awaitingCount = campaign.logs.filter((log) => log.status === 'sent_for_approval').length
+          const approvedCount = campaign.logs.filter((log) => log.status === 'approved').length
+          const latestLog = campaign.logs[0] || null
 
           return (
             <section key={campaign.id} className="card shadow-sm">
@@ -386,10 +431,12 @@ export default function LiveCampaignsPage() {
                   <Metric label="Views this month" value={formatNumber(campaign.views_this_month)} />
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                   <Metric label="Monthly rate" value={formatCurrency(campaign.monthly_rate)} />
                   <Metric label="Earned so far" value={formatCurrency(campaign.earned_prorated)} />
                   <Metric label="Posts vs target" value={postedTargetLabel} />
+                  <Metric label="Drafts" value={String(draftCount)} tone={draftCount > 0 ? 'warning' : 'default'} />
+                  <Metric label="Awaiting approval" value={String(awaitingCount)} tone={awaitingCount > 0 ? 'warning' : 'default'} />
                 </div>
 
                 <div>
@@ -405,13 +452,44 @@ export default function LiveCampaignsPage() {
                   </div>
                 </div>
 
+                {latestLog ? (
+                  <div className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${PLATFORM_COLORS[latestLog.platform]}`}>{latestLog.platform}</span>
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${LOG_STATUS_META[latestLog.status].chip}`}>
+                        {LOG_STATUS_META[latestLog.status].label}
+                      </span>
+                      <span className="text-xs text-[#9a9a9a]">Latest log · {formatDate(latestLog.date, true)}</span>
+                      {approvedCount > 0 ? <span className="text-xs text-[#9a9a9a]">• {approvedCount} approved</span> : null}
+                    </div>
+                    {(latestLog.notes.hook || latestLog.notes.concept || latestLog.notes.context) ? (
+                      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div className="rounded-2xl border border-[#ecece8] bg-white p-3">
+                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Hook</p>
+                          <p className="mt-2 text-sm text-[#363535] line-clamp-2">{latestLog.notes.hook || '—'}</p>
+                        </div>
+                        <div className="rounded-2xl border border-[#ecece8] bg-white p-3">
+                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Concept</p>
+                          <p className="mt-2 text-sm text-[#363535] line-clamp-2">{latestLog.notes.concept || '—'}</p>
+                        </div>
+                        <div className="rounded-2xl border border-[#ecece8] bg-white p-3">
+                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Context</p>
+                          <p className="mt-2 text-sm text-[#363535] line-clamp-2">{latestLog.notes.context || '—'}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-[#6b6b6b]">No hook, concept, or context notes logged on the latest entry yet.</p>
+                    )}
+                  </div>
+                ) : null}
+
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => setOpenDealId(isOpen ? null : campaign.id)}
                     className="btn-primary"
                   >
                     <Plus className="h-4 w-4" />
-                    Log today&apos;s content
+                    Log content
                   </button>
                   <Link
                     href={`/live-campaigns/${campaign.id}`}
@@ -421,7 +499,7 @@ export default function LiveCampaignsPage() {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <div className="text-sm text-[#6b6b6b]">
-                    {campaign.total_videos} total videos · {formatNumber(campaign.total_views)} total views
+                    {campaign.total_videos} total posted/approved videos · {formatNumber(campaign.total_views)} total views
                   </div>
                 </div>
 
@@ -445,6 +523,23 @@ export default function LiveCampaignsPage() {
                       </label>
 
                       <label className="text-sm text-[#363535]">
+                        <span className="mb-2 block font-medium">Status</span>
+                        <select
+                          value={draft.status}
+                          onChange={(event) => setFormState((current) => ({
+                            ...current,
+                            [campaign.id]: { ...current[campaign.id], status: event.target.value as LiveCampaignLogStatus },
+                          }))}
+                          className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                        >
+                          <option value="drafted">Drafted</option>
+                          <option value="posted">Posted</option>
+                          <option value="sent_for_approval">Sent for approval</option>
+                          <option value="approved">Approved</option>
+                        </select>
+                      </label>
+
+                      <label className="text-sm text-[#363535]">
                         <span className="mb-2 block font-medium">Views</span>
                         <input
                           type="number"
@@ -459,21 +554,6 @@ export default function LiveCampaignsPage() {
                         />
                       </label>
 
-                      <label className="text-sm text-[#363535] md:col-span-2">
-                        <span className="mb-2 block font-medium">Video URL</span>
-                        <input
-                          type="url"
-                          value={draft.video_url}
-                          onChange={(event) => setFormState((current) => ({
-                            ...current,
-                            [campaign.id]: { ...current[campaign.id], video_url: event.target.value },
-                          }))}
-                          className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
-                          placeholder="https://www.tiktok.com/..."
-                          required
-                        />
-                      </label>
-
                       <label className="text-sm text-[#363535]">
                         <span className="mb-2 block font-medium">Date</span>
                         <input
@@ -485,6 +565,60 @@ export default function LiveCampaignsPage() {
                           }))}
                           className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
                           required
+                        />
+                      </label>
+
+                      <label className="text-sm text-[#363535] md:col-span-2">
+                        <span className="mb-2 block font-medium">Video URL</span>
+                        <input
+                          type="url"
+                          value={draft.video_url}
+                          onChange={(event) => setFormState((current) => ({
+                            ...current,
+                            [campaign.id]: { ...current[campaign.id], video_url: event.target.value },
+                          }))}
+                          className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                          placeholder="https://www.tiktok.com/..."
+                        />
+                      </label>
+
+                      <label className="text-sm text-[#363535]">
+                        <span className="mb-2 block font-medium">Hook</span>
+                        <input
+                          type="text"
+                          value={draft.notes.hook}
+                          onChange={(event) => setFormState((current) => ({
+                            ...current,
+                            [campaign.id]: { ...current[campaign.id], notes: { ...current[campaign.id].notes, hook: event.target.value } },
+                          }))}
+                          className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                          placeholder="Strong first-line idea"
+                        />
+                      </label>
+
+                      <label className="text-sm text-[#363535] md:col-span-2">
+                        <span className="mb-2 block font-medium">Concept</span>
+                        <textarea
+                          value={draft.notes.concept}
+                          onChange={(event) => setFormState((current) => ({
+                            ...current,
+                            [campaign.id]: { ...current[campaign.id], notes: { ...current[campaign.id].notes, concept: event.target.value } },
+                          }))}
+                          className="min-h-[88px] w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                          placeholder="Angle, structure, talking points"
+                        />
+                      </label>
+
+                      <label className="text-sm text-[#363535] md:col-span-2">
+                        <span className="mb-2 block font-medium">Context</span>
+                        <textarea
+                          value={draft.notes.context}
+                          onChange={(event) => setFormState((current) => ({
+                            ...current,
+                            [campaign.id]: { ...current[campaign.id], notes: { ...current[campaign.id].notes, context: event.target.value } },
+                          }))}
+                          className="min-h-[88px] w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                          placeholder="Audience, CTA, feedback, posting context"
                         />
                       </label>
                     </div>
@@ -517,41 +651,62 @@ export default function LiveCampaignsPage() {
 
         {contentLog.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-[#e8e8e4] bg-[#fafaf9] px-6 py-12 text-center text-sm text-[#6b6b6b]">
-            No videos logged yet. Use “Log today&apos;s content” on a campaign card to add the first post.
+            No videos logged yet. Use “Log content” on a campaign card to add the first post.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-separate border-spacing-y-3">
-              <thead>
-                <tr>
-                  {['Client', 'Platform', 'Video', 'Date', 'Views'].map((heading) => (
-                    <th key={heading} className="px-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[#9a9a9a]">
-                      {heading}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {contentLog.map((entry) => (
-                  <tr key={entry.id} className="overflow-hidden rounded-2xl bg-[#fafaf9]">
-                    <td className="rounded-l-2xl px-3 py-4 text-sm font-semibold text-[#1c1c1e]">{entry.client_name}</td>
-                    <td className="px-3 py-4">
+          <div className="space-y-3">
+            {contentLog.map((entry) => (
+              <div key={entry.id} className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-[#1c1c1e]">{entry.client_name}</span>
                       <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${PLATFORM_COLORS[entry.platform]}`}>
                         {entry.platform}
                       </span>
-                    </td>
-                    <td className="px-3 py-4 text-sm text-[#363535]">
-                      <a href={entry.video_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 hover:underline">
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${LOG_STATUS_META[entry.status].chip}`}>
+                        {LOG_STATUS_META[entry.status].label}
+                      </span>
+                      <span className="text-xs text-[#9a9a9a]">{formatDate(entry.date, true)}</span>
+                    </div>
+                    {entry.video_url ? (
+                      <a href={entry.video_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex max-w-full items-center gap-2 text-sm font-medium text-[#1c1c1e] hover:underline">
                         <Link2 className="h-4 w-4" />
-                        <span className="max-w-[320px] truncate">{entry.video_url}</span>
+                        <span className="max-w-[420px] truncate">{entry.video_url}</span>
                       </a>
-                    </td>
-                    <td className="px-3 py-4 text-sm text-[#6b6b6b]">{formatDate(entry.date, true)}</td>
-                    <td className="rounded-r-2xl px-3 py-4 text-sm font-semibold text-[#1c1c1e]">{formatNumber(entry.views)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    ) : (
+                      <p className="mt-3 text-sm text-[#9a9a9a]">No live URL yet.</p>
+                    )}
+                    {(entry.notes.hook || entry.notes.concept || entry.notes.context) ? (
+                      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div className="rounded-2xl border border-[#ecece8] bg-white p-3">
+                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Hook</p>
+                          <p className="mt-2 text-sm text-[#363535]">{entry.notes.hook || '—'}</p>
+                        </div>
+                        <div className="rounded-2xl border border-[#ecece8] bg-white p-3">
+                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Concept</p>
+                          <p className="mt-2 text-sm text-[#363535]">{entry.notes.concept || '—'}</p>
+                        </div>
+                        <div className="rounded-2xl border border-[#ecece8] bg-white p-3">
+                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Context</p>
+                          <p className="mt-2 text-sm text-[#363535]">{entry.notes.context || '—'}</p>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-col gap-3 lg:min-w-[170px]">
+                    <div className="rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-right">
+                      <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Views</p>
+                      <p className="mt-1 text-lg font-semibold text-[#1c1c1e]">{formatNumber(entry.views)}</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-right">
+                      <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Logged</p>
+                      <p className="mt-1 text-sm text-[#6b6b6b]">{new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>

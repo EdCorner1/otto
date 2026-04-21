@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import {
   computeLiveCampaignStats,
   dateKey,
+  normalizeLogStatus,
   normalizePlatform,
   parseLiveCampaignMetadata,
   serializeLiveCampaignMetadata,
@@ -64,9 +65,15 @@ export async function POST(request: NextRequest) {
     const videoUrl = typeof body?.video_url === 'string' ? body.video_url.trim() : ''
     const views = Number(body?.views || 0)
     const date = typeof body?.date === 'string' && body.date ? body.date : dateKey(new Date())
+    const status = normalizeLogStatus(body?.status)
+    const notes = {
+      hook: typeof body?.notes?.hook === 'string' ? body.notes.hook.trim() : '',
+      concept: typeof body?.notes?.concept === 'string' ? body.notes.concept.trim() : '',
+      context: typeof body?.notes?.context === 'string' ? body.notes.context.trim() : '',
+    }
 
-    if (!dealId || !platform || !videoUrl || !Number.isFinite(views)) {
-      return NextResponse.json({ error: 'deal_id, platform, video_url, views, and date are required.' }, { status: 400 })
+    if (!dealId || !platform || !Number.isFinite(views) || (!videoUrl && !notes.hook && !notes.concept && !notes.context)) {
+      return NextResponse.json({ error: 'deal_id, platform, date, a valid status, and either video_url or notes are required.' }, { status: 400 })
     }
 
     const { data: deal, error: dealError } = await auth.admin
@@ -99,6 +106,8 @@ export async function POST(request: NextRequest) {
       views: Math.max(0, Math.round(views)),
       date,
       created_at: new Date().toISOString(),
+      status,
+      notes,
     }
 
     const nextMetadata = {

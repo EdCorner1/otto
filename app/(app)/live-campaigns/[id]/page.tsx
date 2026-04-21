@@ -18,13 +18,22 @@ import {
   Globe,
   Link2,
   Loader2,
+  MessageSquareQuote,
   NotebookPen,
+  Pencil,
   Plus,
+  RotateCcw,
+  Save,
   Target,
   Trash2,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import type { LiveCampaignPlatform, LiveCampaignTaskStatus } from '@/lib/live-campaigns'
+import type {
+  LiveCampaignApprovalStatus,
+  LiveCampaignLogStatus,
+  LiveCampaignPlatform,
+  LiveCampaignTaskStatus,
+} from '@/lib/live-campaigns'
 
 type CampaignStatus = 'on_track' | 'behind' | 'not_started'
 type ActionPriority = 'high' | 'medium' | 'low'
@@ -103,6 +112,17 @@ type LiveCampaignDetailPayload = {
       due_date: string | null
     }>
   }
+  logs_summary: {
+    drafted_count: number
+    posted_count: number
+    sent_for_approval_count: number
+    approved_count: number
+  }
+  approvals_summary: {
+    sent_for_approval_count: number
+    approved_count: number
+    revision_requested_count: number
+  }
   next_actions: Array<{
     id: string
     title: string
@@ -124,6 +144,27 @@ type LiveCampaignDetailPayload = {
     views: number
     date: string
     created_at: string
+    status: LiveCampaignLogStatus
+    notes: {
+      hook: string
+      concept: string
+      context: string
+    }
+  }>
+  client_feedback: Array<{
+    id: string
+    body: string
+    source: string
+    date: string
+    created_at: string
+  }>
+  approvals: Array<{
+    id: string
+    title: string
+    status: LiveCampaignApprovalStatus
+    detail: string
+    date: string
+    created_at: string
   }>
   placeholders: {
     next_review: string
@@ -136,6 +177,29 @@ type TaskDraft = {
   title: string
   detail: string
   due_date: string
+}
+
+type LogEditorState = {
+  status: LiveCampaignLogStatus
+  video_url: string
+  views: string
+  date: string
+  hook: string
+  concept: string
+  context: string
+}
+
+type FeedbackDraft = {
+  body: string
+  source: string
+  date: string
+}
+
+type ApprovalDraft = {
+  title: string
+  status: LiveCampaignApprovalStatus
+  detail: string
+  date: string
 }
 
 const PLATFORM_COLORS: Record<LiveCampaignPlatform, string> = {
@@ -181,6 +245,19 @@ const ACTIVITY_ICON_STYLES: Record<ActivityType, { bg: string; icon: React.React
   status_snapshot: { bg: 'bg-[#f5f5f4] text-[#57534e]', icon: <AlertCircle className="h-4 w-4" /> },
 }
 
+const LOG_STATUS_META: Record<LiveCampaignLogStatus, { label: string; chip: string }> = {
+  drafted: { label: 'Drafted', chip: 'border-[#e5e7eb] bg-white text-[#57534e]' },
+  posted: { label: 'Posted', chip: 'border-[#bbf7d0] bg-[#ecfdf3] text-[#166534]' },
+  sent_for_approval: { label: 'Sent for approval', chip: 'border-[#fde68a] bg-[#fffbeb] text-[#92400e]' },
+  approved: { label: 'Approved', chip: 'border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]' },
+}
+
+const APPROVAL_STATUS_META: Record<LiveCampaignApprovalStatus, { label: string; chip: string }> = {
+  sent_for_approval: { label: 'Sent for approval', chip: 'border-[#fde68a] bg-[#fffbeb] text-[#92400e]' },
+  approved: { label: 'Approved', chip: 'border-[#bbf7d0] bg-[#ecfdf3] text-[#166534]' },
+  revision_requested: { label: 'Revision requested', chip: 'border-[#fdba74] bg-[#fff7ed] text-[#c2410c]' },
+}
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -216,6 +293,10 @@ function formatDateTime(value: string | null) {
   })
 }
 
+function startOfTodayKey() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 function MetricCard({ label, value, hint, icon }: { label: string; value: string; hint?: string; icon?: React.ReactNode }) {
   return (
     <div className="rounded-[28px] border border-[#ecece8] bg-white p-5 shadow-sm">
@@ -231,6 +312,22 @@ function MetricCard({ label, value, hint, icon }: { label: string; value: string
   )
 }
 
+function InfoStat({ label, value, tone = 'default' }: { label: string; value: string; tone?: 'default' | 'success' | 'warning' | 'danger' }) {
+  const tones = {
+    default: 'border-[#ecece8] bg-[#fafaf9] text-[#1c1c1e]',
+    success: 'border-[#bbf7d0] bg-[#f0fdf4] text-[#166534]',
+    warning: 'border-[#fde68a] bg-[#fffbeb] text-[#92400e]',
+    danger: 'border-[#fecaca] bg-[#fff1f1] text-[#a61b1b]',
+  } as const
+
+  return (
+    <div className={`rounded-2xl border p-4 ${tones[tone]}`}>
+      <p className="text-xs uppercase tracking-[0.14em] opacity-70">{label}</p>
+      <p className="mt-2 text-xl font-semibold">{value}</p>
+    </div>
+  )
+}
+
 export default function LiveCampaignDetailPage() {
   const params = useParams<{ id: string }>()
   const supabase = useMemo(() => createClient(), [])
@@ -240,8 +337,19 @@ export default function LiveCampaignDetailPage() {
   const [savingNotes, setSavingNotes] = useState(false)
   const [taskBusyId, setTaskBusyId] = useState<string | null>(null)
   const [taskSubmitting, setTaskSubmitting] = useState(false)
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const [logBusyId, setLogBusyId] = useState<string | null>(null)
+  const [editingLogId, setEditingLogId] = useState<string | null>(null)
+  const [feedbackBusyId, setFeedbackBusyId] = useState<string | null>(null)
+  const [approvalBusyId, setApprovalBusyId] = useState<string | null>(null)
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
+  const [approvalSubmitting, setApprovalSubmitting] = useState(false)
   const [notesDraft, setNotesDraft] = useState('')
   const [taskDraft, setTaskDraft] = useState<TaskDraft>({ title: '', detail: '', due_date: '' })
+  const [editingTaskDraft, setEditingTaskDraft] = useState<TaskDraft>({ title: '', detail: '', due_date: '' })
+  const [logDrafts, setLogDrafts] = useState<Record<string, LogEditorState>>({})
+  const [feedbackDraft, setFeedbackDraft] = useState<FeedbackDraft>({ body: '', source: '', date: startOfTodayKey() })
+  const [approvalDraft, setApprovalDraft] = useState<ApprovalDraft>({ title: '', status: 'sent_for_approval', detail: '', date: startOfTodayKey() })
 
   const loadCampaign = async () => {
     try {
@@ -262,6 +370,15 @@ export default function LiveCampaignDetailPage() {
       const nextPayload = data as LiveCampaignDetailPayload
       setPayload(nextPayload)
       setNotesDraft(nextPayload.internal_notes.body || '')
+      setLogDrafts(Object.fromEntries(nextPayload.recent_logs.map((log) => [log.id, {
+        status: log.status,
+        video_url: log.video_url,
+        views: String(log.views ?? 0),
+        date: log.date,
+        hook: log.notes.hook || '',
+        concept: log.notes.concept || '',
+        context: log.notes.context || '',
+      }])))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load campaign.')
     } finally {
@@ -342,6 +459,156 @@ export default function LiveCampaignDetailPage() {
     }
   }
 
+  const startEditingTask = (task: LiveCampaignDetailPayload['tasks'][number]) => {
+    setEditingTaskId(task.id)
+    setEditingTaskDraft({
+      title: task.title,
+      detail: task.detail,
+      due_date: task.due_date || '',
+    })
+  }
+
+  const saveTaskEdit = async (taskId: string) => {
+    if (!editingTaskDraft.title.trim()) return
+    try {
+      setTaskBusyId(taskId)
+      setError('')
+      await updateCampaign({
+        task: {
+          action: 'update',
+          id: taskId,
+          title: editingTaskDraft.title,
+          detail: editingTaskDraft.detail,
+          due_date: editingTaskDraft.due_date,
+        },
+      })
+      setEditingTaskId(null)
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save task changes.')
+    } finally {
+      setTaskBusyId(null)
+    }
+  }
+
+  const saveLogEdit = async (logId: string) => {
+    const draft = logDrafts[logId]
+    if (!draft) return
+    try {
+      setLogBusyId(logId)
+      setError('')
+      await updateCampaign({
+        log: {
+          action: 'update',
+          id: logId,
+          status: draft.status,
+          video_url: draft.video_url,
+          views: Number(draft.views || 0),
+          date: draft.date,
+          notes: {
+            hook: draft.hook,
+            concept: draft.concept,
+            context: draft.context,
+          },
+        },
+      })
+      setEditingLogId(null)
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save log changes.')
+    } finally {
+      setLogBusyId(null)
+    }
+  }
+
+  const deleteLog = async (logId: string) => {
+    try {
+      setLogBusyId(logId)
+      setError('')
+      await updateCampaign({ log: { action: 'delete', id: logId } })
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not remove log.')
+    } finally {
+      setLogBusyId(null)
+    }
+  }
+
+  const submitFeedback = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!feedbackDraft.body.trim()) return
+
+    try {
+      setFeedbackSubmitting(true)
+      setError('')
+      await updateCampaign({
+        feedback: {
+          action: 'create',
+          body: feedbackDraft.body,
+          source: feedbackDraft.source,
+          date: feedbackDraft.date,
+        },
+      })
+      setFeedbackDraft({ body: '', source: '', date: startOfTodayKey() })
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not add feedback.')
+    } finally {
+      setFeedbackSubmitting(false)
+    }
+  }
+
+  const deleteFeedback = async (feedbackId: string) => {
+    try {
+      setFeedbackBusyId(feedbackId)
+      setError('')
+      await updateCampaign({ feedback: { action: 'delete', id: feedbackId } })
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not remove feedback.')
+    } finally {
+      setFeedbackBusyId(null)
+    }
+  }
+
+  const submitApproval = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!approvalDraft.title.trim()) return
+
+    try {
+      setApprovalSubmitting(true)
+      setError('')
+      await updateCampaign({
+        approval: {
+          action: 'create',
+          title: approvalDraft.title,
+          status: approvalDraft.status,
+          detail: approvalDraft.detail,
+          date: approvalDraft.date,
+        },
+      })
+      setApprovalDraft({ title: '', status: 'sent_for_approval', detail: '', date: startOfTodayKey() })
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not add approval item.')
+    } finally {
+      setApprovalSubmitting(false)
+    }
+  }
+
+  const deleteApproval = async (approvalId: string) => {
+    try {
+      setApprovalBusyId(approvalId)
+      setError('')
+      await updateCampaign({ approval: { action: 'delete', id: approvalId } })
+      await loadCampaign()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not remove approval item.')
+    } finally {
+      setApprovalBusyId(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#fafaf9]">
@@ -362,7 +629,24 @@ export default function LiveCampaignDetailPage() {
 
   if (!payload) return null
 
-  const { campaign, summary, goals, views_by_platform, notes, internal_notes, tasks, task_summary, next_actions, activity_timeline, recent_logs, placeholders } = payload
+  const {
+    campaign,
+    summary,
+    goals,
+    views_by_platform,
+    notes,
+    internal_notes,
+    tasks,
+    task_summary,
+    logs_summary,
+    approvals_summary,
+    next_actions,
+    activity_timeline,
+    recent_logs,
+    client_feedback,
+    approvals,
+    placeholders,
+  } = payload
   const status = STATUS_STYLES[campaign.campaign_status]
 
   return (
@@ -436,8 +720,8 @@ export default function LiveCampaignDetailPage() {
       </section>
 
       <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Progress to date" value={`${summary.progress_percent}%`} hint={`${summary.videos_this_month}/${summary.monthly_target_to_date || campaign.daily_target} posts against target`} icon={<Target className="h-5 w-5" />} />
-        <MetricCard label="Views this month" value={formatNumber(summary.views_this_month)} hint={`${formatNumber(summary.total_views)} lifetime views logged`} icon={<Eye className="h-5 w-5" />} />
+        <MetricCard label="Progress to date" value={`${summary.progress_percent}%`} hint={`${summary.videos_this_month}/${summary.monthly_target_to_date || campaign.daily_target} posted/approved pieces against target`} icon={<Target className="h-5 w-5" />} />
+        <MetricCard label="Views this month" value={formatNumber(summary.views_this_month)} hint={`${formatNumber(summary.total_views)} lifetime views on posted/approved content`} icon={<Eye className="h-5 w-5" />} />
         <MetricCard label="Videos posted" value={formatNumber(summary.total_videos)} hint={`${formatNumber(summary.videos_this_week)} this week · ${formatNumber(summary.videos_today)} today`} icon={<Film className="h-5 w-5" />} />
         <MetricCard label="Earned so far" value={formatCurrency(summary.earned_prorated)} hint={`${formatCurrency(campaign.monthly_rate)} monthly retainer`} icon={<DollarSign className="h-5 w-5" />} />
       </section>
@@ -456,13 +740,9 @@ export default function LiveCampaignDetailPage() {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {next_actions.map((action) => (
                 <div key={action.id} className={`rounded-[24px] border p-4 ${ACTION_PRIORITY_STYLES[action.priority]}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em]">{action.priority} priority</p>
-                      <p className="mt-2 text-base font-semibold">{action.title}</p>
-                      <p className="mt-2 text-sm opacity-90">{action.detail}</p>
-                    </div>
-                  </div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em]">{action.priority} priority</p>
+                  <p className="mt-2 text-base font-semibold">{action.title}</p>
+                  <p className="mt-2 text-sm opacity-90">{action.detail}</p>
                 </div>
               ))}
             </div>
@@ -478,22 +758,10 @@ export default function LiveCampaignDetailPage() {
             </div>
 
             <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <div className="rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Open</p>
-                <p className="mt-2 text-xl font-semibold text-[#1c1c1e]">{task_summary.open_count}</p>
-              </div>
-              <div className="rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Completed</p>
-                <p className="mt-2 text-xl font-semibold text-[#1c1c1e]">{task_summary.completed_count}</p>
-              </div>
-              <div className="rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Overdue</p>
-                <p className="mt-2 text-xl font-semibold text-[#1c1c1e]">{task_summary.overdue_count}</p>
-              </div>
-              <div className="rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Due next</p>
-                <p className="mt-2 text-sm font-semibold text-[#1c1c1e]">{task_summary.upcoming_deadlines[0]?.due_date ? formatDate(task_summary.upcoming_deadlines[0].due_date) : 'No deadline set'}</p>
-              </div>
+              <InfoStat label="Open" value={String(task_summary.open_count)} />
+              <InfoStat label="Completed" value={String(task_summary.completed_count)} tone="success" />
+              <InfoStat label="Overdue" value={String(task_summary.overdue_count)} tone={task_summary.overdue_count > 0 ? 'danger' : 'default'} />
+              <InfoStat label="Due next" value={task_summary.upcoming_deadlines[0]?.due_date ? formatDate(task_summary.upcoming_deadlines[0].due_date) : 'No deadline'} tone="warning" />
             </div>
 
             <form onSubmit={handleTaskSubmit} className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
@@ -547,37 +815,428 @@ export default function LiveCampaignDetailPage() {
               ) : tasks.map((task) => {
                 const isDone = task.status === 'done'
                 const isBusy = taskBusyId === task.id
+                const isEditing = editingTaskId === task.id
                 return (
                   <div key={task.id} className={`rounded-[24px] border p-4 ${isDone ? 'border-[#d6f5df] bg-[#f5fcf7]' : 'border-[#ecece8] bg-[#fafaf9]'}`}>
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="min-w-0 flex-1">
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={editingTaskDraft.title}
+                          onChange={(event) => setEditingTaskDraft((current) => ({ ...current, title: event.target.value }))}
+                          className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                        />
+                        <textarea
+                          value={editingTaskDraft.detail}
+                          onChange={(event) => setEditingTaskDraft((current) => ({ ...current, detail: event.target.value }))}
+                          className="min-h-[96px] w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                        />
+                        <input
+                          type="date"
+                          value={editingTaskDraft.due_date}
+                          onChange={(event) => setEditingTaskDraft((current) => ({ ...current, due_date: event.target.value }))}
+                          className="w-full max-w-[220px] rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#1c1c1e] outline-none focus:border-[#ccff00]"
+                        />
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold ${isDone ? 'border-[#bbf7d0] bg-[#ecfdf3] text-[#166534]' : 'border-[#e8e8e4] bg-white text-[#57534e]'}`}>
-                            <CircleDot className={`h-3 w-3 ${isDone ? 'fill-[#22c55e] text-[#22c55e]' : 'fill-[#d6d3d1] text-[#d6d3d1]'}`} />
-                            {isDone ? 'Done' : 'To do'}
-                          </span>
-                          {task.due_date ? (
-                            <span className="inline-flex items-center gap-1 text-xs text-[#6b6b6b]"><Clock3 className="h-3.5 w-3.5" /> Due {formatDate(task.due_date, true)}</span>
-                          ) : null}
+                          <button type="button" className="btn-primary" onClick={() => saveTaskEdit(task.id)} disabled={isBusy}>
+                            {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            Save changes
+                          </button>
+                          <button type="button" className="btn-ghost" onClick={() => setEditingTaskId(null)}>
+                            Cancel
+                          </button>
                         </div>
-                        <p className={`mt-3 text-base font-semibold ${isDone ? 'text-[#3f3f46] line-through' : 'text-[#1c1c1e]'}`}>{task.title}</p>
-                        {task.detail ? <p className="mt-2 text-sm text-[#6b6b6b]">{task.detail}</p> : null}
                       </div>
+                    ) : (
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold ${isDone ? 'border-[#bbf7d0] bg-[#ecfdf3] text-[#166534]' : 'border-[#e8e8e4] bg-white text-[#57534e]'}`}>
+                              <CircleDot className={`h-3 w-3 ${isDone ? 'fill-[#22c55e] text-[#22c55e]' : 'fill-[#d6d3d1] text-[#d6d3d1]'}`} />
+                              {isDone ? 'Done' : 'To do'}
+                            </span>
+                            {task.due_date ? (
+                              <span className="inline-flex items-center gap-1 text-xs text-[#6b6b6b]"><Clock3 className="h-3.5 w-3.5" /> Due {formatDate(task.due_date, true)}</span>
+                            ) : null}
+                          </div>
+                          <p className={`mt-3 text-base font-semibold ${isDone ? 'text-[#3f3f46] line-through' : 'text-[#1c1c1e]'}`}>{task.title}</p>
+                          {task.detail ? <p className="mt-2 text-sm text-[#6b6b6b]">{task.detail}</p> : null}
+                        </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button type="button" className="btn-ghost border border-[#e8e8e4] bg-white px-3 py-2 text-sm" onClick={() => handleTaskAction(task.id, 'toggle')} disabled={isBusy}>
-                          {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                          {isDone ? 'Mark open' : 'Mark done'}
-                        </button>
-                        <button type="button" className="btn-ghost border border-[#f1d6d6] bg-white px-3 py-2 text-sm text-[#a61b1b]" onClick={() => handleTaskAction(task.id, 'delete')} disabled={isBusy}>
-                          <Trash2 className="h-4 w-4" />
-                          Remove
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button type="button" className="btn-ghost border border-[#e8e8e4] bg-white px-3 py-2 text-sm" onClick={() => startEditingTask(task)} disabled={isBusy}>
+                            <Pencil className="h-4 w-4" />
+                            Edit
+                          </button>
+                          <button type="button" className="btn-ghost border border-[#e8e8e4] bg-white px-3 py-2 text-sm" onClick={() => handleTaskAction(task.id, 'toggle')} disabled={isBusy}>
+                            {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            {isDone ? 'Mark open' : 'Mark done'}
+                          </button>
+                          <button type="button" className="btn-ghost border border-[#f1d6d6] bg-white px-3 py-2 text-sm text-[#a61b1b]" onClick={() => handleTaskAction(task.id, 'delete')} disabled={isBusy}>
+                            <Trash2 className="h-4 w-4" />
+                            Remove
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )
               })}
+            </div>
+          </div>
+
+          <div className="card shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="section-label mb-1">Content log workflow</p>
+                <h2 className="text-2xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>Drafts, posts, approvals</h2>
+              </div>
+              <div className="text-sm text-[#6b6b6b]">{recent_logs.length} recent entries</div>
+            </div>
+
+            <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <InfoStat label="Drafted" value={String(logs_summary.drafted_count)} />
+              <InfoStat label="Posted" value={String(logs_summary.posted_count)} tone="success" />
+              <InfoStat label="Awaiting approval" value={String(logs_summary.sent_for_approval_count)} tone="warning" />
+              <InfoStat label="Approved" value={String(logs_summary.approved_count)} tone="default" />
+            </div>
+
+            {recent_logs.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-[#e8e8e4] bg-[#fafaf9] px-6 py-10 text-sm text-[#6b6b6b]">
+                No posts logged yet. Use the content logger to start tracking delivery.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recent_logs.map((log) => {
+                  const isEditing = editingLogId === log.id
+                  const isBusy = logBusyId === log.id
+                  const draft = logDrafts[log.id]
+                  return (
+                    <div key={log.id} className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${PLATFORM_COLORS[log.platform]}`}>{log.platform}</span>
+                            <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${LOG_STATUS_META[(isEditing ? draft?.status : log.status) || log.status].chip}`}>
+                              {LOG_STATUS_META[(isEditing ? draft?.status : log.status) || log.status].label}
+                            </span>
+                            <span className="text-xs text-[#9a9a9a]">{formatDate(log.date, true)}</span>
+                          </div>
+
+                          {isEditing && draft ? (
+                            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                              <label className="text-sm text-[#363535]">
+                                <span className="mb-2 block font-medium">Status</span>
+                                <select
+                                  value={draft.status}
+                                  onChange={(event) => setLogDrafts((current) => ({ ...current, [log.id]: { ...current[log.id], status: event.target.value as LiveCampaignLogStatus } }))}
+                                  className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                                >
+                                  <option value="drafted">Drafted</option>
+                                  <option value="posted">Posted</option>
+                                  <option value="sent_for_approval">Sent for approval</option>
+                                  <option value="approved">Approved</option>
+                                </select>
+                              </label>
+                              <label className="text-sm text-[#363535]">
+                                <span className="mb-2 block font-medium">Date</span>
+                                <input
+                                  type="date"
+                                  value={draft.date}
+                                  onChange={(event) => setLogDrafts((current) => ({ ...current, [log.id]: { ...current[log.id], date: event.target.value } }))}
+                                  className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                                />
+                              </label>
+                              <label className="text-sm text-[#363535] md:col-span-2">
+                                <span className="mb-2 block font-medium">Video URL</span>
+                                <input
+                                  type="url"
+                                  value={draft.video_url}
+                                  onChange={(event) => setLogDrafts((current) => ({ ...current, [log.id]: { ...current[log.id], video_url: event.target.value } }))}
+                                  className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                                  placeholder="https://..."
+                                />
+                              </label>
+                              <label className="text-sm text-[#363535]">
+                                <span className="mb-2 block font-medium">Views</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={draft.views}
+                                  onChange={(event) => setLogDrafts((current) => ({ ...current, [log.id]: { ...current[log.id], views: event.target.value } }))}
+                                  className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                                />
+                              </label>
+                              <label className="text-sm text-[#363535]">
+                                <span className="mb-2 block font-medium">Hook</span>
+                                <input
+                                  type="text"
+                                  value={draft.hook}
+                                  onChange={(event) => setLogDrafts((current) => ({ ...current, [log.id]: { ...current[log.id], hook: event.target.value } }))}
+                                  className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                                  placeholder="Problem-first hook..."
+                                />
+                              </label>
+                              <label className="text-sm text-[#363535] md:col-span-2">
+                                <span className="mb-2 block font-medium">Concept</span>
+                                <textarea
+                                  value={draft.concept}
+                                  onChange={(event) => setLogDrafts((current) => ({ ...current, [log.id]: { ...current[log.id], concept: event.target.value } }))}
+                                  className="min-h-[88px] w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                                  placeholder="Core angle or structure"
+                                />
+                              </label>
+                              <label className="text-sm text-[#363535] md:col-span-2">
+                                <span className="mb-2 block font-medium">Context</span>
+                                <textarea
+                                  value={draft.context}
+                                  onChange={(event) => setLogDrafts((current) => ({ ...current, [log.id]: { ...current[log.id], context: event.target.value } }))}
+                                  className="min-h-[88px] w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                                  placeholder="Usage context, CTA, audience, feedback to remember"
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <>
+                              {log.video_url ? (
+                                <a href={log.video_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex max-w-full items-center gap-2 text-sm font-medium text-[#1c1c1e] hover:underline">
+                                  <Link2 className="h-4 w-4 shrink-0" />
+                                  <span className="truncate">{log.video_url}</span>
+                                  <ArrowUpRight className="h-4 w-4 shrink-0" />
+                                </a>
+                              ) : (
+                                <p className="mt-3 text-sm text-[#9a9a9a]">No live URL added yet.</p>
+                              )}
+                              {(log.notes.hook || log.notes.concept || log.notes.context) ? (
+                                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                                  <div className="rounded-2xl border border-[#ecece8] bg-white p-3">
+                                    <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Hook</p>
+                                    <p className="mt-2 text-sm text-[#363535]">{log.notes.hook || '—'}</p>
+                                  </div>
+                                  <div className="rounded-2xl border border-[#ecece8] bg-white p-3">
+                                    <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Concept</p>
+                                    <p className="mt-2 text-sm text-[#363535]">{log.notes.concept || '—'}</p>
+                                  </div>
+                                  <div className="rounded-2xl border border-[#ecece8] bg-white p-3">
+                                    <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Context</p>
+                                    <p className="mt-2 text-sm text-[#363535]">{log.notes.context || '—'}</p>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-col sm:items-stretch sm:min-w-[190px]">
+                          <div className="rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-right">
+                            <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Views</p>
+                            <p className="mt-1 text-lg font-semibold text-[#1c1c1e]">{formatNumber(Number((isEditing ? draft?.views : String(log.views)) || 0))}</p>
+                          </div>
+                          <div className="rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-right">
+                            <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Logged</p>
+                            <p className="mt-1 text-sm font-semibold text-[#1c1c1e]">{formatDateTime(log.created_at)}</p>
+                          </div>
+                          <div className="flex flex-wrap items-center justify-end gap-2 sm:justify-start">
+                            {isEditing ? (
+                              <>
+                                <button type="button" className="btn-primary" onClick={() => saveLogEdit(log.id)} disabled={isBusy}>
+                                  {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                  Save
+                                </button>
+                                <button type="button" className="btn-ghost" onClick={() => setEditingLogId(null)}>
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button type="button" className="btn-ghost border border-[#e8e8e4] bg-white px-3 py-2 text-sm" onClick={() => setEditingLogId(log.id)}>
+                                  <Pencil className="h-4 w-4" />
+                                  Edit
+                                </button>
+                                <button type="button" className="btn-ghost border border-[#f1d6d6] bg-white px-3 py-2 text-sm text-[#a61b1b]" onClick={() => deleteLog(log.id)} disabled={isBusy}>
+                                  {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                  Remove
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="card shadow-sm">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <p className="section-label mb-1">Client feedback</p>
+                  <h2 className="text-2xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>What the client said</h2>
+                </div>
+                <div className="text-sm text-[#6b6b6b]">{client_feedback.length} notes</div>
+              </div>
+
+              <form onSubmit={submitFeedback} className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
+                <div className="grid grid-cols-1 gap-3">
+                  <label className="text-sm text-[#363535]">
+                    <span className="mb-2 block font-medium">Feedback</span>
+                    <textarea
+                      value={feedbackDraft.body}
+                      onChange={(event) => setFeedbackDraft((current) => ({ ...current, body: event.target.value }))}
+                      className="min-h-[110px] w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                      placeholder="Client liked the hook but wants a clearer product payoff in the first 5 seconds..."
+                      required
+                    />
+                  </label>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <label className="text-sm text-[#363535]">
+                      <span className="mb-2 block font-medium">Source</span>
+                      <input
+                        type="text"
+                        value={feedbackDraft.source}
+                        onChange={(event) => setFeedbackDraft((current) => ({ ...current, source: event.target.value }))}
+                        className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                        placeholder="WhatsApp / call / email"
+                      />
+                    </label>
+                    <label className="text-sm text-[#363535]">
+                      <span className="mb-2 block font-medium">Date</span>
+                      <input
+                        type="date"
+                        value={feedbackDraft.date}
+                        onChange={(event) => setFeedbackDraft((current) => ({ ...current, date: event.target.value }))}
+                        className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                      />
+                    </label>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <button type="submit" className="btn-primary" disabled={feedbackSubmitting}>
+                    {feedbackSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    Add feedback
+                  </button>
+                </div>
+              </form>
+
+              <div className="mt-5 space-y-3">
+                {client_feedback.length === 0 ? (
+                  <div className="rounded-3xl border border-dashed border-[#e8e8e4] bg-[#fafaf9] px-6 py-10 text-sm text-[#6b6b6b]">
+                    No client feedback logged yet.
+                  </div>
+                ) : client_feedback.map((entry) => (
+                  <div key={entry.id} className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-[#9a9a9a]">
+                          <span>{formatDate(entry.date, true)}</span>
+                          {entry.source ? <><span>•</span><span>{entry.source}</span></> : null}
+                        </div>
+                        <p className="mt-3 text-sm text-[#363535]">{entry.body}</p>
+                      </div>
+                      <button type="button" className="btn-ghost border border-[#f1d6d6] bg-white px-3 py-2 text-sm text-[#a61b1b]" onClick={() => deleteFeedback(entry.id)} disabled={feedbackBusyId === entry.id}>
+                        {feedbackBusyId === entry.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card shadow-sm">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <p className="section-label mb-1">Approvals & revisions</p>
+                  <h2 className="text-2xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>Approval tracker</h2>
+                </div>
+                <div className="text-sm text-[#6b6b6b]">{approvals.length} items</div>
+              </div>
+
+              <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <InfoStat label="Awaiting" value={String(approvals_summary.sent_for_approval_count)} tone="warning" />
+                <InfoStat label="Approved" value={String(approvals_summary.approved_count)} tone="success" />
+                <InfoStat label="Revisions" value={String(approvals_summary.revision_requested_count)} tone={approvals_summary.revision_requested_count > 0 ? 'danger' : 'default'} />
+              </div>
+
+              <form onSubmit={submitApproval} className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <label className="text-sm text-[#363535] md:col-span-2">
+                    <span className="mb-2 block font-medium">Title</span>
+                    <input
+                      type="text"
+                      value={approvalDraft.title}
+                      onChange={(event) => setApprovalDraft((current) => ({ ...current, title: event.target.value }))}
+                      className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                      placeholder="UGC v3 sent to client"
+                      required
+                    />
+                  </label>
+                  <label className="text-sm text-[#363535]">
+                    <span className="mb-2 block font-medium">Status</span>
+                    <select
+                      value={approvalDraft.status}
+                      onChange={(event) => setApprovalDraft((current) => ({ ...current, status: event.target.value as LiveCampaignApprovalStatus }))}
+                      className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                    >
+                      <option value="sent_for_approval">Sent for approval</option>
+                      <option value="approved">Approved</option>
+                      <option value="revision_requested">Revision requested</option>
+                    </select>
+                  </label>
+                  <label className="text-sm text-[#363535]">
+                    <span className="mb-2 block font-medium">Date</span>
+                    <input
+                      type="date"
+                      value={approvalDraft.date}
+                      onChange={(event) => setApprovalDraft((current) => ({ ...current, date: event.target.value }))}
+                      className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                    />
+                  </label>
+                  <label className="text-sm text-[#363535] md:col-span-2">
+                    <span className="mb-2 block font-medium">Details</span>
+                    <textarea
+                      value={approvalDraft.detail}
+                      onChange={(event) => setApprovalDraft((current) => ({ ...current, detail: event.target.value }))}
+                      className="min-h-[90px] w-full rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm outline-none focus:border-[#ccff00]"
+                      placeholder="Requested stronger CTA, new first frame, and cleaner subtitles..."
+                    />
+                  </label>
+                </div>
+                <div className="mt-4">
+                  <button type="submit" className="btn-primary" disabled={approvalSubmitting}>
+                    {approvalSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    Add approval item
+                  </button>
+                </div>
+              </form>
+
+              <div className="mt-5 space-y-3">
+                {approvals.length === 0 ? (
+                  <div className="rounded-3xl border border-dashed border-[#e8e8e4] bg-[#fafaf9] px-6 py-10 text-sm text-[#6b6b6b]">
+                    No approval events tracked yet.
+                  </div>
+                ) : approvals.map((entry) => (
+                  <div key={entry.id} className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${APPROVAL_STATUS_META[entry.status].chip}`}>
+                            {APPROVAL_STATUS_META[entry.status].label}
+                          </span>
+                          <span className="text-xs text-[#9a9a9a]">{formatDate(entry.date, true)}</span>
+                        </div>
+                        <p className="mt-3 text-sm font-semibold text-[#1c1c1e]">{entry.title}</p>
+                        {entry.detail ? <p className="mt-2 text-sm text-[#6b6b6b]">{entry.detail}</p> : null}
+                      </div>
+                      <button type="button" className="btn-ghost border border-[#f1d6d6] bg-white px-3 py-2 text-sm text-[#a61b1b]" onClick={() => deleteApproval(entry.id)} disabled={approvalBusyId === entry.id}>
+                        {approvalBusyId === entry.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -614,52 +1273,6 @@ export default function LiveCampaignDetailPage() {
                 )
               })}
             </div>
-          </div>
-
-          <div className="card shadow-sm">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div>
-                <p className="section-label mb-1">Recent content log</p>
-                <h2 className="text-2xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>Latest posted content</h2>
-              </div>
-              <div className="text-sm text-[#6b6b6b]">{recent_logs.length} most recent entries</div>
-            </div>
-
-            {recent_logs.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-[#e8e8e4] bg-[#fafaf9] px-6 py-10 text-sm text-[#6b6b6b]">
-                No posts logged yet. Use the content logger to start tracking delivery.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recent_logs.map((log) => (
-                  <div key={log.id} className="rounded-[24px] border border-[#ecece8] bg-[#fafaf9] p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${PLATFORM_COLORS[log.platform]}`}>{log.platform}</span>
-                          <span className="text-xs text-[#9a9a9a]">{formatDate(log.date, true)}</span>
-                        </div>
-                        <a href={log.video_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex max-w-full items-center gap-2 text-sm font-medium text-[#1c1c1e] hover:underline">
-                          <Link2 className="h-4 w-4 shrink-0" />
-                          <span className="truncate">{log.video_url}</span>
-                          <ArrowUpRight className="h-4 w-4 shrink-0" />
-                        </a>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 sm:flex sm:items-stretch">
-                        <div className="rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-right">
-                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Views</p>
-                          <p className="mt-1 text-lg font-semibold text-[#1c1c1e]">{formatNumber(log.views)}</p>
-                        </div>
-                        <div className="rounded-2xl border border-[#e8e8e4] bg-white px-4 py-3 text-right">
-                          <p className="text-xs uppercase tracking-[0.14em] text-[#9a9a9a]">Logged</p>
-                          <p className="mt-1 text-sm font-semibold text-[#1c1c1e]">{formatDateTime(log.created_at)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="card shadow-sm">
@@ -785,14 +1398,14 @@ export default function LiveCampaignDetailPage() {
                 </div>
               </div>
               <div className="flex items-start gap-3 rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#6b6b6b]" />
+                <RotateCcw className="mt-0.5 h-4 w-4 text-[#6b6b6b]" />
                 <div>
                   <p className="font-semibold text-[#1c1c1e]">Approvals & revisions</p>
                   <p className="mt-1 text-[#6b6b6b]">{placeholders.approvals}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#6b6b6b]" />
+                <MessageSquareQuote className="mt-0.5 h-4 w-4 text-[#6b6b6b]" />
                 <div>
                   <p className="font-semibold text-[#1c1c1e]">Client feedback</p>
                   <p className="mt-1 text-[#6b6b6b]">{placeholders.client_feedback}</p>

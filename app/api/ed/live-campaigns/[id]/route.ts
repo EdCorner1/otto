@@ -3,8 +3,12 @@ import { createClient } from '@supabase/supabase-js'
 import {
   computeLiveCampaignStats,
   dateKey,
+  normalizeApprovalStatus,
+  normalizeLogStatus,
   parseLiveCampaignMetadata,
   serializeLiveCampaignMetadata,
+  sortApprovalsDesc,
+  sortFeedbackDesc,
   sortLogsDesc,
   sortTasks,
 } from '@/lib/live-campaigns'
@@ -87,13 +91,14 @@ async function getAuthContext(request: NextRequest) {
 }
 
 function summarizeGoals(metadata: NonNullable<ReturnType<typeof parseLiveCampaignMetadata>>, stats: ReturnType<typeof computeLiveCampaignStats>) {
+  const countedLogs = metadata.logs.filter((log) => log.status === 'posted' || log.status === 'approved')
   const targetPerPlatform = metadata.platforms.length > 0
     ? Math.max(1, Math.round(metadata.daily_target / metadata.platforms.length))
     : metadata.daily_target
 
   return metadata.platforms.map((platform) => {
-    const totalPosts = metadata.logs.filter((log) => log.platform === platform).length
-    const monthPosts = metadata.logs.filter((log) => {
+    const totalPosts = countedLogs.filter((log) => log.platform === platform).length
+    const monthPosts = countedLogs.filter((log) => {
       if (log.platform !== platform) return false
       const logDate = new Date(`${log.date}T12:00:00Z`)
       const now = new Date()
@@ -118,8 +123,11 @@ function buildNextActions(metadata: NonNullable<ReturnType<typeof parseLiveCampa
   const today = dateKey(new Date())
   const overdueTasks = metadata.tasks.filter((task) => task.status === 'todo' && task.due_date && task.due_date < today)
   const dueSoonTasks = metadata.tasks.filter((task) => task.status === 'todo' && task.due_date && task.due_date >= today).slice(0, 3)
-  const completedCount = metadata.tasks.filter((task) => task.status === 'done').length
   const openCount = metadata.tasks.filter((task) => task.status === 'todo').length
+  const completedCount = metadata.tasks.filter((task) => task.status === 'done').length
+  const draftCount = metadata.logs.filter((log) => log.status === 'drafted').length
+  const awaitingApprovalCount = metadata.logs.filter((log) => log.status === 'sent_for_approval').length
+  const revisionCount = metadata.approvals.filter((entry) => entry.status === 'revision_requested').length
 
   const actions: Array<{ id: string; title: string; detail: string; priority: 'high' | 'medium' | 'low' }> = []
 
@@ -127,16 +135,34 @@ function buildNextActions(metadata: NonNullable<ReturnType<typeof parseLiveCampa
     actions.push({
       id: 'posting-gap',
       title: `Log ${metadata.daily_target - stats.videosToday} more post${metadata.daily_target - stats.videosToday === 1 ? '' : 's'} for today`,
-      detail: `Daily target is ${metadata.daily_target}. Currently ${stats.videosToday} logged today.`,
+      detail: `Daily target is ${metadata.daily_target}. Currently ${stats.videosToday} posted or approved today.`,
       priority: 'high',
     })
   }
 
-  if (stats.status === 'behind') {
+  if (draftCount > 0) {
     actions.push({
-      id: 'pace-behind',
-      title: 'Catch campaign back up to target pace',
-      detail: `${stats.videosThisMonth} posts logged against ${stats.monthlyTargetToDate} expected by now.`,
+      id: 'drafts-waiting',
+      title: `${draftCount} draft${draftCount === 1 ? '' : 's'} still need posting`,
+      detail: 'Move drafted content into posted or sent for approval once it is live or ready.',
+      priority: 'high',
+    })
+  }
+
+  if (awaitingApprovalCount > 0) {
+    actions.push({
+      id: 'awaiting-approval',
+      title: `${awaitingApprovalCount} item${awaitingApprovalCount === 1 ? '' : 's'} waiting on client approval`,
+      detail: 'Follow up or update the approval tracker once the client responds.',
+      priority: 'high',
+    })
+  }
+
+  if (revisionCount > 0) {
+    actions.push({
+      id: 'revisions-open',
+      title: `${revisionCount} revision request${revisionCount === 1 ? '' : 's'} open`,
+      detail: 'Use the approvals tracker to keep revision loops visible.',
       priority: 'high',
     })
   }
@@ -159,6 +185,15 @@ function buildNextActions(metadata: NonNullable<ReturnType<typeof parseLiveCampa
     })
   }
 
+  if (metadata.client_feedback.length === 0) {
+    actions.push({
+      id: 'feedback-empty',
+      title: 'Log the latest client feedback',
+      detail: 'Capture quick comments, blockers, and direction changes in the tracker.',
+      priority: 'medium',
+    })
+  }
+
   if (metadata.internal_notes.trim().length === 0) {
     actions.push({
       id: 'notes-empty',
@@ -177,7 +212,7 @@ function buildNextActions(metadata: NonNullable<ReturnType<typeof parseLiveCampa
     })
   }
 
-  return actions.slice(0, 4)
+  return actions.slice(0, 5)
 }
 
 function buildActivityTimeline(metadata: NonNullable<ReturnType<typeof parseLiveCampaignMetadata>>, stats: ReturnType<typeof computeLiveCampaignStats>) {
@@ -203,8 +238,11 @@ function buildActivityTimeline(metadata: NonNullable<ReturnType<typeof parseLive
     timeline.push({
       id: `log-${log.id}`,
       type: 'content_logged',
-      title: `${log.platform} post logged`,
-      detail: `${log.views.toLocaleString()} views tracked for ${log.video_url}`,
+      title: `${log.platform} content ${log.status.replaceAll('_', ' ')}`,
+      detail: [
+        log.video_url ? log.video_url : 'No live link yet',
+        log.notes.hook ? `Hook: ${log.notes.hook}` : '',
+      ].filter(Boolean).join(' · '),
       date: log.date,
       created_at: log.created_at,
     })
@@ -246,8 +284,8 @@ function buildActivityTimeline(metadata: NonNullable<ReturnType<typeof parseLive
   timeline.push({
     id: 'status-snapshot',
     type: 'status_snapshot',
-    title: stats.status === 'on_track' ? 'Campaign is on track' : stats.status === 'behind' ? 'Campaign pacing is behind' : 'Campaign has not started logging yet',
-    detail: `${stats.videosThisMonth} posts logged this month against ${stats.monthlyTargetToDate} expected by now.`,
+    title: stats.status === 'on_track' ? 'Campaign is on track' : stats.status === 'behind' ? 'Campaign pacing is behind' : 'Campaign has not started posting yet',
+    detail: `${stats.videosThisMonth} posted or approved pieces logged this month against ${stats.monthlyTargetToDate} expected by now.`,
     date: dateKey(new Date()),
     created_at: new Date().toISOString(),
   })
@@ -295,16 +333,20 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     const job = relationOne(deal.jobs)
     const logs = sortLogsDesc(metadata.logs)
     const tasks = sortTasks(metadata.tasks)
-    const normalizedMetadata = { ...metadata, logs, tasks }
+    const clientFeedback = sortFeedbackDesc(metadata.client_feedback)
+    const approvals = sortApprovalsDesc(metadata.approvals)
+    const normalizedMetadata = { ...metadata, logs, tasks, client_feedback: clientFeedback, approvals }
     const stats = computeLiveCampaignStats(normalizedMetadata)
 
-    const recentLogs = logs.slice(0, 8)
+    const recentLogs = logs.slice(0, 12)
     const viewsByPlatform = metadata.platforms.map((platform) => ({
       platform,
-      views: logs.filter((log) => log.platform === platform).reduce((sum, log) => sum + Math.max(0, Number(log.views || 0)), 0),
+      views: logs
+        .filter((log) => log.platform === platform && (log.status === 'posted' || log.status === 'approved'))
+        .reduce((sum, log) => sum + Math.max(0, Number(log.views || 0)), 0),
     }))
 
-    const latestPost = logs[0] || null
+    const latestPostedLog = logs.find((log) => log.status === 'posted' || log.status === 'approved') || null
     const today = dateKey(new Date())
     const overdueTasks = tasks.filter((task) => task.status === 'todo' && task.due_date && task.due_date < today).length
     const openTasks = tasks.filter((task) => task.status === 'todo').length
@@ -319,6 +361,19 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
         due_date: task.due_date,
       }))
 
+    const logsSummary = {
+      drafted_count: logs.filter((log) => log.status === 'drafted').length,
+      posted_count: logs.filter((log) => log.status === 'posted').length,
+      sent_for_approval_count: logs.filter((log) => log.status === 'sent_for_approval').length,
+      approved_count: logs.filter((log) => log.status === 'approved').length,
+    }
+
+    const approvalsSummary = {
+      sent_for_approval_count: approvals.filter((entry) => entry.status === 'sent_for_approval').length,
+      approved_count: approvals.filter((entry) => entry.status === 'approved').length,
+      revision_requested_count: approvals.filter((entry) => entry.status === 'revision_requested').length,
+    }
+
     const notes = [
       `Primary retainer for ${metadata.client_name}.`,
       `${metadata.daily_target} repurposed posts expected per day across ${metadata.platforms.length} platform${metadata.platforms.length === 1 ? '' : 's'}.`,
@@ -326,7 +381,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
         ? 'Posting pace is currently on track against the month-to-date target.'
         : stats.status === 'behind'
           ? 'Posting pace is behind the month-to-date target and needs attention.'
-          : 'No posts logged yet for the current month.',
+          : 'No posted or approved content logged yet for the current month.',
     ]
 
     return NextResponse.json({
@@ -361,8 +416,8 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
         total_videos: stats.totalVideos,
         total_views: stats.totalViews,
         earned_prorated: stats.earnedProrated,
-        latest_post_date: latestPost?.date || null,
-        latest_post_platform: latestPost?.platform || null,
+        latest_post_date: latestPostedLog?.date || null,
+        latest_post_platform: latestPostedLog?.platform || null,
       },
       goals: summarizeGoals(normalizedMetadata, stats),
       views_by_platform: viewsByPlatform,
@@ -379,13 +434,17 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
         completion_rate: completionRate,
         upcoming_deadlines: upcomingDeadlines,
       },
+      logs_summary: logsSummary,
+      approvals_summary: approvalsSummary,
       next_actions: buildNextActions(normalizedMetadata, stats),
       activity_timeline: buildActivityTimeline(normalizedMetadata, stats),
       recent_logs: recentLogs,
+      client_feedback: clientFeedback,
+      approvals,
       placeholders: {
         next_review: stats.daysActive >= 7 ? 'Weekly client check-in ready' : 'First weekly check-in not reached yet',
-        approvals: 'Track approvals and revisions manually for now',
-        client_feedback: 'No client feedback feed connected yet',
+        approvals: approvals.length > 0 ? 'Using tracker below' : 'Add approvals or revision events manually below',
+        client_feedback: clientFeedback.length > 0 ? 'Using tracker below' : 'Add quick client feedback notes below',
       },
     })
   } catch (error) {
@@ -480,6 +539,27 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
         changed = true
       }
 
+      if (action === 'update') {
+        const taskId = typeof body.task.id === 'string' ? body.task.id : ''
+        const title = typeof body.task.title === 'string' ? body.task.title.trim() : ''
+        if (!taskId || !title) return NextResponse.json({ error: 'Task id and title are required.' }, { status: 400 })
+
+        nextMetadata = {
+          ...nextMetadata,
+          tasks: sortTasks(nextMetadata.tasks.map((task) => task.id === taskId
+            ? {
+              ...task,
+              title,
+              detail: typeof body.task.detail === 'string' ? body.task.detail.trim() : task.detail,
+              due_date: typeof body.task.due_date === 'string'
+                ? (body.task.due_date || null)
+                : task.due_date,
+            }
+            : task)),
+        }
+        changed = true
+      }
+
       if (action === 'delete') {
         const taskId = typeof body.task.id === 'string' ? body.task.id : ''
         if (!taskId) return NextResponse.json({ error: 'Task id is required.' }, { status: 400 })
@@ -487,6 +567,120 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
         nextMetadata = {
           ...nextMetadata,
           tasks: sortTasks(nextMetadata.tasks.filter((task) => task.id !== taskId)),
+        }
+        changed = true
+      }
+    }
+
+    if (body?.log && typeof body.log === 'object') {
+      const action = typeof body.log.action === 'string' ? body.log.action : ''
+      const nowIso = new Date().toISOString()
+
+      if (action === 'update') {
+        const logId = typeof body.log.id === 'string' ? body.log.id : ''
+        if (!logId) return NextResponse.json({ error: 'Log id is required.' }, { status: 400 })
+
+        nextMetadata = {
+          ...nextMetadata,
+          logs: sortLogsDesc(nextMetadata.logs.map((log) => log.id === logId
+            ? {
+              ...log,
+              video_url: typeof body.log.video_url === 'string' ? body.log.video_url.trim() : log.video_url,
+              views: Number.isFinite(Number(body.log.views)) ? Math.max(0, Math.round(Number(body.log.views))) : log.views,
+              date: typeof body.log.date === 'string' && body.log.date ? body.log.date : log.date,
+              status: normalizeLogStatus(body.log.status),
+              notes: {
+                hook: typeof body.log.notes?.hook === 'string' ? body.log.notes.hook.trim() : log.notes.hook,
+                concept: typeof body.log.notes?.concept === 'string' ? body.log.notes.concept.trim() : log.notes.concept,
+                context: typeof body.log.notes?.context === 'string' ? body.log.notes.context.trim() : log.notes.context,
+              },
+              created_at: log.created_at || nowIso,
+            }
+            : log)),
+        }
+        changed = true
+      }
+
+      if (action === 'delete') {
+        const logId = typeof body.log.id === 'string' ? body.log.id : ''
+        if (!logId) return NextResponse.json({ error: 'Log id is required.' }, { status: 400 })
+
+        nextMetadata = {
+          ...nextMetadata,
+          logs: sortLogsDesc(nextMetadata.logs.filter((log) => log.id !== logId)),
+        }
+        changed = true
+      }
+    }
+
+    if (body?.feedback && typeof body.feedback === 'object') {
+      const action = typeof body.feedback.action === 'string' ? body.feedback.action : ''
+
+      if (action === 'create') {
+        const feedbackBody = typeof body.feedback.body === 'string' ? body.feedback.body.trim() : ''
+        if (!feedbackBody) return NextResponse.json({ error: 'Feedback text is required.' }, { status: 400 })
+        const date = typeof body.feedback.date === 'string' && body.feedback.date ? body.feedback.date : dateKey(new Date())
+
+        nextMetadata = {
+          ...nextMetadata,
+          client_feedback: sortFeedbackDesc([
+            {
+              id: crypto.randomUUID(),
+              body: feedbackBody,
+              source: typeof body.feedback.source === 'string' ? body.feedback.source.trim() : '',
+              date,
+              created_at: new Date().toISOString(),
+            },
+            ...nextMetadata.client_feedback,
+          ]),
+        }
+        changed = true
+      }
+
+      if (action === 'delete') {
+        const feedbackId = typeof body.feedback.id === 'string' ? body.feedback.id : ''
+        if (!feedbackId) return NextResponse.json({ error: 'Feedback id is required.' }, { status: 400 })
+
+        nextMetadata = {
+          ...nextMetadata,
+          client_feedback: sortFeedbackDesc(nextMetadata.client_feedback.filter((entry) => entry.id !== feedbackId)),
+        }
+        changed = true
+      }
+    }
+
+    if (body?.approval && typeof body.approval === 'object') {
+      const action = typeof body.approval.action === 'string' ? body.approval.action : ''
+
+      if (action === 'create') {
+        const title = typeof body.approval.title === 'string' ? body.approval.title.trim() : ''
+        if (!title) return NextResponse.json({ error: 'Approval title is required.' }, { status: 400 })
+        const date = typeof body.approval.date === 'string' && body.approval.date ? body.approval.date : dateKey(new Date())
+
+        nextMetadata = {
+          ...nextMetadata,
+          approvals: sortApprovalsDesc([
+            {
+              id: crypto.randomUUID(),
+              title,
+              status: normalizeApprovalStatus(body.approval.status),
+              detail: typeof body.approval.detail === 'string' ? body.approval.detail.trim() : '',
+              date,
+              created_at: new Date().toISOString(),
+            },
+            ...nextMetadata.approvals,
+          ]),
+        }
+        changed = true
+      }
+
+      if (action === 'delete') {
+        const approvalId = typeof body.approval.id === 'string' ? body.approval.id : ''
+        if (!approvalId) return NextResponse.json({ error: 'Approval id is required.' }, { status: 400 })
+
+        nextMetadata = {
+          ...nextMetadata,
+          approvals: sortApprovalsDesc(nextMetadata.approvals.filter((entry) => entry.id !== approvalId)),
         }
         changed = true
       }

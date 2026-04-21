@@ -1,7 +1,17 @@
 export const LIVE_CAMPAIGN_PLATFORMS = ['TikTok', 'Instagram', 'YouTube', 'LinkedIn'] as const
+export const LIVE_CAMPAIGN_LOG_STATUSES = ['drafted', 'posted', 'sent_for_approval', 'approved'] as const
+export const LIVE_CAMPAIGN_APPROVAL_STATUSES = ['sent_for_approval', 'approved', 'revision_requested'] as const
 
 export type LiveCampaignPlatform = (typeof LIVE_CAMPAIGN_PLATFORMS)[number]
 export type LiveCampaignTaskStatus = 'todo' | 'done'
+export type LiveCampaignLogStatus = (typeof LIVE_CAMPAIGN_LOG_STATUSES)[number]
+export type LiveCampaignApprovalStatus = (typeof LIVE_CAMPAIGN_APPROVAL_STATUSES)[number]
+
+export type LiveCampaignLogNotes = {
+  hook: string
+  concept: string
+  context: string
+}
 
 export type LiveCampaignLog = {
   id: string
@@ -10,6 +20,8 @@ export type LiveCampaignLog = {
   views: number
   date: string
   created_at: string
+  status: LiveCampaignLogStatus
+  notes: LiveCampaignLogNotes
 }
 
 export type LiveCampaignTask = {
@@ -22,9 +34,26 @@ export type LiveCampaignTask = {
   completed_at: string | null
 }
 
+export type LiveCampaignClientFeedbackEntry = {
+  id: string
+  body: string
+  source: string
+  date: string
+  created_at: string
+}
+
+export type LiveCampaignApprovalEntry = {
+  id: string
+  title: string
+  status: LiveCampaignApprovalStatus
+  detail: string
+  date: string
+  created_at: string
+}
+
 export type LiveCampaignMetadata = {
   kind: 'live_campaign'
-  version: 1 | 2
+  version: 1 | 2 | 3
   seed_key: string
   client_name: string
   start_date: string
@@ -36,6 +65,8 @@ export type LiveCampaignMetadata = {
   internal_notes: string
   notes_updated_at: string | null
   tasks: LiveCampaignTask[]
+  client_feedback: LiveCampaignClientFeedbackEntry[]
+  approvals: LiveCampaignApprovalEntry[]
 }
 
 export type LiveCampaignSeed = {
@@ -131,6 +162,16 @@ export function normalizeTaskStatus(input: unknown): LiveCampaignTaskStatus {
   return input === 'done' ? 'done' : 'todo'
 }
 
+export function normalizeLogStatus(input: unknown): LiveCampaignLogStatus {
+  if (input === 'drafted' || input === 'sent_for_approval' || input === 'approved') return input
+  return 'posted'
+}
+
+export function normalizeApprovalStatus(input: unknown): LiveCampaignApprovalStatus {
+  if (input === 'approved' || input === 'revision_requested') return input
+  return 'sent_for_approval'
+}
+
 function parseTask(input: unknown): LiveCampaignTask | null {
   if (!input || typeof input !== 'object') return null
 
@@ -155,12 +196,111 @@ function parseTask(input: unknown): LiveCampaignTask | null {
   }
 }
 
+function parseLog(input: unknown): LiveCampaignLog | null {
+  if (!input || typeof input !== 'object') return null
+
+  const log = input as Partial<LiveCampaignLog> & {
+    hook?: string
+    concept?: string
+    context?: string
+  }
+  const platform = normalizePlatform(log.platform)
+  const date = typeof log.date === 'string' && log.date ? log.date : dateKey(new Date())
+  const videoUrl = typeof log.video_url === 'string' ? log.video_url.trim() : ''
+  const notes = log.notes && typeof log.notes === 'object'
+    ? {
+      hook: typeof log.notes.hook === 'string' ? log.notes.hook.trim() : '',
+      concept: typeof log.notes.concept === 'string' ? log.notes.concept.trim() : '',
+      context: typeof log.notes.context === 'string' ? log.notes.context.trim() : '',
+    }
+    : {
+      hook: typeof log.hook === 'string' ? log.hook.trim() : '',
+      concept: typeof log.concept === 'string' ? log.concept.trim() : '',
+      context: typeof log.context === 'string' ? log.context.trim() : '',
+    }
+
+  const hasMeaningfulContent = Boolean(videoUrl || notes.hook || notes.concept || notes.context)
+  if (!platform || !hasMeaningfulContent) return null
+
+  return {
+    id: typeof log.id === 'string' && log.id ? log.id : `${platform}-${videoUrl || notes.hook || notes.concept || date}-${date}`,
+    platform,
+    video_url: videoUrl,
+    views: Number.isFinite(Number(log.views)) ? Number(log.views) : 0,
+    date,
+    created_at: typeof log.created_at === 'string' && log.created_at ? log.created_at : new Date(`${date}T12:00:00Z`).toISOString(),
+    status: normalizeLogStatus(log.status),
+    notes,
+  }
+}
+
+function parseFeedbackEntry(input: unknown): LiveCampaignClientFeedbackEntry | null {
+  if (!input || typeof input !== 'object') return null
+
+  const entry = input as Partial<LiveCampaignClientFeedbackEntry>
+  const body = typeof entry.body === 'string' ? entry.body.trim() : ''
+  if (!body) return null
+
+  const date = typeof entry.date === 'string' && entry.date ? entry.date : dateKey(new Date())
+
+  return {
+    id: typeof entry.id === 'string' && entry.id ? entry.id : crypto.randomUUID(),
+    body,
+    source: typeof entry.source === 'string' ? entry.source.trim() : '',
+    date,
+    created_at: typeof entry.created_at === 'string' && entry.created_at ? entry.created_at : new Date(`${date}T12:00:00Z`).toISOString(),
+  }
+}
+
+function parseApprovalEntry(input: unknown): LiveCampaignApprovalEntry | null {
+  if (!input || typeof input !== 'object') return null
+
+  const entry = input as Partial<LiveCampaignApprovalEntry>
+  const title = typeof entry.title === 'string' ? entry.title.trim() : ''
+  if (!title) return null
+
+  const date = typeof entry.date === 'string' && entry.date ? entry.date : dateKey(new Date())
+
+  return {
+    id: typeof entry.id === 'string' && entry.id ? entry.id : crypto.randomUUID(),
+    title,
+    status: normalizeApprovalStatus(entry.status),
+    detail: typeof entry.detail === 'string' ? entry.detail.trim() : '',
+    date,
+    created_at: typeof entry.created_at === 'string' && entry.created_at ? entry.created_at : new Date(`${date}T12:00:00Z`).toISOString(),
+  }
+}
+
 export function sortTasks(tasks: LiveCampaignTask[]) {
   return [...tasks].sort((a, b) => {
     if (a.status !== b.status) return a.status === 'todo' ? -1 : 1
     if (a.due_date && b.due_date && a.due_date !== b.due_date) return a.due_date.localeCompare(b.due_date)
     if (a.due_date && !b.due_date) return -1
     if (!a.due_date && b.due_date) return 1
+    return b.created_at.localeCompare(a.created_at)
+  })
+}
+
+export function sortLogsDesc(logs: LiveCampaignLog[]) {
+  return [...logs].sort((a, b) => {
+    const byDate = b.date.localeCompare(a.date)
+    if (byDate !== 0) return byDate
+    return b.created_at.localeCompare(a.created_at)
+  })
+}
+
+export function sortFeedbackDesc(entries: LiveCampaignClientFeedbackEntry[]) {
+  return [...entries].sort((a, b) => {
+    const byDate = b.date.localeCompare(a.date)
+    if (byDate !== 0) return byDate
+    return b.created_at.localeCompare(a.created_at)
+  })
+}
+
+export function sortApprovalsDesc(entries: LiveCampaignApprovalEntry[]) {
+  return [...entries].sort((a, b) => {
+    const byDate = b.date.localeCompare(a.date)
+    if (byDate !== 0) return byDate
     return b.created_at.localeCompare(a.created_at)
   })
 }
@@ -172,7 +312,7 @@ export function parseLiveCampaignMetadata(input: string | null | undefined): Liv
     const parsed = JSON.parse(input) as Partial<LiveCampaignMetadata>
 
     if (parsed?.kind !== 'live_campaign') return null
-    if (parsed.version !== 1 && parsed.version !== 2) return null
+    if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3) return null
     if (!parsed.client_name || !parsed.start_date || !parsed.seed_key) return null
 
     const platforms = Array.isArray(parsed.platforms)
@@ -192,22 +332,10 @@ export function parseLiveCampaignMetadata(input: string | null | undefined): Liv
       daily_target: Number(parsed.daily_target || 0),
       platforms: platforms.length ? platforms : [...LIVE_CAMPAIGN_PLATFORMS],
       logs: Array.isArray(parsed.logs)
-        ? parsed.logs.flatMap((log) => {
-          const platform = normalizePlatform(log?.platform)
-          const videoUrl = typeof log?.video_url === 'string' ? log.video_url.trim() : ''
-          const date = typeof log?.date === 'string' && log.date ? log.date : dateKey(new Date())
-
-          if (!platform || !videoUrl) return []
-
-          return [{
-            id: typeof log?.id === 'string' && log.id ? log.id : `${platform}-${videoUrl}-${date}`,
-            platform,
-            video_url: videoUrl,
-            views: Number.isFinite(Number(log?.views)) ? Number(log?.views) : 0,
-            date,
-            created_at: typeof log?.created_at === 'string' && log.created_at ? log.created_at : new Date(`${date}T12:00:00Z`).toISOString(),
-          } satisfies LiveCampaignLog]
-        })
+        ? sortLogsDesc(parsed.logs.flatMap((log) => {
+          const parsedLog = parseLog(log)
+          return parsedLog ? [parsedLog] : []
+        }))
         : [],
       internal_notes: typeof parsed.internal_notes === 'string' ? parsed.internal_notes : '',
       notes_updated_at: typeof parsed.notes_updated_at === 'string' && parsed.notes_updated_at ? parsed.notes_updated_at : null,
@@ -215,6 +343,18 @@ export function parseLiveCampaignMetadata(input: string | null | undefined): Liv
         ? sortTasks(parsed.tasks.flatMap((task) => {
           const parsedTask = parseTask(task)
           return parsedTask ? [parsedTask] : []
+        }))
+        : [],
+      client_feedback: Array.isArray(parsed.client_feedback)
+        ? sortFeedbackDesc(parsed.client_feedback.flatMap((entry) => {
+          const parsedEntry = parseFeedbackEntry(entry)
+          return parsedEntry ? [parsedEntry] : []
+        }))
+        : [],
+      approvals: Array.isArray(parsed.approvals)
+        ? sortApprovalsDesc(parsed.approvals.flatMap((entry) => {
+          const parsedEntry = parseApprovalEntry(entry)
+          return parsedEntry ? [parsedEntry] : []
         }))
         : [],
     }
@@ -226,7 +366,7 @@ export function parseLiveCampaignMetadata(input: string | null | undefined): Liv
 export function createLiveCampaignMetadata(seed: LiveCampaignSeed, logs: LiveCampaignLog[] = []): LiveCampaignMetadata {
   return {
     kind: 'live_campaign',
-    version: 2,
+    version: 3,
     seed_key: seed.seedKey,
     client_name: seed.clientName,
     start_date: seed.startDate,
@@ -248,19 +388,13 @@ export function createLiveCampaignMetadata(seed: LiveCampaignSeed, logs: LiveCam
         completed_at: null,
       },
     ],
+    client_feedback: [],
+    approvals: [],
   }
 }
 
 export function serializeLiveCampaignMetadata(metadata: LiveCampaignMetadata) {
   return JSON.stringify(metadata)
-}
-
-export function sortLogsDesc(logs: LiveCampaignLog[]) {
-  return [...logs].sort((a, b) => {
-    const byDate = b.date.localeCompare(a.date)
-    if (byDate !== 0) return byDate
-    return b.created_at.localeCompare(a.created_at)
-  })
 }
 
 export function computeLiveCampaignStats(metadata: LiveCampaignMetadata, now = new Date()): LiveCampaignStats {
@@ -274,19 +408,20 @@ export function computeLiveCampaignStats(metadata: LiveCampaignMetadata, now = n
     : today.getUTCDate()
 
   const normalizedLogs = sortLogsDesc(metadata.logs)
+  const postedLogs = normalizedLogs.filter((log) => log.status === 'posted' || log.status === 'approved')
 
   const isWithinRange = (value: string, start: Date, end: Date) => {
     const date = toUtcDateOnly(value)
     return date >= start && date <= end
   }
 
-  const videosToday = normalizedLogs.filter((log) => isWithinRange(log.date, today, today)).length
-  const videosThisWeek = normalizedLogs.filter((log) => isWithinRange(log.date, weekStart, today)).length
-  const monthLogs = normalizedLogs.filter((log) => isWithinRange(log.date, monthStart, today))
+  const videosToday = postedLogs.filter((log) => isWithinRange(log.date, today, today)).length
+  const videosThisWeek = postedLogs.filter((log) => isWithinRange(log.date, weekStart, today)).length
+  const monthLogs = postedLogs.filter((log) => isWithinRange(log.date, monthStart, today))
   const videosThisMonth = monthLogs.length
   const viewsThisMonth = monthLogs.reduce((sum, log) => sum + Math.max(0, Number(log.views || 0)), 0)
-  const totalVideos = normalizedLogs.length
-  const totalViews = normalizedLogs.reduce((sum, log) => sum + Math.max(0, Number(log.views || 0)), 0)
+  const totalVideos = postedLogs.length
+  const totalViews = postedLogs.reduce((sum, log) => sum + Math.max(0, Number(log.views || 0)), 0)
   const elapsedForEarnings = Math.min(metadata.contract_days, daysActive)
   const earnedProrated = metadata.contract_days > 0
     ? Number(((metadata.monthly_rate / metadata.contract_days) * elapsedForEarnings).toFixed(2))
