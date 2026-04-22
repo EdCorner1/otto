@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 type Role = 'creator' | 'brand'
@@ -63,10 +63,73 @@ const ROADMAP_CARDS: RoadmapCard[] = [
     id: 'video-minimum',
     status: 'Building now',
     tag: 'Onboarding',
-    title: 'Better creator onboarding with a 3-video minimum',
-    body: 'A stronger onboarding bar should make the whole platform feel better for both creators and brands.',
-    upvotes: 31,
+    title: 'Raise the creator bar to 6 portfolio videos',
+    body: 'Six pieces gives brands a much better read on quality, consistency, and style than three ever could.',
+    upvotes: 37,
+    downvotes: 4,
+  },
+  {
+    id: 'fast-payouts',
+    status: 'Under consideration',
+    tag: 'Creator ops',
+    title: 'Fast payouts',
+    body: 'Slow payouts kill trust. Otto should make getting paid feel clear and fast.',
+    upvotes: 46,
+    downvotes: 2,
+  },
+  {
+    id: 'post-scheduling',
+    status: 'Under consideration',
+    tag: 'Scheduling',
+    title: 'Post scheduling built into creator workflows',
+    body: 'If a creator gets hired through Otto, scheduling should feel close by instead of scattered across tools.',
+    upvotes: 39,
+    downvotes: 3,
+  },
+  {
+    id: 'ai-coach',
+    status: 'Under consideration',
+    tag: 'AI tools',
+    title: 'AI content and engagement coach',
+    body: 'A light-touch coach could help creators improve hooks, positioning, and account growth without feeling robotic.',
+    upvotes: 33,
+    downvotes: 6,
+  },
+  {
+    id: 'portfolio-roasts',
+    status: 'Under consideration',
+    tag: 'Feedback',
+    title: 'Portfolio roasts',
+    body: 'Creators often need honest feedback more than generic praise. Otto could make that part of the platform.',
+    upvotes: 41,
+    downvotes: 4,
+  },
+  {
+    id: 'creator-community',
+    status: 'Under consideration',
+    tag: 'Community',
+    title: 'Creator community',
+    body: 'Not a noisy forum. Just a better place for creators to trade ideas, wins, and what is actually working.',
+    upvotes: 35,
     downvotes: 5,
+  },
+  {
+    id: 'finding-clients',
+    status: 'Under consideration',
+    tag: 'Growth',
+    title: 'Better ways to help creators find clients',
+    body: 'The platform should make getting discovered easier, but also help creators get more intentional about outreach.',
+    upvotes: 44,
+    downvotes: 2,
+  },
+  {
+    id: 'account-growth',
+    status: 'Under consideration',
+    tag: 'Growth',
+    title: 'Tools to help creators grow their account',
+    body: 'Account growth is still one of the biggest pain points. Otto should eventually help with that too.',
+    upvotes: 30,
+    downvotes: 4,
   },
   {
     id: 'custom-domains',
@@ -92,10 +155,39 @@ export default function HomeWaitlistLanding() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [votes, setVotes] = useState<Record<string, Vote>>({})
+  const [visibleCards, setVisibleCards] = useState<Record<string, boolean>>({})
   const [idea, setIdea] = useState('')
   const [ideaSubmitted, setIdeaSubmitted] = useState(false)
 
   const content = useMemo(() => COPY[role], [role])
+
+  useEffect(() => {
+    const observers: IntersectionObserver[] = []
+
+    ROADMAP_CARDS.forEach((card) => {
+      const el = document.getElementById(`roadmap-card-${card.id}`)
+      if (!el) return
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setVisibleCards((current) => ({ ...current, [card.id]: true }))
+              observer.disconnect()
+            }
+          })
+        },
+        { threshold: 0.18 }
+      )
+
+      observer.observe(el)
+      observers.push(observer)
+    })
+
+    return () => {
+      observers.forEach((observer) => observer.disconnect())
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -310,7 +402,16 @@ export default function HomeWaitlistLanding() {
             {ROADMAP_CARDS.map((card) => {
               const vote = votes[card.id] ?? null
               return (
-                <article key={card.id} className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 text-left shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-6">
+                <article
+                  key={card.id}
+                  id={`roadmap-card-${card.id}`}
+                  className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 text-left shadow-[0_10px_30px_rgba(28,28,30,0.05)] transition-all duration-700 ease-out sm:p-6"
+                  style={{
+                    opacity: visibleCards[card.id] ? 1 : 0,
+                    transform: visibleCards[card.id] ? 'translateY(0px) scale(1)' : 'translateY(24px) scale(0.985)',
+                    transitionDelay: visibleCards[card.id] ? '0ms' : '0ms',
+                  }}
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusClasses(card.status)}`}>
                       {card.status}

@@ -83,8 +83,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Add at least one TikTok, Instagram, or YouTube link.' }, { status: 400 })
     }
 
-    if (portfolioItems.length < 3 || portfolioItems.length > 6) {
-      return NextResponse.json({ error: 'Add 3 to 6 portfolio videos.' }, { status: 400 })
+    if (portfolioItems.length < 6 || portfolioItems.length > 6) {
+      return NextResponse.json({ error: 'Add 6 portfolio videos.' }, { status: 400 })
     }
 
     const { data: existingCreator } = await adminClient

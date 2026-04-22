@@ -123,7 +123,7 @@ function normalizePlatformValue(value: string) {
 }
 
 function hasMinimumViablePortfolio(items: PortfolioItem[]) {
-  return items.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length >= 3
+  return items.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length >= 6
 }
 
 function blankDraft(): OnboardingDraft {
@@ -932,7 +932,7 @@ export default function OnboardingPage() {
                       Add the work you want brands to remember.
                     </h2>
                     <p className="mt-4 text-sm text-[#6b6b6b]">
-                      Add at least 3 portfolio videos to continue. Upload up to 6 videos directly and Otto will use them on your public profile preview in the next step.
+                      Add 6 portfolio videos to continue. Otto will use them on your public profile preview in the next step.
                     </p>
                   </div>
 
@@ -940,7 +940,7 @@ export default function OnboardingPage() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-lg font-semibold text-[#1c1c1e]">Portfolio uploads</p>
-                        <p className="mt-1 text-sm text-[#6b6b6b]">MP4, MOV, WebM, or M4V · up to 500MB each · {draft.portfolioItems.length}/{MAX_PORTFOLIO_ITEMS} added · {viablePortfolioCount}/3 ready</p>
+                        <p className="mt-1 text-sm text-[#6b6b6b]">MP4, MOV, WebM, or M4V · up to 500MB each · {draft.portfolioItems.length}/{MAX_PORTFOLIO_ITEMS} added · {viablePortfolioCount}/6 ready</p>
                       </div>
                       <div>
                         <input
@@ -966,9 +966,9 @@ export default function OnboardingPage() {
 
                   {draft.portfolioItems.length > 0 ? (
                     <div className="space-y-4">
-                      {viablePortfolioCount < 3 && (
+                      {viablePortfolioCount < 6 && (
                         <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] px-4 py-3 text-sm text-[#6b6b6b]">
-                          Add at least 3 portfolio videos to continue. Right now you have {viablePortfolioCount} valid video{viablePortfolioCount === 1 ? '' : 's'} ready.
+                          Add 6 portfolio videos to continue. Right now you have {viablePortfolioCount} valid video{viablePortfolioCount === 1 ? '' : 's'} ready.
                         </div>
                       )}
                       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -999,7 +999,7 @@ export default function OnboardingPage() {
                   ) : (
                     <div className="rounded-[28px] border border-[#e8e8e4] bg-[#fbfbf8] px-5 py-8 text-center text-sm text-[#6b6b6b]">
                       <p className="text-base font-semibold text-[#1c1c1e]">Your portfolio starts here.</p>
-                      <p className="mt-2">Add at least 3 portfolio videos to continue. Upload your best product demos, UGC examples, or client work so brands can instantly see your style.</p>
+                      <p className="mt-2">Add 6 portfolio videos to continue. Upload your best product demos, UGC examples, or client work so brands can actually get a proper read on your style.</p>
                     </div>
                   )}
                 </div>
