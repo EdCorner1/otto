@@ -280,7 +280,7 @@ export default function HomeWaitlistLanding() {
                 What we’re building next
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6b6b6b] md:text-base">
-                This is the only new layer below the hero — a simple public feed of ideas we’re actively shaping for Otto.
+                Vote on what we should build next, or drop your own idea below.
               </p>
             </div>
           </div>
