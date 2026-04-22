@@ -83,13 +83,13 @@ export async function POST(req: NextRequest) {
 
         if (creatorEmail) {
           const html = emailShell(`
-            <p style="margin:0 0 8px;font-size:13px;color:#6b6b6b">Deal Approved 🎉</p>
+            <p style="margin:0 0 8px;font-size:13px;color:#6b6b6b">Deal Approved</p>
             <h1 style="${HEADLINE_STYLE};font-size:28px;margin:0 0 16px">${brandName} approved your work</h1>
             <p style="${BODY_STYLE};margin:0 0 8px"><strong>${jobTitle}</strong></p>
-            <p style="${BODY_STYLE};color:#6b6b6b;font-size:14px">Great work — payment will be released shortly.</p>
+            <p style="${BODY_STYLE};color:#6b6b6b;font-size:14px">Great work. Payment will be released shortly.</p>
             ${ctaButton('View Deal', `${appUrl}/deals/${dealId}`)}
           `)
-          await sendEmail({ to: creatorEmail, subject: `Your work on "${jobTitle}" was approved! 🎉`, html })
+          await sendEmail({ to: creatorEmail, subject: `Your work on "${jobTitle}" was approved`, html })
         }
         break
       }

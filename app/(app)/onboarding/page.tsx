@@ -9,9 +9,9 @@ import {
   ChevronLeft,
   ChevronRight,
   LoaderCircle,
-  Sparkles,
   Upload,
   UserCircle2,
+  Users,
   Video,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
@@ -666,7 +666,7 @@ export default function OnboardingPage() {
                       className={`rounded-[28px] border p-6 text-left transition-all ${role === 'creator' ? 'border-[#ccff00] bg-[#f7ffd4] shadow-[0_20px_50px_rgba(204,255,0,0.18)]' : 'border-[#e8e8e4] bg-white hover:border-[#c8c8c2] hover:-translate-y-0.5'}`}
                     >
                       <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1c1c1e] text-white">
-                        <Sparkles className="h-5 w-5" />
+                        <Users className="h-5 w-5" />
                       </div>
                       <div className="flex items-center justify-between gap-3">
                         <div>
