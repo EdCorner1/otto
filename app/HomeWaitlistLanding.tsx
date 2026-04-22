@@ -2,17 +2,19 @@
 
 import Image from 'next/image'
 import { useMemo, useState } from 'react'
-import { Lightbulb, MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 type Role = 'creator' | 'brand'
 type Vote = 'up' | 'down' | null
 
 type RoadmapCard = {
   id: string
-  status: 'Thinking' | 'Building' | 'Shipped'
+  status: 'Under consideration' | 'Building now' | 'Shipped this week'
   title: string
   body: string
   tag: string
+  upvotes: number
+  downvotes: number
 }
 
 const AVATARS = [
@@ -40,38 +42,46 @@ const COPY: Record<Role, { headline: string; subheadline: string; button: string
 
 const ROADMAP_CARDS: RoadmapCard[] = [
   {
+    id: 'live-campaigns',
+    status: 'Shipped this week',
+    tag: 'Workflow',
+    title: 'Live campaign workspace',
+    body: 'Creators can now track campaign progress, deliverables, and client feedback in one place.',
+    upvotes: 28,
+    downvotes: 1,
+  },
+  {
     id: 'public-sites',
-    status: 'Building',
-    tag: 'Creator websites',
-    title: 'Free public creator sites on name.ottougc.com',
-    body: 'Every creator should get a proper public portfolio page they can actually share, not just a hidden profile inside a marketplace.',
+    status: 'Building now',
+    tag: 'Creator sites',
+    title: 'Free public creator sites on ottougc.com',
+    body: 'Every creator should get a clean public page they can actually share with brands.',
+    upvotes: 42,
+    downvotes: 3,
   },
   {
     id: 'video-minimum',
-    status: 'Building',
+    status: 'Building now',
     tag: 'Onboarding',
-    title: 'Require 3 strong videos before a creator goes live',
-    body: 'Otto should feel curated. Better onboarding quality means better trust for brands and better outcomes for creators.',
+    title: 'Better creator onboarding with a 3-video minimum',
+    body: 'A stronger onboarding bar should make the whole platform feel better for both creators and brands.',
+    upvotes: 31,
+    downvotes: 5,
   },
   {
     id: 'custom-domains',
-    status: 'Thinking',
-    tag: 'Pro plan',
-    title: 'Custom domains for Pro creators',
-    body: 'Free gets you a clean Otto subdomain. Pro should turn that into a real creator website with your own domain.',
-  },
-  {
-    id: 'campaign-scheduling',
-    status: 'Thinking',
-    tag: 'Workflow',
-    title: 'Built-in scheduling for brand + creator campaigns',
-    body: 'Long term, Otto should help run the partnership after a hire happens — not just help make the intro.',
+    status: 'Under consideration',
+    tag: 'Pro',
+    title: 'Custom domains for creator portfolio pages',
+    body: 'Free gets a hosted Otto page. Pro should let creators connect their own domain later.',
+    upvotes: 24,
+    downvotes: 2,
   },
 ]
 
 function statusClasses(status: RoadmapCard['status']) {
-  if (status === 'Shipped') return 'bg-[#efffd3] text-[#355400] border-[#dff3b3]'
-  if (status === 'Building') return 'bg-[#fff6d8] text-[#6a5200] border-[#f4e1a0]'
+  if (status === 'Shipped this week') return 'bg-[#efffd3] text-[#355400] border-[#dff3b3]'
+  if (status === 'Building now') return 'bg-[#fff6d8] text-[#6a5200] border-[#f4e1a0]'
   return 'bg-[#f3f3ef] text-[#5f5f58] border-[#e4e4dd]'
 }
 
@@ -134,6 +144,19 @@ export default function HomeWaitlistLanding() {
       ...current,
       [cardId]: current[cardId] === value ? null : value,
     }))
+  }
+
+  function getVoteCount(card: RoadmapCard, kind: 'up' | 'down') {
+    const currentVote = votes[card.id] ?? null
+    const base = kind === 'up' ? card.upvotes : card.downvotes
+
+    if (kind === 'up') {
+      if (currentVote === 'up') return base + 1
+      return base
+    }
+
+    if (currentVote === 'down') return base + 1
+    return base
   }
 
   function handleIdeaSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -273,89 +296,84 @@ export default function HomeWaitlistLanding() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 pb-8 md:px-10">
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Roadmap feed</p>
-              <h2 className="mt-3 text-[clamp(2rem,4vw,3.4rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-                What we’re building next
-              </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6b6b6b] md:text-base">
-                Vote on what we should build next, or drop your own idea below.
-              </p>
-            </div>
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Roadmap</p>
+            <h2 className="mt-3 text-[clamp(2rem,4vw,3.4rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
+              What should we build next?
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[#6b6b6b] md:text-base">
+              Vote on ideas or suggest one.
+            </p>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start">
-            <div className="space-y-4">
-              {ROADMAP_CARDS.map((card) => {
-                const vote = votes[card.id] ?? null
-                return (
-                  <article key={card.id} className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-6">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusClasses(card.status)}`}>
-                        {card.status}
-                      </span>
-                      <span className="inline-flex rounded-full border border-[#ecece7] bg-[#fafaf8] px-3 py-1 text-xs font-medium text-[#6b6b6b]">
-                        {card.tag}
-                      </span>
-                    </div>
+          <div className="mx-auto mt-10 max-w-3xl space-y-4">
+            {ROADMAP_CARDS.map((card) => {
+              const vote = votes[card.id] ?? null
+              return (
+                <article key={card.id} className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 text-left shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-6">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusClasses(card.status)}`}>
+                      {card.status}
+                    </span>
+                    <span className="inline-flex rounded-full border border-[#ecece7] bg-[#fafaf8] px-3 py-1 text-xs font-medium text-[#6b6b6b]">
+                      {card.tag}
+                    </span>
+                  </div>
 
-                    <h3 className="mt-4 text-xl font-semibold leading-tight text-[#1c1c1e]">{card.title}</h3>
-                    <p className="mt-3 text-sm leading-6 text-[#5f5f58] sm:text-[15px]">{card.body}</p>
+                  <h3 className="mt-4 text-xl font-semibold leading-tight text-[#1c1c1e]">{card.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[#5f5f58] sm:text-[15px]">{card.body}</p>
 
-                    <div className="mt-5 flex flex-wrap items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setVote(card.id, 'up')}
-                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${vote === 'up' ? 'border-[#dff3b3] bg-[#efffd3] text-[#355400]' : 'border-[#e8e8e4] bg-[#fcfcfa] text-[#4f4f49] hover:border-[#d9d9d2]'}`}
-                      >
-                        <ThumbsUp className="h-4 w-4" />
-                        Want this
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setVote(card.id, 'down')}
-                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${vote === 'down' ? 'border-[#f2d6d6] bg-[#fff3f3] text-[#8a2a2a]' : 'border-[#e8e8e4] bg-[#fcfcfa] text-[#4f4f49] hover:border-[#d9d9d2]'}`}
-                      >
-                        <ThumbsDown className="h-4 w-4" />
-                        Not useful
-                      </button>
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setVote(card.id, 'up')}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${vote === 'up' ? 'border-[#dff3b3] bg-[#efffd3] text-[#355400]' : 'border-[#e8e8e4] bg-[#fcfcfa] text-[#4f4f49] hover:border-[#d9d9d2]'}`}
+                    >
+                      <ThumbsUp className="h-4 w-4" />
+                      <span>{getVoteCount(card, 'up')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVote(card.id, 'down')}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${vote === 'down' ? 'border-[#f2d6d6] bg-[#fff3f3] text-[#8a2a2a]' : 'border-[#e8e8e4] bg-[#fcfcfa] text-[#4f4f49] hover:border-[#d9d9d2]'}`}
+                    >
+                      <ThumbsDown className="h-4 w-4" />
+                      <span>{getVoteCount(card, 'down')}</span>
+                    </button>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </section>
 
-            <aside className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-6 lg:sticky lg:top-28">
-              <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f3ffd1] text-[#1c1c1e]">
-                <Lightbulb className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[#1c1c1e]">What do you want to see?</h3>
-              <p className="mt-3 text-sm leading-6 text-[#6b6b6b]">
-                Drop a feature idea, creator pain point, or brand workflow problem. Keep it simple — I want signal, not essays.
-              </p>
+        <section className="mx-auto max-w-6xl px-6 pb-20 pt-8 md:px-10">
+          <div className="mx-auto max-w-3xl rounded-[28px] border border-[#e8e8e4] bg-white p-5 text-left shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-6">
+            <h3 className="text-2xl font-semibold tracking-tight text-[#1c1c1e]">What do you want to see?</h3>
+            <p className="mt-3 text-sm leading-6 text-[#6b6b6b]">
+              Add a feature idea, creator pain point, or workflow problem.
+            </p>
 
-              <form onSubmit={handleIdeaSubmit} className="mt-5 space-y-3">
-                <textarea
-                  value={idea}
-                  onChange={(e) => setIdea(e.target.value)}
-                  placeholder="Example: Let creators build a proper public site on name.ottougc.com"
-                  className="min-h-[150px] w-full rounded-3xl border border-[#e8e8e4] bg-[#f8f8f5] px-5 py-4 text-sm text-[#1c1c1e] outline-none transition focus:border-[#ccff00]"
-                />
-                <button
-                  type="submit"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-bold text-[#1c1c1e] transition hover:opacity-90"
-                  style={{ background: '#ccff00' }}
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Share idea
-                </button>
-              </form>
+            <form onSubmit={handleIdeaSubmit} className="mt-5 space-y-3">
+              <textarea
+                value={idea}
+                onChange={(e) => setIdea(e.target.value)}
+                placeholder="Share an idea"
+                className="min-h-[150px] w-full rounded-3xl border border-[#e8e8e4] bg-[#f8f8f5] px-5 py-4 text-sm text-[#1c1c1e] outline-none transition focus:border-[#ccff00]"
+              />
+              <button
+                type="submit"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-bold text-[#1c1c1e] transition hover:opacity-90"
+                style={{ background: '#ccff00' }}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Share idea
+              </button>
+            </form>
 
-              {ideaSubmitted && (
-                <p className="mt-3 text-sm text-[#5f5f5b]">Got it — that’s exactly the kind of thing I want more of.</p>
-              )}
-            </aside>
+            {ideaSubmitted && (
+              <p className="mt-3 text-sm text-[#5f5f5b]">Thanks — added to the list.</p>
+            )}
           </div>
         </section>
       </main>
