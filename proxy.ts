@@ -19,8 +19,14 @@ function getAllowedEmails() {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
+  const normalizedHost = host.split(':')[0].toLowerCase()
 
-  if (host === 'otto.edcorner.co.uk' || host === 'www.ottougc.com') {
+  if (normalizedHost === 'hooks.ottougc.com') {
+    if (pathname === '/hooks') return NextResponse.next()
+    return NextResponse.rewrite(new URL('/hooks', request.url))
+  }
+
+  if (normalizedHost === 'otto.edcorner.co.uk' || normalizedHost === 'www.ottougc.com') {
     const redirectUrl = new URL(request.url)
     redirectUrl.protocol = 'https:'
     redirectUrl.host = 'ottougc.com'
@@ -29,6 +35,7 @@ export async function proxy(request: NextRequest) {
 
   const publicExactRoutes = [
     '/',
+    '/hooks',
     '/login',
     '/signup',
     '/creators/welcome',
