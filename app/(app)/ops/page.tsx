@@ -252,7 +252,7 @@ export default function OpsPage() {
             <div>
               <p className="section-label mb-2">Needs attention</p>
               <h2 className="text-2xl font-semibold text-[#363535]" style={{ fontFamily: 'var(--font-bricolage)' }}>
-                Highest-leverage next moves
+                Most important next moves
               </h2>
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
-import { MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { BadgeCheck, Clock3, Hammer, MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 type Role = 'creator' | 'brand'
 type Vote = 'up' | 'down' | null
@@ -142,10 +142,25 @@ const ROADMAP_CARDS: RoadmapCard[] = [
   },
 ]
 
-function statusClasses(status: RoadmapCard['status']) {
-  if (status === 'Shipped this week') return 'bg-[#efffd3] text-[#355400] border-[#dff3b3]'
-  if (status === 'Building now') return 'bg-[#fff6d8] text-[#6a5200] border-[#f4e1a0]'
-  return 'bg-[#f3f3ef] text-[#5f5f58] border-[#e4e4dd]'
+function statusConfig(status: RoadmapCard['status']) {
+  if (status === 'Shipped this week') {
+    return {
+      className: 'bg-[#efffd3] text-[#355400] border-[#dff3b3]',
+      icon: BadgeCheck,
+    }
+  }
+
+  if (status === 'Building now') {
+    return {
+      className: 'bg-[#fff6d8] text-[#6a5200] border-[#f4e1a0]',
+      icon: Hammer,
+    }
+  }
+
+  return {
+    className: 'bg-[#f3f3ef] text-[#5f5f58] border-[#e4e4dd]',
+    icon: Clock3,
+  }
 }
 
 export default function HomeWaitlistLanding() {
@@ -401,6 +416,9 @@ export default function HomeWaitlistLanding() {
           <div className="mx-auto mt-10 max-w-3xl space-y-4">
             {ROADMAP_CARDS.map((card) => {
               const vote = votes[card.id] ?? null
+              const status = statusConfig(card.status)
+              const StatusIcon = status.icon
+
               return (
                 <article
                   key={card.id}
@@ -413,7 +431,8 @@ export default function HomeWaitlistLanding() {
                   }}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusClasses(card.status)}`}>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${status.className}`}>
+                      <StatusIcon className="h-3.5 w-3.5" />
                       {card.status}
                     </span>
                     <span className="inline-flex rounded-full border border-[#ecece7] bg-[#fafaf8] px-3 py-1 text-xs font-medium text-[#6b6b6b]">
