@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { inferPortfolioCategory, normalizePortfolioCategory, PORTFOLIO_CATEGORIES, type PortfolioCategory } from '@/lib/portfolio-media'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,6 +18,7 @@ export interface PublicPortfolioVideo {
   url: string
   title: string
   platform: string
+  category: PortfolioCategory
   kind: string
   youtubeId?: string
   playbackId?: string
@@ -83,6 +85,7 @@ type PortfolioItemRow = {
   title?: string | null
   type?: string | null
   platform?: string | null
+  category?: string | null
   caption?: string | null
   thumbnail_url?: string | null
   created_at: string
@@ -207,6 +210,7 @@ export async function getPublicCreatorPortfolioByHandle(
       url,
       title: item.title?.trim() || item.caption?.trim() || 'Untitled',
       platform,
+      category: inferPortfolioCategory({ caption: item.caption, platform, category: item.category }),
       kind: isYoutube ? 'youtube' : isMux ? 'mux' : 'direct',
       youtubeId: youtubeId || undefined,
       playbackId: isMux ? url : undefined,

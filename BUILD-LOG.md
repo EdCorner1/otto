@@ -30,3 +30,13 @@
 - Improve portfolio tabs/categories
 - Polish public creator profile preview
 - Layer in homepage roadmap/feed V1
+
+## 2026-04-23
+### Public portfolio polish
+- Added category-aware filtering to the public creator portfolio page so brands can scan a creator's work by bucket instead of one flat video wall.
+- Public portfolio now respects category data already set in profile editing and falls back to inferred categories when needed.
+- This brings the public profile closer to the private portfolio editor and makes creator work easier to review quickly.
+
+### Validation
+- TypeScript: pass
+- Build: pass
