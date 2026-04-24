@@ -231,7 +231,8 @@ export default function DashboardPage() {
     }
 
     return [
-      { label: 'Find work', href: '/jobs', primary: true },
+      { label: 'Live campaigns', href: '/live-campaigns', primary: true },
+      { label: 'Find work', href: '/jobs', primary: false },
       { label: 'Update profile', href: '/profile/edit', primary: false },
       { label: 'View portfolio', href: '/portfolio', primary: false },
       { label: 'Edit portfolio', href: '/profile/edit?tab=portfolio', primary: false },

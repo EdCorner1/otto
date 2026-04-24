@@ -1387,7 +1387,7 @@ export default function LiveCampaignDetailPage() {
           </div>
 
           <div className="card shadow-sm">
-            <p className="section-label mb-1">Current placeholders</p>
+            <p className="section-label mb-1">Campaign reminders</p>
             <h2 className="text-2xl text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>Still manual in MVP</h2>
             <div className="mt-5 space-y-3 text-sm text-[#363535]">
               <div className="flex items-start gap-3 rounded-2xl border border-[#ecece8] bg-[#fafaf9] p-4">

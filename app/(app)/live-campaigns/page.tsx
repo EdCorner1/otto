@@ -333,7 +333,7 @@ export default function LiveCampaignsPage() {
             Live Campaigns
           </h1>
           <p className="mt-2 text-sm text-[#6b6b6b]">
-            Track Ed&apos;s active creator retainers, daily posting pace, and logged content in one place.
+            Track active retainers, daily posting pace, and logged content in one place.
           </p>
         </div>
       </div>

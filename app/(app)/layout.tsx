@@ -443,8 +443,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       activePrefixes: role === 'brand' ? ['/profile/edit'] : ['/portfolio'],
     },
     { key: 'live-campaigns', label: 'Live Campaigns', href: '/live-campaigns', icon: <CampaignIcon />, activePrefixes: ['/live-campaigns'] },
-    { key: 'payments', label: 'Payments', icon: <PaymentsIcon />, comingSoon: true },
-    { key: 'affiliates', label: 'Affiliates', icon: <AffiliateIcon />, comingSoon: true },
   ], [role, unreadCount])
 
   const orderedNavItems = useMemo(() => {

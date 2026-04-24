@@ -14,6 +14,7 @@ import {
   inferPortfolioThumbnail,
   isDirectVideoUrl,
   isManagedPortfolioVideoUrl,
+  isRealPortfolioVideoUrl,
   normalizePortfolioCategory,
 } from '@/lib/portfolio-media'
 
@@ -76,6 +77,7 @@ const INCOME_RANGES = ['Not sharing', '$0 – $500/mo', '$500 – $2K/mo', '$2K 
 const STEPS = ['Basic Info', 'Stats', 'Portfolio', 'Review'] as const
 const MAX_PORTFOLIO_ITEMS = 6
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024
+const MIN_PORTFOLIO_VIDEOS = 3
 const AVATAR_BUCKET = 'avatars'
 const PORTFOLIO_TAB_STORAGE_KEY = 'otto:profile:portfolio-active-tab'
 
@@ -318,8 +320,11 @@ export default function ProfileEditPage() {
     if (step === 0) {
       return Boolean(fullName.trim() && handle.trim() && bio.trim() && mainPlatform)
     }
+    if (step === 2) {
+      return portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length >= MIN_PORTFOLIO_VIDEOS
+    }
     return true
-  }, [bio, fullName, handle, mainPlatform, role, step])
+  }, [bio, fullName, handle, mainPlatform, portfolioItems, role, step])
 
   const currentCreatorSnapshot = useMemo(
     () => createCreatorSnapshot({
@@ -420,6 +425,8 @@ export default function ProfileEditPage() {
       return acc
     }, {})
   }, [portfolioItems])
+
+  const validPortfolioCount = portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length
 
   const removePortfolioItem = async (id: string) => {
     const itemToRemove = portfolioItems.find((item) => item.id === id)
@@ -583,6 +590,12 @@ export default function ProfileEditPage() {
 
   const submitCreator = async () => {
     if (!creatorId) return
+
+    if (validPortfolioCount < MIN_PORTFOLIO_VIDEOS) {
+      setStatusMessage(`Add at least ${MIN_PORTFOLIO_VIDEOS} real portfolio videos before saving.`)
+      return
+    }
+
     setSaving(true)
     setSaveSuccess(false)
     setStatusMessage('')
@@ -911,7 +924,7 @@ export default function ProfileEditPage() {
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div>
                   <h2 className="font-display text-2xl text-[#1c1c1e]" style={{ letterSpacing: '-0.03em' }}>Portfolio videos</h2>
-                  <p className="mt-1 text-sm text-[#6b6b6b]">Upload videos directly to Otto or add a YouTube link. Max 6 items.</p>
+                  <p className="mt-1 text-sm text-[#6b6b6b]">Upload videos directly to Otto or add a YouTube link. Min {MIN_PORTFOLIO_VIDEOS}, max {MAX_PORTFOLIO_ITEMS} items.</p>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <input ref={videoInputRef} type="file" accept={VIDEO_ACCEPT} className="hidden" onChange={uploadPortfolioVideo} disabled={videoUploading || saving || portfolioItems.length >= MAX_PORTFOLIO_ITEMS} />
@@ -940,7 +953,13 @@ export default function ProfileEditPage() {
 
               {portfolioItems.length === 0 && (
                 <div className="rounded-xl border border-dashed border-[#dbdbd5] bg-[#fcfcfa] p-4 text-sm text-[#6b6b6b]">
-                  Upload up to 6 videos directly or add YouTube links.
+                  Upload at least {MIN_PORTFOLIO_VIDEOS} videos to continue. You can add up to {MAX_PORTFOLIO_ITEMS}.
+                </div>
+              )}
+
+              {portfolioItems.length > 0 && validPortfolioCount < MIN_PORTFOLIO_VIDEOS && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                  Add {MIN_PORTFOLIO_VIDEOS - validPortfolioCount} more video{MIN_PORTFOLIO_VIDEOS - validPortfolioCount === 1 ? '' : 's'} to reach the minimum portfolio quality bar.
                 </div>
               )}
 
@@ -1044,7 +1063,7 @@ export default function ProfileEditPage() {
                 <p><span className="font-semibold text-[#1c1c1e]">Main platform:</span> {labelPlatform(mainPlatform)}</p>
                 <p><span className="font-semibold text-[#1c1c1e]">Followers:</span> {followerRange || 'Not set'}</p>
                 <p><span className="font-semibold text-[#1c1c1e]">Income:</span> {incomeRange || 'Not set'}</p>
-                <p><span className="font-semibold text-[#1c1c1e]">Portfolio videos:</span> {portfolioItems.filter((item) => item.url.trim()).length}</p>
+                <p><span className="font-semibold text-[#1c1c1e]">Portfolio videos:</span> {validPortfolioCount} valid / {portfolioItems.length} total</p>
               </div>
               <p className="text-xs text-[#8a8a86]">This will save to your public creator profile.</p>
             </div>
