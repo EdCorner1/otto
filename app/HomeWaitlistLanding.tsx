@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
-import { BadgeCheck, Clock3, Hammer, MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { BadgeCheck, BriefcaseBusiness, Clock3, Hammer, MessageSquare, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
 
 type Role = 'creator' | 'brand'
 type Vote = 'up' | 'down' | null
@@ -25,18 +25,20 @@ const AVATARS = [
   'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=96&q=80',
 ]
 
-const OTTO_GREEN = '#BEF264'
-
-const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
+const COPY: Record<Role, { headline: string; subheadline: string; button: string; roleLabel: string; roleIcon: typeof Users }> = {
   creator: {
     headline: 'Get paid to make tech content for your favourite brands',
     subheadline: 'The platform that matches you with brands you actually want to work with.',
     button: 'Join waitlist',
+    roleLabel: 'Creator waitlist',
+    roleIcon: Users,
   },
   brand: {
     headline: 'Get human content that connects with your audience',
     subheadline: 'UGC that sounds like a friend recommended you, not an ad.',
     button: 'Join waitlist',
+    roleLabel: 'Brand waitlist',
+    roleIcon: BriefcaseBusiness,
   },
 }
 
@@ -175,6 +177,7 @@ export default function HomeWaitlistLanding() {
   const [ideaSubmitted, setIdeaSubmitted] = useState(false)
 
   const content = useMemo(() => COPY[role], [role])
+  const RoleIcon = content.roleIcon
 
   useEffect(() => {
     const observers: IntersectionObserver[] = []
@@ -318,36 +321,27 @@ export default function HomeWaitlistLanding() {
               </div>
             </div>
 
-            <div className="mb-8 flex items-center justify-center gap-4">
-              <span className={`text-sm font-medium transition-colors duration-300 ${role === 'creator' ? 'text-black' : 'text-gray-400'}`}>
-                I&apos;m a creator
-              </span>
-
-              <div className="relative inline-flex h-8 w-[58px] items-center justify-center rounded-full overflow-hidden shadow-[0_0_18px_rgba(190,242,100,0.28)]">
-                <div
-                  className="absolute inset-0 rounded-full animate-[spin_3.2s_linear_infinite]"
-                  style={{
-                    background: `conic-gradient(from 0deg, transparent 0deg, ${OTTO_GREEN} 110deg, ${OTTO_GREEN} 220deg, transparent 360deg)`,
-                  }}
-                />
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={role === 'brand'}
-                  aria-label="Toggle creator or brand"
-                  onClick={() => setRole(role === 'creator' ? 'brand' : 'creator')}
-                  className="relative inline-flex h-[29px] w-[55px] items-center rounded-full px-[3px] focus:outline-none"
-                  style={{ backgroundColor: OTTO_GREEN }}
-                >
-                  <span
-                    className={`inline-block h-[23px] w-[23px] rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.16)] transition-transform duration-300 ${role === 'brand' ? 'translate-x-[27px]' : 'translate-x-[1px]'}`}
-                  />
-                </button>
+            <div className="mb-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#e8e8e4] bg-white px-4 py-2 text-sm font-semibold text-[#363535]">
+                <RoleIcon className="h-4 w-4 text-[#1c1c1e]" />
+                <span>{content.roleLabel}</span>
               </div>
 
-              <span className={`text-sm font-medium transition-colors duration-300 ${role === 'brand' ? 'text-black' : 'text-gray-400'}`}>
-                I&apos;m a brand
-              </span>
+              <div className="inline-flex rounded-full border border-[#e8e8e4] bg-white p-1 shadow-[0_8px_20px_rgba(28,28,30,0.07)]">
+                {(['creator', 'brand'] as const).map((option) => {
+                  const active = role === option
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setRole(option)}
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${active ? 'bg-[#ccff00] text-[#1c1c1e]' : 'text-[#6b6b6b] hover:text-[#1c1c1e]'}`}
+                    >
+                      {option === 'creator' ? 'Creator' : 'Brand'}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <h1
