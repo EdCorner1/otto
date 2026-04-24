@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { MAX_PORTFOLIO_VIDEOS, MIN_PORTFOLIO_VIDEOS } from '@/lib/portfolio-media'
 
 export const runtime = 'nodejs'
 
@@ -83,8 +84,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Add at least one TikTok, Instagram, or YouTube link.' }, { status: 400 })
     }
 
-    if (portfolioItems.length < 6 || portfolioItems.length > 6) {
-      return NextResponse.json({ error: 'Add 6 portfolio videos.' }, { status: 400 })
+    if (portfolioItems.length < MIN_PORTFOLIO_VIDEOS || portfolioItems.length > MAX_PORTFOLIO_VIDEOS) {
+      return NextResponse.json({ error: `Add between ${MIN_PORTFOLIO_VIDEOS} and ${MAX_PORTFOLIO_VIDEOS} portfolio videos.` }, { status: 400 })
     }
 
     const { data: existingCreator } = await adminClient

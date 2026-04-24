@@ -1,5 +1,6 @@
 // Constants
 export const DIRECT_VIDEO_PLATFORM = 'direct'
+export const MIN_PORTFOLIO_VIDEOS = 3
 export const MAX_PORTFOLIO_VIDEOS = 6
 export const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024 // 100MB
 export const PORTFOLIO_VIDEO_BUCKET = 'portfolio-videos'

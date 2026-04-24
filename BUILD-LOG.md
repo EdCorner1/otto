@@ -40,3 +40,13 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-04-24
+### Creator onboarding quality gate fix
+- Aligned creator onboarding with the Otto roadmap by changing the hard minimum from 6 portfolio videos to 3, while still allowing up to 6 uploads.
+- Updated the onboarding UI copy and progress messaging so creators know the true bar to get live without feeling blocked by an unnecessary higher threshold.
+- Updated server-side creator onboarding validation to enforce the new 3-to-6 portfolio range consistently.
+
+### Validation
+- TypeScript: pass
+- Build: pass
