@@ -26,7 +26,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL('/hooks', request.url))
   }
 
-  if (normalizedHost === 'otto.edcorner.co.uk' || normalizedHost === 'www.ottougc.com') {
+  if (normalizedHost === 'www.ottougc.com') {
     const redirectUrl = new URL(request.url)
     redirectUrl.protocol = 'https:'
     redirectUrl.host = 'ottougc.com'
