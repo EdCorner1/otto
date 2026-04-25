@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LoaderCircle,
+  Trash2,
   Upload,
   UserCircle2,
   Users,
@@ -935,8 +936,23 @@ export default function OnboardingPage() {
                       Add the work you want brands to remember.
                     </h2>
                     <p className="mt-4 text-sm text-[#6b6b6b]">
-                      Add at least {MIN_PORTFOLIO_ITEMS} portfolio videos to continue. You can upload up to {MAX_PORTFOLIO_ITEMS}. Otto will use them on your public profile preview in the next step.
+                      Add at least {MIN_PORTFOLIO_ITEMS} portfolio videos to continue. You can upload up to {MAX_PORTFOLIO_ITEMS}. These videos shape first impressions on your public profile.
                     </p>
+                  </div>
+
+                  <div className="grid gap-3 rounded-[24px] border border-[#e8e8e4] bg-[#fcfcfa] p-4 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-[#ecece7] bg-white px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Hook</p>
+                      <p className="mt-1 text-sm text-[#4f4f49]">Open strong in the first 2 seconds.</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#ecece7] bg-white px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Range</p>
+                      <p className="mt-1 text-sm text-[#4f4f49]">Show different product angles and tones.</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#ecece7] bg-white px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Clarity</p>
+                      <p className="mt-1 text-sm text-[#4f4f49]">Use captions that explain context fast.</p>
+                    </div>
                   </div>
 
                   <div className="rounded-[28px] border border-dashed border-[#d7d7d1] bg-[#fbfbf8] p-6">
@@ -991,9 +1007,9 @@ export default function OnboardingPage() {
                           <button
                             type="button"
                             onClick={() => void removePortfolioItem(index)}
-                            className="inline-flex items-center gap-2 text-sm font-medium text-[#6b6b6b] hover:text-[#1c1c1e]"
+                            className="inline-flex items-center gap-2 rounded-xl border border-[#ecece7] bg-[#fafaf8] px-3 py-2 text-sm font-medium text-[#5f5f58] transition hover:border-[#d8d8d1] hover:text-[#1c1c1e]"
                           >
-                            <ChevronLeft className="h-4 w-4 rotate-45" /> Remove video
+                            <Trash2 className="h-4 w-4" /> Remove video
                           </button>
                         </div>
                       ))}
