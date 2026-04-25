@@ -433,7 +433,7 @@ export default function DashboardPage() {
   const brand = payload?.brand
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-6 pb-8">
+    <div className="mx-auto max-w-7xl px-4 md:px-6 pb-8 dashboard-compact">
       <div className="mb-8">
         <h1 style={headlineStyle}>Welcome back, {welcomeName}</h1>
         <p className="text-sm text-[#6b6b6b] mt-2">
@@ -444,13 +444,13 @@ export default function DashboardPage() {
       </div>
 
       {successMessage && (
-        <div className="mb-5 rounded-2xl border border-[#d7ec8a] bg-[#f7ffd4] p-4 text-sm font-medium text-[#1c1c1e]">
+        <div className="mb-5 rounded-xl border border-[#d7ec8a] bg-[#f7ffd4] p-4 text-sm font-medium text-[#1c1c1e]">
           {successMessage}
         </div>
       )}
 
       {error && (
-        <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
           {error}
         </div>
       )}

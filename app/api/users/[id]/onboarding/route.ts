@@ -246,9 +246,7 @@ async function handleRequest(request: NextRequest, { params }: { params: Promise
       })
     }
 
-    const userUpdate: Record<string, unknown> = {
-      onboarding_complete: true,
-    }
+    const userUpdate: Record<string, unknown> = {}
 
     if (role === 'creator' || role === 'brand') {
       userUpdate.role = role

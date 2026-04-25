@@ -4,6 +4,8 @@ import {
   detectPortfolioPlatform,
   inferPortfolioThumbnail,
   inferPortfolioType,
+  isRealPortfolioVideoUrl,
+  MIN_PORTFOLIO_VIDEOS,
 } from '@/lib/portfolio-media'
 
 export const runtime = 'nodejs'
@@ -115,7 +117,7 @@ async function ensureUserRow(adminClient: any, user: AuthUser, role: Role) {
 
   const { data: existing } = await adminClient
     .from('users')
-    .select('id, role, onboarding_complete, email')
+    .select('id, role, email')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -124,7 +126,6 @@ async function ensureUserRow(adminClient: any, user: AuthUser, role: Role) {
       id: user.id,
       role,
       email: email || null,
-      onboarding_complete: false,
     }
 
     const { error } = await adminClient.from('users').insert(insertPayload)
@@ -133,7 +134,6 @@ async function ensureUserRow(adminClient: any, user: AuthUser, role: Role) {
     return {
       id: user.id,
       role,
-      onboarding_complete: false,
       email,
     }
   }
@@ -150,7 +150,6 @@ async function ensureUserRow(adminClient: any, user: AuthUser, role: Role) {
   return {
     id: existing.id,
     role,
-    onboarding_complete: Boolean(existing.onboarding_complete),
     email: email || existing.email || '',
   }
 }
@@ -241,7 +240,7 @@ async function getCurrentRows(adminClient: any, userId: string) {
   const [creatorRow, brandRow, userRow] = await Promise.all([
     adminClient.from('creators').select('id, display_name, avatar_url, bio').eq('user_id', userId).maybeSingle(),
     adminClient.from('brands').select('id, company_name, bio, industry, website, logo_url').eq('user_id', userId).maybeSingle(),
-    adminClient.from('users').select('id, role, onboarding_complete').eq('id', userId).maybeSingle(),
+    adminClient.from('users').select('id, role').eq('id', userId).maybeSingle(),
   ])
 
   return {
@@ -337,9 +336,7 @@ export async function GET(request: NextRequest) {
     const brandId = rows.brand?.id || null
 
     const metadataStep = getMetadataStep(user)
-    const dbComplete = Boolean(rows.user?.onboarding_complete)
-    const metadataComplete = getMetadataOnboardingComplete(user)
-    const onboardingComplete = dbComplete || metadataComplete
+    const onboardingComplete = getMetadataOnboardingComplete(user)
 
     const serverStep = onboardingComplete ? TOTAL_STEPS : metadataStep
 
@@ -408,7 +405,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const role = inferRole(user, rowsBefore.user?.role, body?.role)
 
     const metadataStep = getMetadataStep(user)
-    const onboardingComplete = Boolean(rowsBefore.user?.onboarding_complete) || getMetadataOnboardingComplete(user)
+    const onboardingComplete = getMetadataOnboardingComplete(user)
     const currentStep = onboardingComplete ? TOTAL_STEPS : metadataStep
 
     if (onboardingComplete) {
@@ -433,6 +430,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
         brandId: rowsBefore.brand?.id,
         skipped: true,
       })
+    }
+
+    if (requestedStep > currentStep) {
+      return NextResponse.json(
+        { error: `Complete step ${currentStep} before moving on.` },
+        { status: 409 }
+      )
     }
 
     let nextStep = currentStep
@@ -599,6 +603,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
               .slice(0, 6)
           : []
 
+        const validPortfolioCount = portfolioItems.filter((item: { url: string }) => isRealPortfolioVideoUrl(item.url)).length
+        if (validPortfolioCount < MIN_PORTFOLIO_VIDEOS) {
+          return NextResponse.json(
+            { error: `Add at least ${MIN_PORTFOLIO_VIDEOS} valid portfolio videos before continuing.` },
+            { status: 400 }
+          )
+        }
+
         const { error: deleteError } = await adminClient
           .from('portfolio_items')
           .delete()
@@ -638,20 +650,34 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (requestedStep === 5) {
       await ensureUserRow(adminClient, user, role)
 
-      if (role === 'creator') creatorId = await ensureCreatorRow(adminClient, user)
-      if (role === 'brand') brandId = await ensureBrandRow(adminClient, user)
+      if (role === 'creator') {
+        creatorId = await ensureCreatorRow(adminClient, user)
 
-      const userPatch: Record<string, unknown> = {
-        role,
-        onboarding_complete: true,
+        const { data: savedPortfolio } = await adminClient
+          .from('portfolio_items')
+          .select('url')
+          .eq('creator_id', creatorId)
+
+        const validPortfolioCount = (savedPortfolio || [])
+          .filter((item: { url?: string | null }) => isRealPortfolioVideoUrl(cleanText(item?.url || '')))
+          .length
+
+        if (validPortfolioCount < MIN_PORTFOLIO_VIDEOS) {
+          return NextResponse.json(
+            { error: `Add at least ${MIN_PORTFOLIO_VIDEOS} valid portfolio videos before finishing onboarding.` },
+            { status: 400 }
+          )
+        }
       }
 
-      const { error: userUpdateError } = await adminClient
+      if (role === 'brand') brandId = await ensureBrandRow(adminClient, user)
+
+      const { error: userRoleUpdateError } = await adminClient
         .from('users')
-        .update(userPatch)
+        .update({ role })
         .eq('id', user.id)
 
-      if (userUpdateError) throw new Error(userUpdateError.message)
+      if (userRoleUpdateError) throw new Error(userRoleUpdateError.message)
 
       const displayHandle = cleanText(body?.handle || user.user_metadata?.handle).replace(/^@+/, '')
       const profilePath = creatorId ? `/creators/${creatorId}` : '/dashboard'

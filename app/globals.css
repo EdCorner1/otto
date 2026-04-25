@@ -183,6 +183,19 @@ h2, .headline-lg {
     background: radial-gradient(circle, rgba(204, 255, 0, 0.26) 0%, rgba(204, 255, 0, 0) 72%);
     pointer-events: none;
   }
+
+  .onboarding-compact .rounded-\[30px\],
+  .onboarding-compact .rounded-\[28px\],
+  .onboarding-compact .rounded-\[24px\],
+  .onboarding-compact .rounded-2xl {
+    border-radius: 0.85rem;
+  }
+
+  .dashboard-compact .card,
+  .dashboard-compact .rounded-2xl,
+  .dashboard-compact .rounded-xl {
+    border-radius: 0.8rem;
+  }
 }
 
 /* ─── Responsive utilities ──────────────────────────────── */

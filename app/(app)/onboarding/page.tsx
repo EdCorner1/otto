@@ -130,6 +130,15 @@ function hasMinimumViablePortfolio(items: PortfolioItem[]) {
   return items.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length >= MIN_PORTFOLIO_ITEMS
 }
 
+function normalizeOnboardingError(message: string, fallback: string) {
+  const clean = (message || '').trim()
+  if (!clean) return fallback
+  if (clean.toLowerCase().includes('missing auth token') || clean.toLowerCase().includes('not authenticated')) {
+    return 'Your session expired. Please sign in again.'
+  }
+  return clean
+}
+
 function blankDraft(): OnboardingDraft {
   return {
     role: 'creator',
@@ -273,8 +282,9 @@ export default function OnboardingPage() {
     const accessToken = sessionData.session?.access_token
 
     if (!accessToken) {
-      router.replace('/login')
-      throw new Error('You need to sign in again to continue.')
+      const redirectTo = encodeURIComponent(`/onboarding?role=${role}`)
+      router.replace(`/login?redirectTo=${redirectTo}`)
+      throw new Error('Your session expired. Please sign in again to continue onboarding.')
     }
 
     const response = await fetch(`/api/onboarding/step/${targetStep}`, {
@@ -304,7 +314,8 @@ export default function OnboardingPage() {
         const user = authData.user
 
         if (!user) {
-          router.replace('/login')
+          const redirectTo = encodeURIComponent(`/onboarding?role=${requestedRole}`)
+          router.replace(`/login?redirectTo=${redirectTo}`)
           return
         }
 
@@ -317,7 +328,8 @@ export default function OnboardingPage() {
         const { data: sessionData } = await supabase.auth.getSession()
         const accessToken = sessionData.session?.access_token
         if (!accessToken) {
-          router.replace('/login')
+          const redirectTo = encodeURIComponent(`/onboarding?role=${requestedRole}`)
+          router.replace(`/login?redirectTo=${redirectTo}`)
           return
         }
 
@@ -352,7 +364,7 @@ export default function OnboardingPage() {
         setStep(resumedStep)
         persistLocalDraft(merged, resumedStep)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not load onboarding.')
+        setError(normalizeOnboardingError(err instanceof Error ? err.message : '', 'Could not load onboarding.'))
       } finally {
         setBooting(false)
       }
@@ -395,7 +407,7 @@ export default function OnboardingPage() {
       setStep(nextStep)
       persistLocalDraft(draft, nextStep)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save step.')
+      setError(normalizeOnboardingError(err instanceof Error ? err.message : '', 'Could not save step.'))
     } finally {
       setLoadingMessage('')
       setSubmitting(false)
@@ -476,7 +488,7 @@ export default function OnboardingPage() {
         router.push(result.redirectTo || '/dashboard')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save step.')
+      setError(normalizeOnboardingError(err instanceof Error ? err.message : '', 'Could not save step.'))
     } finally {
       setLoadingMessage('')
       setSubmitting(false)
@@ -639,7 +651,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-[#fafaf9] text-[#1c1c1e]">
       <Header />
-      <main className="mx-auto w-full max-w-6xl px-5 pb-12 pt-28 sm:px-8">
+      <main className="mx-auto w-full max-w-6xl px-5 pb-12 pt-28 sm:px-8 onboarding-compact">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
           <section>
             <ProgressBar step={step} />
@@ -936,7 +948,7 @@ export default function OnboardingPage() {
                       Add the work you want brands to remember.
                     </h2>
                     <p className="mt-4 text-sm text-[#6b6b6b]">
-                      Add at least {MIN_PORTFOLIO_ITEMS} portfolio videos to continue. You can upload up to {MAX_PORTFOLIO_ITEMS}. These videos shape first impressions on your public profile.
+                      Add at least {MIN_PORTFOLIO_ITEMS} valid portfolio videos to continue. You can upload up to {MAX_PORTFOLIO_ITEMS}. These videos shape first impressions on your public profile.
                     </p>
                   </div>
 
@@ -986,8 +998,8 @@ export default function OnboardingPage() {
                   {draft.portfolioItems.length > 0 ? (
                     <div className="space-y-4">
                       {viablePortfolioCount < MIN_PORTFOLIO_ITEMS && (
-                        <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] px-4 py-3 text-sm text-[#6b6b6b]">
-                          Add at least {MIN_PORTFOLIO_ITEMS} portfolio videos to continue. Right now you have {viablePortfolioCount} valid video{viablePortfolioCount === 1 ? '' : 's'} ready.
+                        <div className="rounded-xl border border-[#e8e8e4] bg-[#fbfbf8] px-4 py-3 text-sm text-[#6b6b6b]">
+                          Add at least {MIN_PORTFOLIO_ITEMS} valid portfolio videos to continue. Right now you have {viablePortfolioCount} valid video{viablePortfolioCount === 1 ? '' : 's'} ready.
                         </div>
                       )}
                       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -1016,9 +1028,9 @@ export default function OnboardingPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-[28px] border border-[#e8e8e4] bg-[#fbfbf8] px-5 py-8 text-center text-sm text-[#6b6b6b]">
+                    <div className="rounded-xl border border-[#e8e8e4] bg-[#fbfbf8] px-5 py-8 text-center text-sm text-[#6b6b6b]">
                       <p className="text-base font-semibold text-[#1c1c1e]">Your portfolio starts here.</p>
-                      <p className="mt-2">Add at least {MIN_PORTFOLIO_ITEMS} portfolio videos to continue. Upload your best product demos, UGC examples, or client work so brands can actually get a proper read on your style.</p>
+                      <p className="mt-2">Add at least {MIN_PORTFOLIO_ITEMS} valid portfolio videos to continue. Upload your best product demos, UGC examples, or client work so brands can actually get a proper read on your style.</p>
                     </div>
                   )}
                 </div>

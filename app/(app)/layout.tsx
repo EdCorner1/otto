@@ -324,7 +324,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       const { data: userRow } = await supabase
         .from('users')
-        .select('role, onboarding_complete')
+        .select('role')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -346,7 +346,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const onboardingComplete =
         isOwner
           ? true
-          : Boolean(userRow?.onboarding_complete || user.user_metadata?.onboarding_complete)
+          : Boolean(user.user_metadata?.onboarding_complete)
 
       if (cancelled) return
 

@@ -36,7 +36,7 @@ function SignupPageInner() {
         data: {
           role,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/onboarding?role=${requestedRole}`)}`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/onboarding?role=${role}`)}`,
       },
     })
 
