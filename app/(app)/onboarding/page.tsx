@@ -1086,17 +1086,70 @@ export default function OnboardingPage() {
                   </div>
 
                   {role === 'creator' && creatorId ? (
-                    <div className="overflow-hidden rounded-[28px] border border-[#e8e8e4] bg-[#f5f5f2] shadow-sm">
-                      <div className="flex items-center justify-between border-b border-[#e8e8e4] bg-white px-5 py-3">
-                        <div>
-                          <p className="text-sm font-semibold text-[#1c1c1e]">Public profile preview</p>
-                          <p className="text-xs text-[#8a8a86]">Live preview · {creatorProfileUrl}</p>
+                    <div className="space-y-5">
+                      <div className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-sm">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Ready to go live</p>
+                            <h3 className="mt-2 text-[clamp(24px,4vw,34px)] leading-none text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
+                              Your public profile now feels real.
+                            </h3>
+                            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5d5d58]">
+                              Brands will judge this page fast. Otto is now showing your name, niche, platform, and portfolio together in one clean public profile.
+                            </p>
+                          </div>
+
+                          <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] px-4 py-3 lg:min-w-[260px]">
+                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a8a86]">Live URL</p>
+                            <p className="mt-2 break-all text-base font-semibold text-[#1c1c1e]">ottougc.com/{creatorHandle}</p>
+                            <a href={creatorProfileUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-sm font-medium text-[#1c1c1e] underline decoration-[#ccff00] underline-offset-4">
+                              Open profile
+                            </a>
+                          </div>
                         </div>
-                        <a href={creatorProfileUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-[#1c1c1e] underline decoration-[#ccff00] underline-offset-4">
-                          Open profile
-                        </a>
+
+                        <div className="mt-5 grid gap-3 md:grid-cols-3">
+                          <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] p-4">
+                            <div className="flex items-center gap-2 text-[#1c1c1e]">
+                              <Video className="h-4 w-4" />
+                              <p className="text-sm font-semibold">Portfolio quality bar</p>
+                            </div>
+                            <p className="mt-2 text-2xl font-semibold text-[#1c1c1e]">{viablePortfolioCount}</p>
+                            <p className="mt-1 text-sm text-[#6b6b6b]">valid video{viablePortfolioCount === 1 ? '' : 's'} ready for review</p>
+                          </div>
+
+                          <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] p-4">
+                            <div className="flex items-center gap-2 text-[#1c1c1e]">
+                              <Users className="h-4 w-4" />
+                              <p className="text-sm font-semibold">Niche positioning</p>
+                            </div>
+                            <p className="mt-2 text-2xl font-semibold text-[#1c1c1e]">{draft.nicheTags.length}</p>
+                            <p className="mt-1 text-sm text-[#6b6b6b]">niche tag{draft.nicheTags.length === 1 ? '' : 's'} helping brands place you quickly</p>
+                          </div>
+
+                          <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] p-4">
+                            <div className="flex items-center gap-2 text-[#1c1c1e]">
+                              <Check className="h-4 w-4" />
+                              <p className="text-sm font-semibold">What brands see first</p>
+                            </div>
+                            <p className="mt-2 text-base font-semibold text-[#1c1c1e]">{draft.mainPlatform || 'Creator profile'}</p>
+                            <p className="mt-1 text-sm text-[#6b6b6b]">Clear platform signal, public profile link, and proof of work in one place</p>
+                          </div>
+                        </div>
                       </div>
-                      <iframe title="Creator profile preview" src={creatorProfileUrl} className="h-[780px] w-full bg-white" />
+
+                      <div className="overflow-hidden rounded-[28px] border border-[#e8e8e4] bg-[#f5f5f2] shadow-sm">
+                        <div className="flex items-center justify-between border-b border-[#e8e8e4] bg-white px-5 py-3">
+                          <div>
+                            <p className="text-sm font-semibold text-[#1c1c1e]">Public profile preview</p>
+                            <p className="text-xs text-[#8a8a86]">Live preview · {creatorProfileUrl}</p>
+                          </div>
+                          <a href={creatorProfileUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-[#1c1c1e] underline decoration-[#ccff00] underline-offset-4">
+                            Open profile
+                          </a>
+                        </div>
+                        <iframe title="Creator profile preview" src={creatorProfileUrl} className="h-[780px] w-full bg-white" />
+                      </div>
                     </div>
                   ) : role === 'creator' ? (
                     <div className="rounded-[28px] border border-[#e8e8e4] bg-[#fbfbf8] p-6">

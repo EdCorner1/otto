@@ -50,3 +50,13 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-04-25
+### Creator onboarding preview polish
+- Upgraded the final creator onboarding preview step so it feels like a real go-live checkpoint instead of just an iframe dump.
+- Added a cleaner readiness summary above the live profile preview with signals around portfolio count, niche positioning, and what brands see first.
+- This makes the handoff from onboarding to public profile feel more intentional and reinforces creator quality before they land in the dashboard.
+
+### Validation
+- TypeScript: pass
+- Build: pass
