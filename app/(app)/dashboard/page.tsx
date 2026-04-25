@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { FALLBACK_HOOK_ROULETTE_ITEMS } from '@/lib/hook-roulette'
 
 type Role = 'creator' | 'brand'
 
@@ -97,6 +98,8 @@ type HookRouletteIdea = {
   hookStarter: string
   scriptAngle: string
   ctaBeat: string
+  type?: string
+  sourceUrl?: string
 }
 
 type SavedHookNote = {
@@ -114,50 +117,14 @@ const headlineStyle: React.CSSProperties = {
   color: '#1c1c1e',
 }
 
-const HOOK_ROULETTE_IDEAS: HookRouletteIdea[] = [
-  {
-    id: 'myth-breaker',
-    hookStarter: 'Everyone says you need 100K followers. You don’t.',
-    scriptAngle: 'Break down one paid deal you closed with a small audience and show the DM flow + deliverable that won the yes.',
-    ctaBeat: 'Invite creators to comment “DM script” if they want your exact outreach template.',
-  },
-  {
-    id: 'before-after-workflow',
-    hookStarter: 'My videos looked average until I changed this one 7-second sequence.',
-    scriptAngle: 'Show a side-by-side of old vs new opening, then explain the hook → proof → payoff structure that lifted watch time.',
-    ctaBeat: 'End with: “Want my 7-second framework? I put it in my notes.”',
-  },
-  {
-    id: 'tool-proof',
-    hookStarter: 'I tested this AI tool for 7 days so you don’t waste your budget.',
-    scriptAngle: 'Narrate day-by-day results, include what failed, and frame who this tool is actually for.',
-    ctaBeat: 'Ask viewers to vote: “Should I test another tool or publish the full workflow next?”',
-  },
-  {
-    id: 'client-perspective',
-    hookStarter: 'If I were a brand hiring UGC today, this is the first thing I’d check.',
-    scriptAngle: 'Walk through your creator profile as if you were the brand, pointing out what builds trust in the first 10 seconds.',
-    ctaBeat: 'Offer a quick profile teardown in comments for 3 creators.',
-  },
-  {
-    id: 'mistake-led',
-    hookStarter: 'This one sentence in my pitch cost me three deals.',
-    scriptAngle: 'Reveal the sentence, why it triggered brand hesitation, and the replacement line that improved response rate.',
-    ctaBeat: 'Prompt: “Reply ‘pitch’ and I’ll share my updated opener.”',
-  },
-  {
-    id: 'speed-run',
-    hookStarter: 'Give me 20 minutes and I’ll plan a week of creator content from scratch.',
-    scriptAngle: 'Live speed-run your planning board: hook bank, proof moments, CTA variations, and repurposing plan.',
-    ctaBeat: 'Point to your planning checklist and tell viewers to steal it.',
-  },
-  {
-    id: 'hot-take',
-    hookStarter: 'Hot take: polished UGC is usually less persuasive than this.',
-    scriptAngle: 'Demonstrate raw vs polished footage and explain when “too produced” reduces trust for conversion-first ads.',
-    ctaBeat: 'Ask viewers whether they want a “raw-first shot list.”',
-  },
-]
+const HOOK_ROULETTE_IDEAS: HookRouletteIdea[] = FALLBACK_HOOK_ROULETTE_ITEMS.map((item) => ({
+  id: item.id,
+  hookStarter: item.hookText,
+  scriptAngle: item.suggestedScriptAngle,
+  ctaBeat: item.ctaBeat,
+  type: item.type,
+  sourceUrl: item.sourceUrl,
+}))
 
 const HOOK_NOTES_STORAGE_KEY = 'otto-hook-roulette-notes'
 
@@ -206,6 +173,43 @@ function formatDate(value: string) {
   })
 }
 
+function randomFallbackHook(excludeId?: string | null): HookRouletteIdea {
+  if (HOOK_ROULETTE_IDEAS.length < 2) return HOOK_ROULETTE_IDEAS[0]
+
+  let next = HOOK_ROULETTE_IDEAS[Math.floor(Math.random() * HOOK_ROULETTE_IDEAS.length)]
+  while (excludeId && next.id === excludeId) {
+    next = HOOK_ROULETTE_IDEAS[Math.floor(Math.random() * HOOK_ROULETTE_IDEAS.length)]
+  }
+
+  return next
+}
+
+function toHookIdea(payload: unknown): HookRouletteIdea | null {
+  if (!payload || typeof payload !== 'object') return null
+
+  const item = payload as {
+    id?: unknown
+    hookStarter?: unknown
+    scriptAngle?: unknown
+    ctaBeat?: unknown
+    type?: unknown
+    sourceUrl?: unknown
+  }
+
+  if (typeof item.id !== 'string' || typeof item.hookStarter !== 'string' || typeof item.scriptAngle !== 'string' || typeof item.ctaBeat !== 'string') {
+    return null
+  }
+
+  return {
+    id: item.id,
+    hookStarter: item.hookStarter,
+    scriptAngle: item.scriptAngle,
+    ctaBeat: item.ctaBeat,
+    type: typeof item.type === 'string' ? item.type : undefined,
+    sourceUrl: typeof item.sourceUrl === 'string' ? item.sourceUrl : undefined,
+  }
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -220,6 +224,7 @@ export default function DashboardPage() {
   const [rollingHook, setRollingHook] = useState(false)
   const [savedHookNotes, setSavedHookNotes] = useState<SavedHookNote[]>([])
   const [hookFeedbackMessage, setHookFeedbackMessage] = useState('')
+  const [hookSource, setHookSource] = useState<'db' | 'fallback'>('fallback')
 
   useEffect(() => {
     const onboarding = searchParams.get('onboarding')
@@ -303,10 +308,46 @@ export default function DashboardPage() {
     ]
   }, [role])
 
+  const fetchHookIdea = useCallback(async (excludeId?: string | null) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+
+      const response = await fetch('/api/creator/hooks/roulette?limit=3', {
+        headers: token
+          ? {
+            Authorization: `Bearer ${token}`,
+          }
+          : undefined,
+      })
+
+      if (!response.ok) throw new Error('Hook API unavailable')
+
+      const data = (await response.json()) as {
+        source?: 'db' | 'fallback'
+        hooks?: unknown[]
+      }
+
+      const hooks = Array.isArray(data.hooks) ? data.hooks.map(toHookIdea).filter((item): item is HookRouletteIdea => Boolean(item)) : []
+
+      if (!hooks.length) throw new Error('No hooks returned')
+
+      const next = hooks.find((item) => item.id !== excludeId) || hooks[0]
+      setCurrentHookIdea(next)
+      setHookSource(data.source === 'db' ? 'db' : 'fallback')
+      return true
+    } catch {
+      const fallback = randomFallbackHook(excludeId)
+      setCurrentHookIdea(fallback)
+      setHookSource('fallback')
+      return false
+    }
+  }, [supabase])
+
   useEffect(() => {
     if (role !== 'creator') return
 
-    setCurrentHookIdea((previous) => previous || HOOK_ROULETTE_IDEAS[Math.floor(Math.random() * HOOK_ROULETTE_IDEAS.length)])
+    setCurrentHookIdea((previous) => previous || randomFallbackHook())
 
     try {
       const raw = window.localStorage.getItem(HOOK_NOTES_STORAGE_KEY)
@@ -323,7 +364,9 @@ export default function DashboardPage() {
     } catch {
       // Ignore malformed local data.
     }
-  }, [role])
+
+    void fetchHookIdea()
+  }, [fetchHookIdea, role])
 
   useEffect(() => {
     if (!hookFeedbackMessage) return
@@ -338,18 +381,8 @@ export default function DashboardPage() {
   const rollHookIdea = () => {
     setRollingHook(true)
 
-    window.setTimeout(() => {
-      setCurrentHookIdea((previous) => {
-        if (HOOK_ROULETTE_IDEAS.length < 2) return HOOK_ROULETTE_IDEAS[0]
-
-        let next = HOOK_ROULETTE_IDEAS[Math.floor(Math.random() * HOOK_ROULETTE_IDEAS.length)]
-        while (next.id === previous?.id) {
-          next = HOOK_ROULETTE_IDEAS[Math.floor(Math.random() * HOOK_ROULETTE_IDEAS.length)]
-        }
-
-        return next
-      })
-
+    window.setTimeout(async () => {
+      await fetchHookIdea(currentHookIdea?.id || null)
       setRollingHook(false)
       setHookFeedbackMessage('Fresh angle loaded. 🎯')
     }, 360)
@@ -464,6 +497,14 @@ export default function DashboardPage() {
               </p>
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="md:col-span-2 flex items-center justify-between gap-2 text-[11px] text-[#7d7d78]">
+                  <span className="uppercase tracking-[0.12em]">{hookSource === 'db' ? 'Live hook database' : 'Fallback hook bank'}</span>
+                  {currentHookIdea?.sourceUrl ? (
+                    <a href={currentHookIdea.sourceUrl} target="_blank" rel="noreferrer" className="underline decoration-dotted underline-offset-2 hover:text-[#4b5d00]">
+                      Source
+                    </a>
+                  ) : null}
+                </div>
                 <div className="rounded-xl border border-[#e3eac2] bg-white/75 p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">Script angle</p>
                   <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.scriptAngle || '—'}</p>
