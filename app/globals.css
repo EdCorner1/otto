@@ -166,6 +166,23 @@ h2, .headline-lg {
     transform: translateY(-2px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
   }
+
+  .hook-roulette-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hook-roulette-card::after {
+    content: '';
+    position: absolute;
+    right: -80px;
+    top: -80px;
+    width: 220px;
+    height: 220px;
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(204, 255, 0, 0.26) 0%, rgba(204, 255, 0, 0) 72%);
+    pointer-events: none;
+  }
 }
 
 /* ─── Responsive utilities ──────────────────────────────── */

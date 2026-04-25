@@ -92,6 +92,19 @@ type DashboardPayload = {
   brand?: BrandDashboard
 }
 
+type HookRouletteIdea = {
+  id: string
+  hookStarter: string
+  scriptAngle: string
+  ctaBeat: string
+}
+
+type SavedHookNote = {
+  id: string
+  text: string
+  createdAt: string
+}
+
 const headlineStyle: React.CSSProperties = {
   fontFamily: 'var(--font-bricolage)',
   fontWeight: 650,
@@ -100,6 +113,53 @@ const headlineStyle: React.CSSProperties = {
   letterSpacing: '-1px',
   color: '#1c1c1e',
 }
+
+const HOOK_ROULETTE_IDEAS: HookRouletteIdea[] = [
+  {
+    id: 'myth-breaker',
+    hookStarter: 'Everyone says you need 100K followers. You don’t.',
+    scriptAngle: 'Break down one paid deal you closed with a small audience and show the DM flow + deliverable that won the yes.',
+    ctaBeat: 'Invite creators to comment “DM script” if they want your exact outreach template.',
+  },
+  {
+    id: 'before-after-workflow',
+    hookStarter: 'My videos looked average until I changed this one 7-second sequence.',
+    scriptAngle: 'Show a side-by-side of old vs new opening, then explain the hook → proof → payoff structure that lifted watch time.',
+    ctaBeat: 'End with: “Want my 7-second framework? I put it in my notes.”',
+  },
+  {
+    id: 'tool-proof',
+    hookStarter: 'I tested this AI tool for 7 days so you don’t waste your budget.',
+    scriptAngle: 'Narrate day-by-day results, include what failed, and frame who this tool is actually for.',
+    ctaBeat: 'Ask viewers to vote: “Should I test another tool or publish the full workflow next?”',
+  },
+  {
+    id: 'client-perspective',
+    hookStarter: 'If I were a brand hiring UGC today, this is the first thing I’d check.',
+    scriptAngle: 'Walk through your creator profile as if you were the brand, pointing out what builds trust in the first 10 seconds.',
+    ctaBeat: 'Offer a quick profile teardown in comments for 3 creators.',
+  },
+  {
+    id: 'mistake-led',
+    hookStarter: 'This one sentence in my pitch cost me three deals.',
+    scriptAngle: 'Reveal the sentence, why it triggered brand hesitation, and the replacement line that improved response rate.',
+    ctaBeat: 'Prompt: “Reply ‘pitch’ and I’ll share my updated opener.”',
+  },
+  {
+    id: 'speed-run',
+    hookStarter: 'Give me 20 minutes and I’ll plan a week of creator content from scratch.',
+    scriptAngle: 'Live speed-run your planning board: hook bank, proof moments, CTA variations, and repurposing plan.',
+    ctaBeat: 'Point to your planning checklist and tell viewers to steal it.',
+  },
+  {
+    id: 'hot-take',
+    hookStarter: 'Hot take: polished UGC is usually less persuasive than this.',
+    scriptAngle: 'Demonstrate raw vs polished footage and explain when “too produced” reduces trust for conversion-first ads.',
+    ctaBeat: 'Ask viewers whether they want a “raw-first shot list.”',
+  },
+]
+
+const HOOK_NOTES_STORAGE_KEY = 'otto-hook-roulette-notes'
 
 const STATUS_STYLES: Record<string, string> = {
   open: 'bg-[#ccff00]/25 text-[#1c1c1e] border-[#d6ee76]',
@@ -156,6 +216,10 @@ export default function DashboardPage() {
   const [role, setRole] = useState<Role | null>(null)
   const [payload, setPayload] = useState<DashboardPayload | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
+  const [currentHookIdea, setCurrentHookIdea] = useState<HookRouletteIdea | null>(null)
+  const [rollingHook, setRollingHook] = useState(false)
+  const [savedHookNotes, setSavedHookNotes] = useState<SavedHookNote[]>([])
+  const [hookFeedbackMessage, setHookFeedbackMessage] = useState('')
 
   useEffect(() => {
     const onboarding = searchParams.get('onboarding')
@@ -239,6 +303,90 @@ export default function DashboardPage() {
     ]
   }, [role])
 
+  useEffect(() => {
+    if (role !== 'creator') return
+
+    setCurrentHookIdea((previous) => previous || HOOK_ROULETTE_IDEAS[Math.floor(Math.random() * HOOK_ROULETTE_IDEAS.length)])
+
+    try {
+      const raw = window.localStorage.getItem(HOOK_NOTES_STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+
+      if (!Array.isArray(parsed)) return
+
+      const safeNotes = parsed
+        .filter((item): item is SavedHookNote => typeof item?.id === 'string' && typeof item?.text === 'string' && typeof item?.createdAt === 'string')
+        .slice(0, 8)
+
+      setSavedHookNotes(safeNotes)
+    } catch {
+      // Ignore malformed local data.
+    }
+  }, [role])
+
+  useEffect(() => {
+    if (!hookFeedbackMessage) return
+
+    const timer = window.setTimeout(() => {
+      setHookFeedbackMessage('')
+    }, 2400)
+
+    return () => window.clearTimeout(timer)
+  }, [hookFeedbackMessage])
+
+  const rollHookIdea = () => {
+    setRollingHook(true)
+
+    window.setTimeout(() => {
+      setCurrentHookIdea((previous) => {
+        if (HOOK_ROULETTE_IDEAS.length < 2) return HOOK_ROULETTE_IDEAS[0]
+
+        let next = HOOK_ROULETTE_IDEAS[Math.floor(Math.random() * HOOK_ROULETTE_IDEAS.length)]
+        while (next.id === previous?.id) {
+          next = HOOK_ROULETTE_IDEAS[Math.floor(Math.random() * HOOK_ROULETTE_IDEAS.length)]
+        }
+
+        return next
+      })
+
+      setRollingHook(false)
+      setHookFeedbackMessage('Fresh angle loaded. 🎯')
+    }, 360)
+  }
+
+  const saveCurrentHookToNotes = () => {
+    if (!currentHookIdea) return
+
+    const noteText = `${currentHookIdea.hookStarter}\nAngle: ${currentHookIdea.scriptAngle}\nCTA beat: ${currentHookIdea.ctaBeat}`
+
+    const nextNotes: SavedHookNote[] = [
+      {
+        id: `${Date.now()}-${currentHookIdea.id}`,
+        text: noteText,
+        createdAt: new Date().toISOString(),
+      },
+      ...savedHookNotes,
+    ].slice(0, 8)
+
+    setSavedHookNotes(nextNotes)
+    window.localStorage.setItem(HOOK_NOTES_STORAGE_KEY, JSON.stringify(nextNotes))
+    setHookFeedbackMessage('Saved to your hook notes.')
+  }
+
+  const copyHook = async () => {
+    if (!currentHookIdea) return
+
+    const payloadToCopy = `${currentHookIdea.hookStarter}\n\nScript angle: ${currentHookIdea.scriptAngle}\n\nCTA beat: ${currentHookIdea.ctaBeat}`
+
+    try {
+      await navigator.clipboard.writeText(payloadToCopy)
+      setHookFeedbackMessage('Copied. Paste it into your script and roll again.')
+    } catch {
+      setHookFeedbackMessage('Couldn’t copy automatically. You can still save it below.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
@@ -284,6 +432,72 @@ export default function DashboardPage() {
 
       {role === 'creator' && creator && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <section className="card shadow-sm lg:col-span-2 hook-roulette-card">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <p className="section-label mb-2">Surprise me</p>
+                <h2 className="text-[24px] leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.6px' }}>
+                  Hook Roulette
+                </h2>
+                <p className="mt-2 text-sm text-[#6b6b6b] max-w-2xl">
+                  Stuck on your opener? Spin once for a proven hook starter, a quick script angle, and a CTA beat you can ship today.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={rollHookIdea} disabled={rollingHook} className="btn-primary">
+                  {rollingHook ? 'Spinning...' : 'Spin a new hook'}
+                </button>
+                <button type="button" onClick={saveCurrentHookToNotes} className="btn-ghost border border-[#e8e8e4]">
+                  Save to notes
+                </button>
+                <button type="button" onClick={copyHook} className="btn-ghost border border-[#e8e8e4]">
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            <div className={`mt-4 rounded-2xl border border-[#e6efbf] bg-[#f9ffd9] p-4 transition-all duration-300 ${rollingHook ? 'opacity-60 scale-[0.995]' : 'opacity-100 scale-100'}`}>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#78834a]">Hook starter</p>
+              <p className="mt-2 text-lg font-semibold text-[#1c1c1e]">
+                {currentHookIdea?.hookStarter || 'Spin once to load your first idea.'}
+              </p>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl border border-[#e3eac2] bg-white/75 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">Script angle</p>
+                  <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.scriptAngle || '—'}</p>
+                </div>
+                <div className="rounded-xl border border-[#e3eac2] bg-white/75 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">CTA beat</p>
+                  <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.ctaBeat || '—'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <p className="text-xs text-[#8a8a86]">Pro move: spin until one feels obvious, then film before you overthink it.</p>
+              <p className="text-xs font-medium text-[#4b5d00] min-h-[18px]">{hookFeedbackMessage}</p>
+            </div>
+
+            {savedHookNotes.length > 0 && (
+              <div className="mt-4 rounded-2xl border border-[#efefea] bg-[#fcfcfb] p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Recent saved hook notes</p>
+                  <span className="text-[11px] text-[#9a9a9a]">Stored on this device</span>
+                </div>
+                <div className="space-y-2">
+                  {savedHookNotes.slice(0, 3).map((note) => (
+                    <div key={note.id} className="rounded-xl border border-[#ecece8] bg-white p-3">
+                      <p className="whitespace-pre-wrap text-sm text-[#363535] line-clamp-3">{note.text}</p>
+                      <p className="mt-2 text-[11px] text-[#9a9a9a]">Saved {formatDate(note.createdAt)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+
           <section className="card shadow-sm">
             <div className="flex items-end justify-between mb-4">
               <div>
