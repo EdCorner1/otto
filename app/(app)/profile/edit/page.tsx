@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Check, LoaderCircle, Play, Upload, X } from 'lucide-react'
+import { ArrowRight, Check, LoaderCircle, Play, Sparkles, Upload, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import {
   DIRECT_VIDEO_PLATFORM,
@@ -80,6 +80,15 @@ const MAX_VIDEO_SIZE = 50 * 1024 * 1024
 const MIN_PORTFOLIO_VIDEOS = 3
 const AVATAR_BUCKET = 'avatars'
 const PORTFOLIO_TAB_STORAGE_KEY = 'otto:profile:portfolio-active-tab'
+
+type HealthChecklistItem = {
+  id: string
+  label: string
+  done: boolean
+  weight: number
+  ctaLabel: string
+  onJump: () => void
+}
 
 function labelPlatform(platform: string) {
   if (platform === 'tiktok') return 'TikTok'
@@ -427,6 +436,101 @@ export default function ProfileEditPage() {
   }, [portfolioItems])
 
   const validPortfolioCount = portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length
+
+  const nicheTags = useMemo(
+    () => nicheInput.split(',').map((tag) => tag.trim()).filter(Boolean),
+    [nicheInput]
+  )
+
+  const healthChecklist = useMemo<HealthChecklistItem[]>(() => [
+    {
+      id: 'avatar',
+      label: 'Add a profile photo',
+      done: Boolean(avatarUrl.trim()),
+      weight: 12,
+      ctaLabel: 'Go to Basic Info',
+      onJump: () => {
+        setActiveTab('profile')
+        setStep(0)
+      },
+    },
+    {
+      id: 'name-handle',
+      label: 'Set your full name and handle',
+      done: Boolean(fullName.trim() && handle.trim()),
+      weight: 14,
+      ctaLabel: 'Edit name + handle',
+      onJump: () => {
+        setActiveTab('profile')
+        setStep(0)
+      },
+    },
+    {
+      id: 'bio',
+      label: 'Write a clear creator bio (40+ chars)',
+      done: bio.trim().length >= 40,
+      weight: 14,
+      ctaLabel: 'Improve bio',
+      onJump: () => {
+        setActiveTab('profile')
+        setStep(0)
+      },
+    },
+    {
+      id: 'followers',
+      label: 'Set your follower range',
+      done: Boolean(followerRange.trim()),
+      weight: 14,
+      ctaLabel: 'Set follower range',
+      onJump: () => {
+        setActiveTab('profile')
+        setStep(1)
+      },
+    },
+    {
+      id: 'niches',
+      label: 'Add at least 2 niche tags',
+      done: nicheTags.length >= 2,
+      weight: 12,
+      ctaLabel: 'Add niche tags',
+      onJump: () => {
+        setActiveTab('profile')
+        setStep(1)
+      },
+    },
+    {
+      id: 'portfolio-minimum',
+      label: `Upload at least ${MIN_PORTFOLIO_VIDEOS} portfolio videos`,
+      done: validPortfolioCount >= MIN_PORTFOLIO_VIDEOS,
+      weight: 24,
+      ctaLabel: 'Open portfolio',
+      onJump: () => {
+        setActiveTab('portfolio')
+        setStep(2)
+      },
+    },
+    {
+      id: 'portfolio-captions',
+      label: 'Add titles to each portfolio video',
+      done: portfolioItems.length > 0 && portfolioItems.every((item) => item.caption.trim().length >= 8),
+      weight: 10,
+      ctaLabel: 'Review video titles',
+      onJump: () => {
+        setActiveTab('portfolio')
+        setStep(2)
+      },
+    },
+  ], [avatarUrl, bio, followerRange, fullName, handle, nicheTags.length, portfolioItems, validPortfolioCount])
+
+  const healthScore = useMemo(() => {
+    const total = healthChecklist.reduce((sum, item) => sum + item.weight, 0)
+    const earned = healthChecklist.reduce((sum, item) => sum + (item.done ? item.weight : 0), 0)
+    if (!total) return 0
+    return Math.min(100, Math.round((earned / total) * 100))
+  }, [healthChecklist])
+
+  const completedChecklistCount = healthChecklist.filter((item) => item.done).length
+  const firstIncompleteChecklistItem = healthChecklist.find((item) => !item.done) || null
 
   const removePortfolioItem = async (id: string) => {
     const itemToRemove = portfolioItems.find((item) => item.id === id)
@@ -809,6 +913,63 @@ export default function ProfileEditPage() {
             </button>
           </div>
         )}
+
+        <div className="mb-4 rounded-2xl border border-[#e8e8e4] bg-white p-5">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <p className="section-label mb-1">Launch checklist</p>
+              <h2 className="font-display text-2xl text-[#1c1c1e]" style={{ letterSpacing: '-0.03em' }}>
+                Creator profile health score
+              </h2>
+              <p className="mt-1 text-sm text-[#6b6b6b]">Hit 100 before sharing your profile to brands.</p>
+            </div>
+            <div className="rounded-2xl border border-[#e8e8e4] bg-[#fcfcfa] px-4 py-3 text-center min-w-[132px]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#8a8a86]">Score</p>
+              <p className="mt-1 text-3xl font-display text-[#1c1c1e]" style={{ letterSpacing: '-0.04em' }}>{healthScore}<span className="text-base text-[#8a8a86]">/100</span></p>
+              <p className="text-xs text-[#6b6b6b] mt-1">{completedChecklistCount}/{healthChecklist.length} complete</p>
+            </div>
+          </div>
+
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#ecece7]">
+            <div className="h-full rounded-full bg-[#ccff00] transition-all duration-500" style={{ width: `${healthScore}%` }} />
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {healthChecklist.map((item) => (
+              <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl border border-[#ecece7] bg-[#fcfcfa] px-3 py-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${item.done ? 'bg-[#ecffd0] text-[#1c1c1e]' : 'bg-white border border-[#d8d8d2] text-[#8a8a86]'}`}>
+                    {item.done ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                  </span>
+                  <p className={`text-sm ${item.done ? 'text-[#1c1c1e]' : 'text-[#5f5f5a]'}`}>{item.label}</p>
+                </div>
+                {!item.done ? (
+                  <button
+                    type="button"
+                    onClick={item.onJump}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[#e8e8e4] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#1c1c1e] hover:border-[#ccff00]"
+                  >
+                    {item.ctaLabel}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                ) : (
+                  <span className="text-xs font-semibold text-[#5f5f5a]">Done</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {healthScore === 100 ? (
+            <div className="mt-4 rounded-xl border border-[#d9f6a5] bg-[#f4ffdf] px-4 py-3 text-sm text-[#1c1c1e] inline-flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              <span>Profile launch-ready. Brands can scan this and trust you fast.</span>
+            </div>
+          ) : firstIncompleteChecklistItem ? (
+            <div className="mt-4 rounded-xl border border-[#e8e8e4] bg-white px-4 py-3 text-sm text-[#5f5f5a]">
+              Next best move: <span className="font-semibold text-[#1c1c1e]">{firstIncompleteChecklistItem.label}</span>
+            </div>
+          ) : null}
+        </div>
 
         <div className="mb-6 rounded-2xl border border-[#e8e8e4] bg-white p-4">
           <div className="flex items-center gap-2">
