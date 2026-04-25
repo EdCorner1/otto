@@ -39,6 +39,14 @@ function renderMarkdown(text: string): string {
   return html
 }
 
+function sanitizeHtmlFragment(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+    .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/\s(href|src)\s*=\s*("javascript:[^"]*"|'javascript:[^']*')/gi, ' $1="#"')
+}
+
 export default function ReviewPostPage() {
   const params = useParams()
   const postId = params.id as string
@@ -103,7 +111,7 @@ export default function ReviewPostPage() {
 
   if (!post) return null
 
-  const rendered = renderMarkdown(post.content)
+  const rendered = sanitizeHtmlFragment(renderMarkdown(post.content))
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">

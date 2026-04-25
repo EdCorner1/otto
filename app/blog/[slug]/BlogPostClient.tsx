@@ -113,6 +113,21 @@ function calcReadingTime(text: string): number {
   return Math.max(1, Math.round(text.trim().split(/\s+/).length / 200))
 }
 
+function sanitizeHtmlFragment(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+    .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/\s(href|src)\s*=\s*("javascript:[^"]*"|'javascript:[^']*')/gi, ' $1="#"')
+}
+
+function safeJsonLd(schema: unknown): string {
+  return JSON.stringify(schema)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+}
+
 function renderBody(content: string): string {
   const lines = stripMeta(content).split('\n')
   const blocks: string[] = []
@@ -280,7 +295,7 @@ export default function BlogPostClient({ slug }: { slug: string }) {
   const keyTakeaways = post ? parseKeyTakeaways(post.content) : []
   const faqs = post ? parseFaqs(post.content) : []
   const related = post ? parseRelated(post.content) : []
-  const body = post ? renderBody(post.content) : ''
+  const body = post ? sanitizeHtmlFragment(renderBody(post.content)) : ''
   const readingTime = post?.read_time_minutes ?? (post ? calcReadingTime(post.content) : 0)
   const pubDate = post?.published_at ? new Date(post.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
 
@@ -340,7 +355,7 @@ export default function BlogPostClient({ slug }: { slug: string }) {
         <script
           key={key}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
         />
       ))}
 
