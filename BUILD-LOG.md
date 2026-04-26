@@ -60,3 +60,13 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-04-26
+### Brand-facing creator profile polish
+- Upgraded the `/creators/[id]` brand-facing profile view so it is easier to scan like a real evaluation page instead of a flatter raw profile.
+- Added a stronger summary rail with portfolio readiness, response signal, niche signal, and a tighter fast-summary block for brand decision-making.
+- Improved CTA hierarchy so the page feels more premium and intentional when a brand is deciding whether to invite or hire a creator.
+
+### Validation
+- TypeScript: pass
+- Build: pass

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { Camera, Globe, Link2, Music4, Play, Search } from 'lucide-react'
+import { Camera, Clock3, ExternalLink, Globe, Link2, Music4, Play, Search, Sparkles, Star } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { buildYouTubeEmbedUrl, detectPortfolioPlatform, inferPortfolioThumbnail, isDirectVideoUrl, isRealPortfolioVideoUrl } from '@/lib/portfolio-media'
 
@@ -57,6 +57,16 @@ function normalizePlatform(value?: string | null) {
 
 function deriveThumbnail(item: CreatorProfileResponse['portfolioItems'][number]) {
   return inferPortfolioThumbnail(item.url, item.platform) || item.thumbnail_url || ''
+}
+
+function formatResponseTimeFromPortfolioCount(count: number) {
+  if (count >= 6) return 'Fast replies likely'
+  if (count >= 3) return 'Profile is review-ready'
+  return 'Still building depth'
+}
+
+function getFirstName(fullName: string) {
+  return fullName.trim().split(/\s+/)[0] || fullName
 }
 
 export default function CreatorPublicProfilePage() {
@@ -119,6 +129,10 @@ export default function CreatorPublicProfilePage() {
     return profile.portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || ''))
   }, [profile])
 
+  const creatorFirstName = useMemo(() => (profile ? getFirstName(profile.fullName) : 'this creator'), [profile])
+  const profileReadiness = viablePortfolioItems.length >= 6 ? 'Strong' : viablePortfolioItems.length >= 3 ? 'Review-ready' : 'In progress'
+  const responseTimeLabel = formatResponseTimeFromPortfolioCount(viablePortfolioItems.length)
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fafaf9]">
@@ -146,74 +160,127 @@ export default function CreatorPublicProfilePage() {
           <Link href="/explore" className="inline-flex items-center gap-2 text-sm text-[#6b6b6b] hover:text-[#1c1c1e] transition-colors"><Search className="h-4 w-4" /> Back to marketplace</Link>
         </div>
 
-        <section className="card mb-8">
-          <div className="flex flex-col md:flex-row md:items-start gap-6">
-            <div className="w-24 h-24 rounded-3xl border border-[#e8e8e4] overflow-hidden bg-[#f0f0ec] flex items-center justify-center text-2xl font-semibold text-[#6b6b6b] flex-shrink-0">
-              {profile.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatarUrl} alt={profile.fullName} className="w-full h-full object-cover" />
-              ) : (
-                profile.fullName?.[0] || '?'
-              )}
+        <section className="mb-8 overflow-hidden rounded-[32px] border border-[#e8e8e4] bg-white shadow-[0_24px_70px_rgba(0,0,0,0.05)]">
+          <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="p-6 sm:p-8">
+              <div className="flex flex-col gap-6 md:flex-row md:items-start">
+                <div className="w-24 h-24 rounded-3xl border border-[#e8e8e4] overflow-hidden bg-[#f0f0ec] flex items-center justify-center text-2xl font-semibold text-[#6b6b6b] flex-shrink-0 shadow-sm">
+                  {profile.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.avatarUrl} alt={profile.fullName} className="w-full h-full object-cover" />
+                  ) : (
+                    profile.fullName?.[0] || '?'
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-start gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a8a86]">Creator profile</p>
+                      <h1 className="mt-2 font-display text-[#1c1c1e]" style={{ fontSize: 'clamp(30px, 5vw, 42px)', letterSpacing: '-0.045em', lineHeight: 1.0 }}>
+                        {profile.fullName}
+                      </h1>
+                    </div>
+                    {profile.followerRange && (
+                      <span className="inline-flex items-center rounded-full bg-[#ccff00] px-3 py-1 text-xs font-semibold text-[#1c1c1e]">
+                        {profile.followerRange}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center rounded-full border border-[#e8e8e4] bg-[#fafaf7] px-3 py-1 text-xs font-semibold text-[#1c1c1e]">
+                      {profileReadiness}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-[#6b6b6b]">
+                    <span>@{profile.handle || 'creator'}</span>
+                    {profile.mainPlatform && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f1] px-3 py-1.5 font-medium text-[#1c1c1e]">
+                        <PlatformIcon platform={normalizePlatform(profile.mainPlatform)} />
+                        {platformLabel(normalizePlatform(profile.mainPlatform))}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-4 text-sm text-[#4f4f4f] whitespace-pre-wrap leading-relaxed max-w-3xl">{profile.bio || 'This creator is building out their Otto profile.'}</p>
+
+                  <div className="mt-5 flex flex-wrap gap-2.5">
+                    {visiblePlatforms.map((platform) => (
+                      <span key={platform} className="inline-flex items-center gap-1.5 rounded-full border border-[#e8e8e4] bg-white px-3 py-1.5 text-xs text-[#4f4f4f]">
+                        <PlatformIcon platform={platform} />
+                        <span>{platformLabel(platform)}</span>
+                      </span>
+                    ))}
+                  </div>
+
+                  {profile.nicheTags.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {profile.nicheTags.map((niche) => (
+                        <span key={niche} className="inline-flex rounded-full bg-[#f0f0ec] px-3 py-1.5 text-xs font-medium text-[#363535]">
+                          {niche}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h1 className="font-display text-[#1c1c1e]" style={{ fontSize: 'clamp(30px, 5vw, 42px)', letterSpacing: '-0.045em', lineHeight: 1.0 }}>
-                  {profile.fullName}
-                </h1>
-                {profile.followerRange && (
-                  <span className="inline-flex items-center rounded-full bg-[#ccff00] px-3 py-1 text-xs font-semibold text-[#1c1c1e]">
-                    {profile.followerRange}
-                  </span>
+            <aside className="border-t border-[#ecece5] bg-[#fafaf7] p-6 sm:p-8 lg:border-l lg:border-t-0">
+              <div className="rounded-[28px] bg-[#111111] p-6 text-white shadow-[0_22px_60px_rgba(0,0,0,0.16)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">At a glance</p>
+                <div className="mt-5 space-y-4">
+                  <div>
+                    <p className="text-sm text-white/65">Portfolio readiness</p>
+                    <p className="mt-1 inline-flex items-center gap-2 text-lg font-semibold text-white">
+                      <Sparkles className="h-4 w-4 text-[#ccff00]" />
+                      {viablePortfolioItems.length} sample{viablePortfolioItems.length === 1 ? '' : 's'} ready
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white/65">Response signal</p>
+                    <p className="mt-1 inline-flex items-center gap-2 text-lg font-semibold text-white">
+                      <Clock3 className="h-4 w-4 text-[#ccff00]" />
+                      {responseTimeLabel}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white/65">Brand read</p>
+                    <p className="mt-1 inline-flex items-center gap-2 text-lg font-semibold text-white">
+                      <Star className="h-4 w-4 text-[#ccff00]" />
+                      {profile.nicheTags.length > 0 ? `${profile.nicheTags.length} niche signal${profile.nicheTags.length === 1 ? '' : 's'}` : 'General profile'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-[28px] border border-[#e8e8e1] bg-white p-5 shadow-[0_16px_40px_rgba(0,0,0,0.04)]">
+                <p className="text-sm font-semibold text-[#1c1c1e]">Fast summary</p>
+                <p className="mt-2 text-sm leading-6 text-[#6b6b6b]">
+                  {creatorFirstName} looks strongest for brands that want {profile.mainPlatform ? `${platformLabel(normalizePlatform(profile.mainPlatform))} content` : 'short-form content'} with clear portfolio proof and a cleaner public profile.
+                </p>
+              </div>
+
+              <div className="mt-5 space-y-2">
+                {isOwner ? (
+                  <Link href="/profile/edit" className="btn-ghost w-full justify-center border border-[#e8e8e4] bg-white">Edit Profile</Link>
+                ) : isBrandViewer ? (
+                  <button onClick={() => setShowInviteModal(true)} className="btn-primary w-full justify-center">
+                    Invite to apply
+                  </button>
+                ) : (
+                  <Link href="/signup?type=brand" className="btn-ghost w-full justify-center border border-[#e8e8e4] bg-white">
+                    Hire this creator
+                  </Link>
+                )}
+
+                {!isOwner && (
+                  <Link href="/signup" className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-[#6b6b6b] transition hover:text-[#1c1c1e]">
+                    View on Otto
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
                 )}
               </div>
-
-              <p className="text-sm text-[#6b6b6b] mb-2">@{profile.handle || 'creator'}</p>
-              {profile.mainPlatform && (
-                <p className="text-sm font-medium text-[#1c1c1e] mb-3">{platformLabel(normalizePlatform(profile.mainPlatform))} creator</p>
-              )}
-              <p className="text-sm text-[#4f4f4f] whitespace-pre-wrap leading-relaxed max-w-3xl">{profile.bio || 'This creator is building out their Otto profile.'}</p>
-
-              <div className="mt-4 flex flex-wrap gap-2.5">
-                {visiblePlatforms.map((platform) => (
-                  <span key={platform} className="inline-flex items-center gap-1.5 rounded-full border border-[#e8e8e4] bg-white px-3 py-1.5 text-xs text-[#4f4f4f]">
-                    <PlatformIcon platform={platform} />
-                    <span>{platformLabel(platform)}</span>
-                  </span>
-                ))}
-              </div>
-
-              {profile.nicheTags.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {profile.nicheTags.map((niche) => (
-                    <span key={niche} className="inline-flex rounded-full bg-[#f0f0ec] px-3 py-1.5 text-xs font-medium text-[#363535]">
-                      {niche}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="md:ml-auto w-full md:w-auto space-y-2">
-              {isOwner ? (
-                <Link href="/profile/edit" className="btn-ghost w-full md:w-auto justify-center border border-[#e8e8e4]">Edit Profile</Link>
-              ) : isBrandViewer ? (
-                <button onClick={() => setShowInviteModal(true)} className="btn-primary w-full md:w-auto justify-center">
-                  Invite to apply
-                </button>
-              ) : (
-                <Link href="/signup?type=brand" className="btn-ghost w-full md:w-auto justify-center border border-[#e8e8e4]">
-                  Hire this creator
-                </Link>
-              )}
-
-              {!isOwner && (
-                <Link href="/signup" className="inline-flex w-full md:w-auto justify-center rounded-xl px-4 py-2 text-sm font-medium text-[#6b6b6b] transition hover:text-[#1c1c1e]">
-                  View on Otto
-                </Link>
-              )}
-            </div>
+            </aside>
           </div>
         </section>
 
