@@ -384,7 +384,7 @@ export default function DashboardPage() {
     window.setTimeout(async () => {
       await fetchHookIdea(currentHookIdea?.id || null)
       setRollingHook(false)
-      setHookFeedbackMessage('Fresh angle loaded. 🎯')
+      setHookFeedbackMessage('Fresh angle loaded.')
     }, 360)
   }
 

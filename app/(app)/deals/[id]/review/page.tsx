@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import { ExternalLink, Play } from 'lucide-react'
 
 type Deal = {
   id: string; brand_id: string; creator_id: string; job_id: string
@@ -85,6 +86,16 @@ export default function DealReviewPage() {
     ? submissionMsg.content.replace(/^Work submitted.*?(?::\s*https?:\/\/[^\s]+)?\s*(?:—\s*(.+))?$/, '$1').trim()
     : ''
 
+  const getHostname = (value: string) => {
+    try {
+      return new URL(value).hostname.replace(/^www\./, '')
+    } catch {
+      return value
+    }
+  }
+
+  const submissionSource = submissionLink ? getHostname(submissionLink) : ''
+
   const updateDeal = async (newStatus: string) => {
     if (!deal) return
     setUpdating(true)
@@ -158,13 +169,13 @@ export default function DealReviewPage() {
               <a href={submissionLink} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-3 p-4 bg-[#fafaf9] rounded-xl border border-[#e8e8e4] mb-3 hover:border-[#ccff00] transition-all group">
                 <div className="w-10 h-10 rounded-lg bg-[#1c1c1c] flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg ml-0.5">▶️</span>
+                  <Play size={17} className="text-white ml-0.5" fill="currentColor" strokeWidth={2.2} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[#363535] group-hover:text-[#1c1c1c] truncate">{submissionLink}</p>
-                  <p className="text-xs text-[#9a9a9a]">Click to view submitted work</p>
+                  <p className="text-sm font-medium text-[#363535] group-hover:text-[#1c1c1c] truncate">{submissionSource || submissionLink}</p>
+                  <p className="text-xs text-[#9a9a9a]">Open submitted work</p>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <ExternalLink size={16} className="text-[#9a9a9a]" />
               </a>
             )}
 
