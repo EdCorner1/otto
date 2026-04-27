@@ -62,7 +62,7 @@ const ROADMAP_CARDS: RoadmapCard[] = [
     status: 'Building now',
     tag: 'Onboarding',
     title: 'Make creator profiles stronger before they go live',
-    body: 'Six videos gives brands a much better read on quality, consistency, and range.',
+    body: 'Three solid videos is the current minimum so brands can judge quality fast without creating unnecessary signup friction.',
     upvotes: 37,
     downvotes: 4,
   },

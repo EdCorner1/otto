@@ -77,6 +77,10 @@
 - The new summary blocks frame readiness, platform fit, and the best next action in simpler product language.
 - This tightens the public profile preview path and makes first-time brand evaluation feel more confident and intentional.
 
+### Homepage roadmap copy sync
+- Updated the homepage roadmap/feed card about creator quality so it reflects the current 3-video minimum instead of the older 6-video message.
+- This keeps the public build-in-public layer aligned with the current onboarding product reality and avoids mixed signals.
+
 ### Validation
 - TypeScript: pass
 - Build: pass
