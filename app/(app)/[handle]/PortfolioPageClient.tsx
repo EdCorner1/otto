@@ -52,6 +52,10 @@ function getInitials(name: string) {
   return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() || '').join('')
 }
 
+function getFirstName(name: string) {
+  return name.trim().split(/\s+/).filter(Boolean)[0] || name
+}
+
 function getContactEmail(portfolio: PublicCreatorPortfolio) {
   const websiteSocial = portfolio.socials.find((social) => social.platform === 'website')
   if (websiteSocial?.url.startsWith('mailto:')) {
@@ -379,6 +383,8 @@ export default function PortfolioPageClient({
 
   const responseTimeLabel = formatResponseTime(portfolio.stats.responseTimeHours)
   const availabilityText = portfolio.isAvailable ? 'Available now' : 'Busy right now'
+  const creatorFirstName = getFirstName(portfolio.fullName)
+  const readinessLabel = portfolio.portfolioItems.length >= 6 ? 'Strong proof of work' : portfolio.portfolioItems.length >= 3 ? 'Ready for brand review' : 'Still building depth'
 
   return (
     <>
@@ -560,6 +566,38 @@ export default function PortfolioPageClient({
                   </dl>
                 </div>
               </aside>
+            </div>
+          </section>
+
+          <section className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="rounded-[24px] border border-[#ecece5] bg-white p-5 shadow-[0_14px_36px_rgba(0,0,0,0.04)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">Why this profile feels credible</p>
+              <p className="mt-3 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
+                {readinessLabel}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[#6d6d66]">
+                {creatorFirstName} has enough public proof here for a brand to judge fit quickly instead of guessing from a thin profile.
+              </p>
+            </div>
+
+            <div className="rounded-[24px] border border-[#ecece5] bg-white p-5 shadow-[0_14px_36px_rgba(0,0,0,0.04)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">Fast brand read</p>
+              <p className="mt-3 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
+                {portfolio.mainPlatform ? `${platformLabel(portfolio.mainPlatform)} creator` : 'UGC creator'}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[#6d6d66]">
+                Clear niche tags, social links, and portfolio samples make this page easier to scan in the first 10 seconds.
+              </p>
+            </div>
+
+            <div className="rounded-[24px] border border-[#ecece5] bg-white p-5 shadow-[0_14px_36px_rgba(0,0,0,0.04)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">Best next action</p>
+              <p className="mt-3 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
+                Reach out with a brief
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[#6d6d66]">
+                If {creatorFirstName.toLowerCase()} looks right, move straight into deliverables, timing, and content goals instead of asking for more basic profile info.
+              </p>
             </div>
           </section>
 

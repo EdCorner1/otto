@@ -70,3 +70,13 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-04-27
+### Public creator profile credibility strip
+- Added a compact credibility strip to the main public creator portfolio page so brands get a faster read on why the creator is credible without scrolling into deeper stats first.
+- The new summary blocks frame readiness, platform fit, and the best next action in simpler product language.
+- This tightens the public profile preview path and makes first-time brand evaluation feel more confident and intentional.
+
+### Validation
+- TypeScript: pass
+- Build: pass
