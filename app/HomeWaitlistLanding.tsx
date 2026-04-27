@@ -25,18 +25,16 @@ const AVATARS = [
   'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=96&q=80',
 ]
 
-const OTTO_GREEN = '#BEF264'
-
 const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
   creator: {
     headline: 'Get paid to make tech content for your favourite brands',
     subheadline: 'The platform that matches you with brands you actually want to work with.',
-    button: 'Join waitlist',
+    button: 'Get early access',
   },
   brand: {
     headline: 'Get human content that connects with your audience',
     subheadline: 'UGC that sounds like a friend recommended you, not an ad.',
-    button: 'Join waitlist',
+    button: 'Get early access',
   },
 }
 
@@ -287,7 +285,7 @@ export default function HomeWaitlistLanding() {
             <span className="text-lg font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-bricolage)' }}>Otto</span>
             <span className="h-2 w-2 rounded-full bg-[#ccff00]" />
           </a>
-          <a href="#waitlist-form" className="btn-primary text-sm py-2 px-5">Join waitlist</a>
+          <a href="#waitlist-form" className="btn-primary text-sm py-2 px-5">Get early access</a>
         </div>
       </header>
 
@@ -318,36 +316,26 @@ export default function HomeWaitlistLanding() {
               </div>
             </div>
 
-            <div className="mb-8 flex items-center justify-center gap-4">
-              <span className={`text-sm font-medium transition-colors duration-300 ${role === 'creator' ? 'text-black' : 'text-gray-400'}`}>
-                I&apos;m a creator
-              </span>
-
-              <div className="relative inline-flex h-8 w-[58px] items-center justify-center rounded-full overflow-hidden shadow-[0_0_18px_rgba(190,242,100,0.28)]">
-                <div
-                  className="absolute inset-0 rounded-full animate-[spin_3.2s_linear_infinite]"
-                  style={{
-                    background: `conic-gradient(from 0deg, transparent 0deg, ${OTTO_GREEN} 110deg, ${OTTO_GREEN} 220deg, transparent 360deg)`,
-                  }}
-                />
+            <div className="mb-8 flex items-center justify-center">
+              <fieldset className="inline-flex items-center gap-2 rounded-full border border-[#e8e8e4] bg-white p-1.5 shadow-[0_4px_18px_rgba(28,28,30,0.06)]">
+                <legend className="sr-only">Choose your role</legend>
                 <button
                   type="button"
-                  role="switch"
-                  aria-checked={role === 'brand'}
-                  aria-label="Toggle creator or brand"
-                  onClick={() => setRole(role === 'creator' ? 'brand' : 'creator')}
-                  className="relative inline-flex h-[29px] w-[55px] items-center rounded-full px-[3px] focus:outline-none"
-                  style={{ backgroundColor: OTTO_GREEN }}
+                  onClick={() => setRole('creator')}
+                  aria-pressed={role === 'creator'}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${role === 'creator' ? 'bg-[#ccff00] text-[#1c1c1e]' : 'text-[#6b6b6b] hover:bg-[#f5f5f3]'}`}
                 >
-                  <span
-                    className={`inline-block h-[23px] w-[23px] rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.16)] transition-transform duration-300 ${role === 'brand' ? 'translate-x-[27px]' : 'translate-x-[1px]'}`}
-                  />
+                  I&apos;m a creator
                 </button>
-              </div>
-
-              <span className={`text-sm font-medium transition-colors duration-300 ${role === 'brand' ? 'text-black' : 'text-gray-400'}`}>
-                I&apos;m a brand
-              </span>
+                <button
+                  type="button"
+                  onClick={() => setRole('brand')}
+                  aria-pressed={role === 'brand'}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${role === 'brand' ? 'bg-[#ccff00] text-[#1c1c1e]' : 'text-[#6b6b6b] hover:bg-[#f5f5f3]'}`}
+                >
+                  I&apos;m a brand
+                </button>
+              </fieldset>
             </div>
 
             <h1
