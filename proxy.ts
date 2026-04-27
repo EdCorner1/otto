@@ -117,7 +117,8 @@ export async function proxy(request: NextRequest) {
 
   if (!user) {
     const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('redirectTo', pathname)
+    const redirectTarget = `${pathname}${request.nextUrl.search}` || pathname
+    redirectUrl.searchParams.set('redirectTo', redirectTarget)
     return NextResponse.redirect(redirectUrl)
   }
 

@@ -83,7 +83,8 @@
 
 ### Onboarding auth redirect fix
 - Fixed the protected app layout so unauthenticated users are redirected to login with their full current path and query string preserved.
-- This is aimed at making role-specific onboarding entry links survive the auth gate instead of dropping `?role=creator` on the way to login.
+- Fixed the edge `proxy.ts` auth redirect so it preserves the full path plus query string instead of flattening `/onboarding?role=creator` down to `/onboarding`.
+- This is aimed at making role-specific onboarding entry links survive the auth gate correctly on live.
 
 ### Validation
 - TypeScript: pass
