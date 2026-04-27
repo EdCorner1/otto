@@ -315,7 +315,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           setUser(null)
           setRole(null)
           setLoading(false)
-          router.replace('/login')
+          const redirectTarget = typeof window !== 'undefined'
+            ? `${window.location.pathname}${window.location.search}`
+            : pathname
+          router.replace(`/login?redirectTo=${encodeURIComponent(redirectTarget || '/dashboard')}`)
         }
         return
       }
