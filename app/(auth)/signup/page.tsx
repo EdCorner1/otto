@@ -11,6 +11,7 @@ function SignupPageInner() {
   const [role, setRole] = useState<'creator' | 'brand'>('creator')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -28,8 +29,9 @@ function SignupPageInner() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccessMessage('')
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -43,14 +45,23 @@ function SignupPageInner() {
     if (error) {
       setError(error.message)
       setLoading(false)
-    } else {
-      router.push('/onboarding')
-      router.refresh()
+      return
     }
+
+    if (data.session) {
+      router.push(`/onboarding?role=${role}`)
+      router.refresh()
+      return
+    }
+
+    setSuccessMessage(`Check ${email} to confirm your account, then come back and continue as a ${role}.`)
+    setLoading(false)
   }
 
   const handleGoogleSignup = async () => {
     setLoading(true)
+    setError('')
+    setSuccessMessage('')
     const callbackUrl = new URL('/auth/callback', window.location.origin)
     callbackUrl.searchParams.set('next', `/onboarding?role=${requestedRole}`)
 
@@ -77,8 +88,14 @@ function SignupPageInner() {
         </p>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600">
+          <div className="mb-4 rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-600">
             {error}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mb-4 rounded-lg border border-[#dce9b5] bg-[#f7ffd4] p-3 text-sm text-[#3f4a1a]">
+            {successMessage}
           </div>
         )}
 

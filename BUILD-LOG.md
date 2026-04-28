@@ -89,3 +89,13 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-04-28
+### Signup confirmation UX fix
+- Fixed email/password signup so Otto no longer blindly pushes new users into onboarding before a real auth session exists.
+- If Supabase returns an active session, users continue straight into onboarding. If email confirmation is required, Otto now shows a clear check-your-email success message instead of bouncing them into a confusing login loop.
+- This directly addresses the broken-feeling signup path Ed hit while testing with a fresh account.
+
+### Validation
+- TypeScript: pass
+- Build: pass
