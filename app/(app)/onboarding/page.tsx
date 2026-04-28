@@ -6,11 +6,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   BriefcaseBusiness,
   Check,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   LoaderCircle,
   Trash2,
   Upload,
+  ShieldCheck,
+  Timer,
   UserCircle2,
   Users,
   Video,
@@ -953,18 +956,22 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="grid gap-3 rounded-[24px] border border-[#e8e8e4] bg-[#fcfcfa] p-4 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-[#ecece7] bg-white px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Hook</p>
-                      <p className="mt-1 text-sm text-[#4f4f49]">Open strong in the first 2 seconds.</p>
-                    </div>
-                    <div className="rounded-2xl border border-[#ecece7] bg-white px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Range</p>
-                      <p className="mt-1 text-sm text-[#4f4f49]">Show different product angles and tones.</p>
-                    </div>
-                    <div className="rounded-2xl border border-[#ecece7] bg-white px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Clarity</p>
-                      <p className="mt-1 text-sm text-[#4f4f49]">Use captions that explain context fast.</p>
-                    </div>
+                    {[
+                      { icon: CheckCircle2, title: 'Clear opening', body: 'Hook in the first 2 seconds so brands instantly get the concept.' },
+                      { icon: Timer, title: 'Tight pacing', body: 'Keep edits clean and fast so the product story lands quickly.' },
+                      { icon: ShieldCheck, title: 'Proof of fit', body: 'Show range across product types and styles, not one repeated format.' },
+                    ].map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <div key={item.title} className="rounded-2xl border border-[#ecece7] bg-white px-4 py-3">
+                          <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">
+                            <Icon className="h-3.5 w-3.5" />
+                            {item.title}
+                          </p>
+                          <p className="mt-1 text-sm text-[#4f4f49]">{item.body}</p>
+                        </div>
+                      )
+                    })}
                   </div>
 
                   <div className="rounded-[28px] border border-dashed border-[#d7d7d1] bg-[#fbfbf8] p-6">
@@ -1248,17 +1255,17 @@ export default function OnboardingPage() {
                 {role === 'creator' ? 'Your profile goes live fast.' : 'Your workspace opens fast.'}
               </h3>
               <ul className="mt-4 space-y-3 text-sm text-[#5d5d58]">
-                <li>• Every step is saved so you don’t lose momentum.</li>
-                <li>• Close the tab and come back later — you’ll resume where you left off.</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[#363535]" /> <span>Every step is saved so you don’t lose momentum.</span></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[#363535]" /> <span>Close the tab and come back later. You’ll resume where you left off.</span></li>
                 {role === 'creator' ? (
                   <>
-                    <li>• Otto turns your onboarding into a public profile brands can actually browse.</li>
-                    <li>• Finish with a live preview before you land in the dashboard.</li>
+                    <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[#363535]" /> <span>Onboarding becomes a public profile brands can browse immediately.</span></li>
+                    <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[#363535]" /> <span>You get a live preview before landing in the dashboard.</span></li>
                   </>
                 ) : (
                   <>
-                    <li>• Otto saves your company info and routes you to the right next action.</li>
-                    <li>• You can post a job immediately or settle into the dashboard first.</li>
+                    <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[#363535]" /> <span>Your company info is saved and routed into the right next step.</span></li>
+                    <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[#363535]" /> <span>You can post a job immediately or settle into the dashboard first.</span></li>
                   </>
                 )}
               </ul>
