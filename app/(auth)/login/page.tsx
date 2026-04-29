@@ -21,6 +21,11 @@ export default function LoginPage() {
       ? rawRedirect
       : '/dashboard'
     setRedirectTo(safeRedirect)
+
+    const authError = params.get('error')
+    if (authError === 'auth_callback_failed') {
+      setError('We could not finish sign-in from your email link. Please try again from the latest email.')
+    }
   }, [])
 
   const handleEmailLogin = async (e: React.FormEvent) => {
