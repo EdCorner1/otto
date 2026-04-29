@@ -99,3 +99,13 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-04-29
+### Login handoff clarity for onboarding
+- Added clearer login-state messaging when someone is sent to sign in from creator or brand onboarding.
+- Instead of a generic welcome-back screen, Otto now explains that sign-in will take the user straight back into the onboarding flow they were trying to continue.
+- This makes auth gating feel more intentional and reduces the “I’m back on the sign-in page but nothing happened” confusion from tester flows.
+
+### Validation
+- TypeScript: pass
+- Build: pass

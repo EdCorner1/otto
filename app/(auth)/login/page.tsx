@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [redirectTo, setRedirectTo] = useState('/dashboard')
+  const [loginIntent, setLoginIntent] = useState<'creator-onboarding' | 'brand-onboarding' | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -21,6 +22,12 @@ export default function LoginPage() {
       ? rawRedirect
       : '/dashboard'
     setRedirectTo(safeRedirect)
+
+    if (safeRedirect.startsWith('/onboarding?role=creator')) {
+      setLoginIntent('creator-onboarding')
+    } else if (safeRedirect.startsWith('/onboarding?role=brand')) {
+      setLoginIntent('brand-onboarding')
+    }
 
     const authError = params.get('error')
     if (authError === 'auth_callback_failed') {
@@ -73,6 +80,14 @@ export default function LoginPage() {
         <p className="text-gray-500 text-sm mb-8">
           Sign in to access the private Otto platform.
         </p>
+
+        {loginIntent && !error && (
+          <div className="mb-4 rounded-lg border border-[#dce9b5] bg-[#f7ffd4] p-3 text-sm text-[#3f4a1a]">
+            {loginIntent === 'creator-onboarding'
+              ? 'Sign in to continue creator onboarding. We’ll take you straight back to your setup after login.'
+              : 'Sign in to continue brand onboarding. We’ll take you straight back to your setup after login.'}
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600">
