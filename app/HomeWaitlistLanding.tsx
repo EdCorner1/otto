@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
-import { BadgeCheck, Clock3, Hammer, MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { BadgeCheck, Clock3, Hammer, Loader2, MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 type Role = 'creator' | 'brand'
 type Vote = 'up' | 'down' | null
@@ -171,6 +171,8 @@ export default function HomeWaitlistLanding() {
   const [visibleCards, setVisibleCards] = useState<Record<string, boolean>>({})
   const [idea, setIdea] = useState('')
   const [ideaSubmitted, setIdeaSubmitted] = useState(false)
+  const [ideaSubmitting, setIdeaSubmitting] = useState(false)
+  const [ideaError, setIdeaError] = useState<string | null>(null)
 
   const content = useMemo(() => COPY[role], [role])
 
@@ -264,11 +266,40 @@ export default function HomeWaitlistLanding() {
     return base
   }
 
-  function handleIdeaSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleIdeaSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!idea.trim()) return
-    setIdeaSubmitted(true)
-    setIdea('')
+    const trimmed = idea.trim()
+    if (!trimmed || ideaSubmitting) return
+
+    setIdeaSubmitting(true)
+    setIdeaError(null)
+
+    try {
+      const response = await fetch('/api/feedback/ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idea: trimmed,
+          role,
+          email: typeof window !== 'undefined' ? window.localStorage.getItem('otto_waitlist_email') || null : null,
+          page: 'home-roadmap',
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        setIdeaError(data?.error || 'Could not save your idea. Try again.')
+        return
+      }
+
+      setIdeaSubmitted(true)
+      setIdea('')
+    } catch {
+      setIdeaError('Could not save your idea. Try again.')
+    } finally {
+      setIdeaSubmitting(false)
+    }
   }
 
   return (
@@ -471,16 +502,18 @@ export default function HomeWaitlistLanding() {
               />
               <button
                 type="submit"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-bold text-[#1c1c1e] transition hover:opacity-90"
+                disabled={ideaSubmitting}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-bold text-[#1c1c1e] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 style={{ background: '#ccff00' }}
               >
-                <MessageSquare className="h-4 w-4" />
-                Share idea
+                {ideaSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                {ideaSubmitting ? 'Sending...' : 'Share idea'}
               </button>
             </form>
 
-            {ideaSubmitted && (
-              <p className="mt-3 text-sm text-[#5f5f5b]">Thanks — added to the list.</p>
+            {ideaError && <p className="mt-3 text-sm text-[#d14343]">{ideaError}</p>}
+            {!ideaError && ideaSubmitted && (
+              <p className="mt-3 text-sm text-[#5f5f5b]">Thanks. Added to the list.</p>
             )}
           </div>
         </section>
