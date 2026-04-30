@@ -109,3 +109,13 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-04-30
+### Homepage below-the-fold roadmap/feed polish
+- Preserved the current homepage hero exactly as requested and only worked on sections below the fold.
+- Tuned the new value, workflow, public roadmap, and feedback sections to stay closer to Otto’s white/green visual system instead of introducing a darker redesign direction.
+- Kept the build-in-public roadmap layer lightweight: curated idea cards, simple up/down voting, and a bottom feedback capture block for audience input.
+
+### Validation
+- TypeScript: pass
+- Build: pass
