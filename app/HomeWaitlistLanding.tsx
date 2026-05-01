@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowRight,
@@ -383,10 +384,10 @@ export default function HomeWaitlistLanding() {
     >
       <header className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50">
         <div className="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-[#e8e8e4] bg-white/85 px-5 py-3.5 shadow-lg shadow-black/[0.06] backdrop-blur-md md:px-6">
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <span className="text-lg font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-bricolage)' }}>Otto</span>
             <span className="h-2 w-2 rounded-full bg-[#ccff00]" />
-          </a>
+          </Link>
           <a href="#waitlist-form" className="btn-primary text-sm py-2 px-5">Get early access</a>
         </div>
       </header>

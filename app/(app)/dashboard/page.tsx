@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { Bookmark, Copy, RefreshCw } from 'lucide-react'
 import { FALLBACK_HOOK_ROULETTE_ITEMS } from '@/lib/hook-roulette'
 
 type Role = 'creator' | 'brand'
@@ -384,7 +385,7 @@ export default function DashboardPage() {
     window.setTimeout(async () => {
       await fetchHookIdea(currentHookIdea?.id || null)
       setRollingHook(false)
-      setHookFeedbackMessage('Fresh angle loaded.')
+      setHookFeedbackMessage('New angle loaded.')
     }, 360)
   }
 
@@ -414,7 +415,7 @@ export default function DashboardPage() {
 
     try {
       await navigator.clipboard.writeText(payloadToCopy)
-      setHookFeedbackMessage('Copied. Paste it into your script and roll again.')
+      setHookFeedbackMessage('Copied. Paste it into your script when you are ready.')
     } catch {
       setHookFeedbackMessage('Couldn’t copy automatically. You can still save it below.')
     }
@@ -468,23 +469,26 @@ export default function DashboardPage() {
           <section className="card shadow-sm lg:col-span-2 hook-roulette-card">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="section-label mb-2">Surprise me</p>
+                <p className="section-label mb-2">Creator workspace</p>
                 <h2 className="text-[24px] leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.6px' }}>
-                  Hook Roulette
+                  Hook lab
                 </h2>
                 <p className="mt-2 text-sm text-[#6b6b6b] max-w-2xl">
-                  Stuck on your opener? Spin once for a proven hook starter, a quick script angle, and a CTA beat you can ship today.
+                  A cleaner place to shape your opener, angle, and CTA before you film. Use it when the first line is not landing yet.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={rollHookIdea} disabled={rollingHook} className="btn-primary">
-                  {rollingHook ? 'Spinning...' : 'Spin a new hook'}
+                <button type="button" onClick={rollHookIdea} disabled={rollingHook} className="btn-primary inline-flex items-center gap-2">
+                  <RefreshCw className={`h-4 w-4 ${rollingHook ? 'animate-spin' : ''}`} />
+                  {rollingHook ? 'Loading...' : 'New hook'}
                 </button>
-                <button type="button" onClick={saveCurrentHookToNotes} className="btn-ghost border border-[#e8e8e4]">
-                  Save to notes
+                <button type="button" onClick={saveCurrentHookToNotes} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4]">
+                  <Bookmark className="h-4 w-4" />
+                  Save
                 </button>
-                <button type="button" onClick={copyHook} className="btn-ghost border border-[#e8e8e4]">
+                <button type="button" onClick={copyHook} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4]">
+                  <Copy className="h-4 w-4" />
                   Copy
                 </button>
               </div>
@@ -493,7 +497,7 @@ export default function DashboardPage() {
             <div className={`mt-4 rounded-2xl border border-[#e6efbf] bg-[#f9ffd9] p-4 transition-all duration-300 ${rollingHook ? 'opacity-60 scale-[0.995]' : 'opacity-100 scale-100'}`}>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#78834a]">Hook starter</p>
               <p className="mt-2 text-lg font-semibold text-[#1c1c1e]">
-                {currentHookIdea?.hookStarter || 'Spin once to load your first idea.'}
+                {currentHookIdea?.hookStarter || 'Load a hook to start shaping your opener.'}
               </p>
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -517,14 +521,14 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-[#8a8a86]">Pro move: spin until one feels obvious, then film before you overthink it.</p>
+              <p className="text-xs text-[#8a8a86]">Keep it simple: pick the line that sounds most natural, then film before you overwork it.</p>
               <p className="text-xs font-medium text-[#4b5d00] min-h-[18px]">{hookFeedbackMessage}</p>
             </div>
 
             {savedHookNotes.length > 0 && (
               <div className="mt-4 rounded-2xl border border-[#efefea] bg-[#fcfcfb] p-4">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Recent saved hook notes</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Recent notes</p>
                   <span className="text-[11px] text-[#9a9a9a]">Stored on this device</span>
                 </div>
                 <div className="space-y-2">
