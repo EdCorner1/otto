@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { MAX_PORTFOLIO_VIDEOS, MIN_PORTFOLIO_VIDEOS } from '@/lib/portfolio-media'
+import { MAX_PORTFOLIO_VIDEOS, MIN_PORTFOLIO_VIDEOS, isRealPortfolioVideoUrl } from '@/lib/portfolio-media'
 
 export const runtime = 'nodejs'
 
@@ -84,8 +84,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Add at least one TikTok, Instagram, or YouTube link.' }, { status: 400 })
     }
 
-    if (portfolioItems.length < MIN_PORTFOLIO_VIDEOS || portfolioItems.length > MAX_PORTFOLIO_VIDEOS) {
-      return NextResponse.json({ error: `Add between ${MIN_PORTFOLIO_VIDEOS} and ${MAX_PORTFOLIO_VIDEOS} portfolio videos.` }, { status: 400 })
+    const validPortfolioItems = portfolioItems.filter((item) => isRealPortfolioVideoUrl(String(item.url || '')))
+
+    if (validPortfolioItems.length < MIN_PORTFOLIO_VIDEOS || validPortfolioItems.length > MAX_PORTFOLIO_VIDEOS) {
+      return NextResponse.json({ error: `Add between ${MIN_PORTFOLIO_VIDEOS} and ${MAX_PORTFOLIO_VIDEOS} valid portfolio videos.` }, { status: 400 })
     }
 
     const { data: existingCreator } = await adminClient
@@ -148,7 +150,7 @@ export async function POST(request: NextRequest) {
     const { error: socialsError } = await adminClient.from('creator_socials').insert(socialPayload)
     if (socialsError) throw new Error(`Creator socials save failed: ${socialsError.message}`)
 
-    const portfolioPayload = portfolioItems.map((item, index) => ({
+    const portfolioPayload = validPortfolioItems.map((item, index) => ({
       creator_id: creatorId,
       type: item.type,
       url: item.url,

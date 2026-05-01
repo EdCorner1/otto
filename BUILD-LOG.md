@@ -109,3 +109,13 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-05-01
+### Creator onboarding API portfolio validation alignment
+- Reverted the rejected homepage below-the-fold experiment so the current branch no longer carries an unapproved visible homepage redesign forward.
+- Tightened `/api/onboarding/creator` validation so the server now counts only real portfolio video URLs against the 3-to-6 video requirement, matching the client-side onboarding gate.
+- Saved only validated portfolio video items when onboarding completes, preventing non-video/empty entries from slipping into public creator profiles.
+
+### Validation
+- TypeScript: pass
+- Build: pass
