@@ -3,22 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import {
-  ArrowRight,
-  BadgeCheck,
-  BriefcaseBusiness,
-  Clock3,
-  Clapperboard,
-  DollarSign,
-  Hammer,
-  Loader2,
-  MessageSquare,
-  Search,
-  ShieldCheck,
-  ThumbsDown,
-  ThumbsUp,
-  Users,
-} from 'lucide-react'
+import { BadgeCheck, Clock3, Hammer, Loader2, MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 type Role = 'creator' | 'brand'
 type Vote = 'up' | 'down' | null
@@ -53,61 +38,6 @@ const COPY: Record<Role, { headline: string; subheadline: string; button: string
     button: 'Get early access',
   },
 }
-
-const ROLE_OUTCOMES = {
-  creator: [
-    {
-      icon: Clapperboard,
-      title: 'A portfolio that sells you faster',
-      body: 'Show your strongest tech content by category, newest first, so brands can judge fit without asking for the same links again.',
-    },
-    {
-      icon: Search,
-      title: 'Better-fit opportunities',
-      body: 'The goal is fewer random offers and more briefs from brands that actually need your style, niche, and skillset.',
-    },
-    {
-      icon: DollarSign,
-      title: 'Cleaner work after you get hired',
-      body: 'Briefs, feedback, submissions, and payout status should live in one workflow instead of a messy trail of DMs.',
-    },
-  ],
-  brand: [
-    {
-      icon: Users,
-      title: 'Find creators who understand tech',
-      body: 'Browse portfolios from creators already making content around apps, AI tools, SaaS, and digital products.',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Judge quality before the first message',
-      body: 'Profiles are designed around proof of work, categories, and sample videos — not empty creator bios.',
-    },
-    {
-      icon: BriefcaseBusiness,
-      title: 'Run the campaign without spreadsheet sprawl',
-      body: 'Keep the brief, shortlist, message thread, deliverables, reviews, and next steps together from day one.',
-    },
-  ],
-} satisfies Record<Role, { icon: typeof Clapperboard; title: string; body: string }[]>
-
-const WORKFLOW = [
-  {
-    eyebrow: '01',
-    title: 'Creators build a proof-first profile',
-    body: 'At least three videos, clear categories, and enough context for a brand to understand style and fit quickly.',
-  },
-  {
-    eyebrow: '02',
-    title: 'Brands post briefs or shortlist creators',
-    body: 'The matching layer is being built around niche, content quality, category, and campaign fit — not vanity metrics alone.',
-  },
-  {
-    eyebrow: '03',
-    title: 'The work moves through one clean pipeline',
-    body: 'Briefs, messages, assets, submissions, revisions, and payment status stay connected so both sides know what happens next.',
-  },
-]
 
 const ROADMAP_CARDS: RoadmapCard[] = [
   {
@@ -246,7 +176,6 @@ export default function HomeWaitlistLanding() {
   const [ideaError, setIdeaError] = useState<string | null>(null)
 
   const content = useMemo(() => COPY[role], [role])
-  const outcomes = useMemo(() => ROLE_OUTCOMES[role], [role])
 
   useEffect(() => {
     const observers: IntersectionObserver[] = []
@@ -493,82 +422,14 @@ export default function HomeWaitlistLanding() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-20 md:px-10">
-          <div className="grid overflow-hidden rounded-[30px] border border-[#e8e8e4] bg-white shadow-[0_10px_35px_rgba(28,28,30,0.06)] md:grid-cols-3">
-            {[
-              ['Built for tech UGC', 'AI apps, SaaS, tools, software, and creators who can explain them clearly.'],
-              ['Quality before volume', 'Creator onboarding is being designed to surface proof of work, not empty profiles.'],
-              ['Workflow, not just discovery', 'The marketplace should help both sides manage the work after the match.'],
-            ].map(([title, body]) => (
-              <div key={title} className="border-b border-[#e8e8e4] p-6 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0">
-                <p className="text-sm font-bold text-[#1c1c1e]">{title}</p>
-                <p className="mt-2 text-sm leading-6 text-[#6b6b6b]">{body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-6 pb-20 md:px-10">
+        <section className="mx-auto max-w-6xl px-6 pb-8 md:px-10">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Why it exists</p>
-            <h2 className="mt-3 text-[clamp(2.2rem,4.8vw,4rem)] leading-[0.92] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.06em' }}>
-              Tech UGC work should not live in a messy DM thread.
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Roadmap</p>
+            <h2 className="mt-3 text-[clamp(2rem,4vw,3.4rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
+              What should we build next?
             </h2>
-            <p className="mt-4 text-base leading-7 text-[#6b6b6b]">
-              Otto is being built for the specific middle ground between creators who know how to make useful tech content and brands that need more believable product storytelling.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {outcomes.map((item) => {
-              const Icon = item.icon
-              return (
-                <article key={item.title} className="rounded-[28px] border border-[#e8e8e4] bg-white p-6 shadow-[0_10px_30px_rgba(28,28,30,0.05)] transition hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(28,28,30,0.08)]">
-                  <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#efffd3] text-[#355400]">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mt-5 text-xl font-semibold leading-tight text-[#1c1c1e]">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#5f5f58]">{item.body}</p>
-                </article>
-              )
-            })}
-          </div>
-        </section>
-
-        <section id="workflow" className="mx-auto max-w-6xl px-6 pb-20 md:px-10">
-          <div className="rounded-[34px] border border-[#e8e8e4] bg-white p-6 shadow-[0_16px_50px_rgba(28,28,30,0.07)] md:p-8">
-            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6d8f00]">Workflow</p>
-                <h2 className="mt-3 text-[clamp(2.1rem,4.4vw,3.8rem)] leading-[0.92] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.06em' }}>
-                  From proof of work to paid work.
-                </h2>
-              </div>
-              <p className="max-w-2xl text-sm leading-7 text-[#5f5f58] md:text-base">
-                Discovery is only the start. The real win is helping both sides move from portfolio review to brief, feedback, delivery, and payment without losing the thread.
-              </p>
-            </div>
-
-            <div className="mt-9 grid gap-4 md:grid-cols-3">
-              {WORKFLOW.map((step) => (
-                <article key={step.eyebrow} className="rounded-[26px] border border-[#e8e8e4] bg-[#fbfbf8] p-5 transition hover:border-[#dff3b3] hover:bg-[#f7ffe8]">
-                  <p className="inline-flex rounded-full bg-[#efffd3] px-3 py-1 text-sm font-black text-[#355400]">{step.eyebrow}</p>
-                  <h3 className="mt-4 text-xl leading-tight text-[#1c1c1e]">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#5f5f58]">{step.body}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="roadmap" className="mx-auto max-w-6xl px-6 pb-8 md:px-10">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Public roadmap</p>
-            <h2 className="mt-3 text-[clamp(2.2rem,4.8vw,4rem)] leading-[0.92] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.06em' }}>
-              Help shape the next layer.
-            </h2>
-            <p className="mt-4 text-base leading-7 text-[#6b6b6b]">
-              Vote on the features that would make the biggest difference for getting discovered, hiring creators, managing work, or getting paid.
+            <p className="mt-3 text-sm leading-6 text-[#6b6b6b] md:text-base">
+              Vote on ideas or suggest one.
             </p>
           </div>
 
@@ -584,8 +445,8 @@ export default function HomeWaitlistLanding() {
                   id={`roadmap-card-${card.id}`}
                   className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 text-left shadow-[0_10px_30px_rgba(28,28,30,0.05)] transition-all duration-700 ease-out sm:p-6"
                   style={{
-                    opacity: visibleCards[card.id] ? 1 : 0.96,
-                    transform: visibleCards[card.id] ? 'translateY(0px) scale(1)' : 'translateY(10px) scale(0.995)',
+                    opacity: visibleCards[card.id] ? 1 : 0,
+                    transform: visibleCards[card.id] ? 'translateY(0px) scale(1)' : 'translateY(24px) scale(0.985)',
                     transitionDelay: visibleCards[card.id] ? '0ms' : '0ms',
                   }}
                 >
@@ -626,45 +487,35 @@ export default function HomeWaitlistLanding() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-24 pt-8 md:px-10">
-          <div className="mx-auto grid max-w-5xl overflow-hidden rounded-[34px] border border-[#e8e8e4] bg-white shadow-[0_16px_50px_rgba(28,28,30,0.08)] lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="bg-[#f7ffe8] p-6 md:p-8">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6d8f00]">Add your take</p>
-              <h3 className="mt-4 text-[clamp(2rem,4vw,3.4rem)] leading-[0.94] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.06em' }}>
-                What would make this worth using?
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-[#5f5f58]">
-                Share the creator pain point, brand workflow problem, or missing feature that would make the platform meaningfully better.
-              </p>
-            </div>
+        <section className="mx-auto max-w-6xl px-6 pb-20 pt-8 md:px-10">
+          <div className="mx-auto max-w-3xl rounded-[28px] border border-[#e8e8e4] bg-white p-5 text-left shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-6">
+            <h3 className="text-2xl font-semibold tracking-tight text-[#1c1c1e]">What do you want to see?</h3>
+            <p className="mt-3 text-sm leading-6 text-[#6b6b6b]">
+              Add a feature idea, creator pain point, or workflow problem.
+            </p>
 
-            <div className="p-5 sm:p-6 md:p-8">
-              <form onSubmit={handleIdeaSubmit} className="space-y-3">
-                <textarea
-                  value={idea}
-                  onChange={(e) => setIdea(e.target.value)}
-                  placeholder="Example: I want brands to see my best videos by category, not just one long portfolio dump."
-                  className="min-h-[170px] w-full rounded-3xl border border-[#e8e8e4] bg-[#f8f8f5] px-5 py-4 text-sm leading-6 text-[#1c1c1e] outline-none transition placeholder:text-[#9a9a94] focus:border-[#ccff00]"
-                />
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <button
-                    type="submit"
-                    disabled={ideaSubmitting}
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-bold text-[#1c1c1e] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                    style={{ background: '#ccff00' }}
-                  >
-                    {ideaSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
-                    {ideaSubmitting ? 'Sending...' : 'Share idea'}
-                  </button>
-                  <a href="#waitlist-form" className="inline-flex items-center gap-2 text-sm font-semibold text-[#4f4f49] hover:text-[#1c1c1e]">
-                    Or join the waitlist <ArrowRight className="h-4 w-4" />
-                  </a>
-                </div>
-              </form>
+            <form onSubmit={handleIdeaSubmit} className="mt-5 space-y-3">
+              <textarea
+                value={idea}
+                onChange={(e) => setIdea(e.target.value)}
+                placeholder="Share an idea"
+                className="min-h-[150px] w-full rounded-3xl border border-[#e8e8e4] bg-[#f8f8f5] px-5 py-4 text-sm text-[#1c1c1e] outline-none transition focus:border-[#ccff00]"
+              />
+              <button
+                type="submit"
+                disabled={ideaSubmitting}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-bold text-[#1c1c1e] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                style={{ background: '#ccff00' }}
+              >
+                {ideaSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                {ideaSubmitting ? 'Sending...' : 'Share idea'}
+              </button>
+            </form>
 
-              {ideaError && <p className="mt-3 text-sm text-[#d14343]">{ideaError}</p>}
-              {!ideaError && ideaSubmitted && <p className="mt-3 text-sm text-[#5f5f5b]">Thanks. Added to the list.</p>}
-            </div>
+            {ideaError && <p className="mt-3 text-sm text-[#d14343]">{ideaError}</p>}
+            {!ideaError && ideaSubmitted && (
+              <p className="mt-3 text-sm text-[#5f5f5b]">Thanks. Added to the list.</p>
+            )}
           </div>
         </section>
       </main>
