@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { Bookmark, Copy, RefreshCw } from 'lucide-react'
+import { Banknote, Bookmark, BriefcaseBusiness, ClipboardList, Copy, RefreshCw, Send, Sparkles } from 'lucide-react'
 import { FALLBACK_HOOK_ROULETTE_ITEMS } from '@/lib/hook-roulette'
 
 type Role = 'creator' | 'brand'
@@ -435,13 +435,63 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 pb-8 dashboard-compact">
-      <div className="mb-8">
-        <h1 style={headlineStyle}>Welcome back, {welcomeName}</h1>
-        <p className="text-sm text-[#6b6b6b] mt-2">
-          {role === 'brand'
-            ? 'Track briefs, review applications, and keep campaigns moving.'
-            : 'Track deals, applications, and new opportunities in one place.'}
-        </p>
+      <div className="mb-8 overflow-hidden rounded-[28px] border border-[#ecece7] bg-[linear-gradient(135deg,#ffffff_0%,#fbfbf5_48%,#f4ffd7_100%)] p-5 shadow-sm md:p-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="section-label mb-3">{role === 'brand' ? 'Brand workspace' : 'Creator workspace'}</p>
+            <h1 style={headlineStyle}>Welcome back, {welcomeName}</h1>
+            <p className="text-sm text-[#5f5f5b] mt-3 max-w-2xl">
+              {role === 'brand'
+                ? 'Review the work that needs a decision, keep briefs moving, and spot creators worth inviting back.'
+                : 'Keep today focused: check live work, follow up on applications, and save a strong hook before you film.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[520px]">
+            {role === 'creator' && creator ? (
+              <>
+                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                  <BriefcaseBusiness className="mb-2 h-4 w-4 text-[#6b6b6b]" />
+                  <p className="text-[11px] text-[#77736d]">Active deals</p>
+                  <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.activeDeals.count}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                  <Send className="mb-2 h-4 w-4 text-[#6b6b6b]" />
+                  <p className="text-[11px] text-[#77736d]">Applications</p>
+                  <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.applications.count}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                  <Sparkles className="mb-2 h-4 w-4 text-[#6b6b6b]" />
+                  <p className="text-[11px] text-[#77736d]">Open matches</p>
+                  <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.opportunities.count}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                  <Banknote className="mb-2 h-4 w-4 text-[#6b6b6b]" />
+                  <p className="text-[11px] text-[#77736d]">Pending</p>
+                  <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(creator.earnings.pending)}</p>
+                </div>
+              </>
+            ) : role === 'brand' && brand ? (
+              <>
+                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                  <ClipboardList className="mb-2 h-4 w-4 text-[#6b6b6b]" />
+                  <p className="text-[11px] text-[#77736d]">Active briefs</p>
+                  <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{brand.activeBriefs.count}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                  <Send className="mb-2 h-4 w-4 text-[#6b6b6b]" />
+                  <p className="text-[11px] text-[#77736d]">To review</p>
+                  <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{brand.applicationsToReview.count}</p>
+                </div>
+                <div className="col-span-2 rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                  <Banknote className="mb-2 h-4 w-4 text-[#6b6b6b]" />
+                  <p className="text-[11px] text-[#77736d]">Campaign spend</p>
+                  <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(brand.spend.total)}</p>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       {successMessage && (
@@ -690,7 +740,7 @@ export default function DashboardPage() {
           <section className="card shadow-sm">
             <div className="flex items-end justify-between mb-4">
               <div>
-                <p className="section-label mb-1">Earnings spent</p>
+                <p className="section-label mb-1">Campaign spend</p>
                 <p className="text-2xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(brand.spend.total)}</p>
               </div>
             </div>
