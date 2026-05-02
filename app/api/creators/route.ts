@@ -7,7 +7,6 @@ type CreatorRow = {
   id: string
   user_id: string
   display_name: string | null
-  headline: string | null
   avatar_url: string | null
   profile_views: number | null
   created_at: string
@@ -130,6 +129,11 @@ function creatorFromRow(row: CreatorRow): CreatorPayload {
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
 
+  const headlineTag = (row.creator_tags || [])
+    .map((entry) => entry.tag || '')
+    .find((tag) => tag.toLowerCase().startsWith('headline:'))
+  const headline = headlineTag ? headlineTag.slice('headline:'.length).trim() : null
+
   const topItem = sortedPortfolio[0]
   const topThumbnail = topItem?.thumbnail_url || (topItem?.type === 'image' ? topItem.url : null)
 
@@ -138,7 +142,7 @@ function creatorFromRow(row: CreatorRow): CreatorPayload {
     name: row.display_name || 'Creator',
     handle: tags.handle,
     avatarUrl: row.avatar_url,
-    headline: row.headline,
+    headline,
     mainPlatform: inferMainPlatform(tags.mainPlatform, row.creator_socials),
     followerRange: tags.followerRange,
     incomeLevel: tags.incomeLevel,
@@ -189,7 +193,7 @@ export async function GET(request: NextRequest) {
 
     const { data: creatorRows, error: creatorsError } = await admin
       .from('creators')
-      .select('id, user_id, display_name, headline, avatar_url, profile_views, created_at, updated_at, creator_socials(platform), creator_tags(tag), portfolio_items(id, thumbnail_url, url, type, created_at, sort_order)')
+      .select('id, user_id, display_name, avatar_url, profile_views, created_at, updated_at, creator_socials(platform), creator_tags(tag), portfolio_items(id, thumbnail_url, url, type, created_at, sort_order)')
       .in('user_id', creatorUserIds)
 
     if (creatorsError) {

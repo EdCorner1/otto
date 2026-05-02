@@ -32,7 +32,7 @@ type CreatorsResponse = {
 
 const PLATFORM_OPTIONS = ['all', 'tiktok', 'instagram', 'youtube']
 const FOLLOWER_OPTIONS = ['all', '< 1K', '1K – 10K', '10K – 50K', '50K – 250K', '250K – 500K', '500K +']
-const NICHE_OPTIONS = ['all', 'SaaS & AI', 'Tech & Apps', 'Gaming', 'Fintech', 'Lifestyle & Vlogs', 'Travel']
+const NICHE_OPTIONS = ['all', 'SaaS & AI', 'Tech & Apps', 'AI Tools', 'Creator Economy', 'Productivity', 'Health & Fitness', 'Travel', 'Lifestyle & Vlogs', 'Gaming', 'Fintech']
 const CONTENT_TYPE_OPTIONS = ['all', 'Ad creative', 'Product review', 'Tutorial / demo', 'Lifestyle integrated']
 const INCOME_OPTIONS = ['all', 'Not sharing', '$0 – $500/mo', '$500 – $2K/mo', '$2K – $5K/mo', '$5K+/mo']
 
