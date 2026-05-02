@@ -16,8 +16,9 @@ export async function GET(request: NextRequest) {
   const type = requestUrl.searchParams.get('type') as OtpType | null
   const next = requestUrl.searchParams.get('next') || '/dashboard'
   const safeNext = next.startsWith('/') ? next : '/dashboard'
+  const canonicalOrigin = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
 
-  let response = NextResponse.redirect(new URL(safeNext, request.url))
+  let response = NextResponse.redirect(new URL(safeNext, canonicalOrigin))
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          response = NextResponse.redirect(new URL(safeNext, request.url))
+          response = NextResponse.redirect(new URL(safeNext, canonicalOrigin))
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           )
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
     if (code) {
       const { error } = await supabase.auth.exchangeCodeForSession(code)
       if (error) {
-        const loginUrl = new URL('/login', request.url)
+        const loginUrl = new URL('/login', canonicalOrigin)
         loginUrl.searchParams.set('error', 'auth_callback_failed')
         return NextResponse.redirect(loginUrl)
       }
@@ -55,14 +56,14 @@ export async function GET(request: NextRequest) {
         token_hash: tokenHash,
       })
       if (error) {
-        const loginUrl = new URL('/login', request.url)
+        const loginUrl = new URL('/login', canonicalOrigin)
         loginUrl.searchParams.set('error', 'auth_callback_failed')
         return NextResponse.redirect(loginUrl)
       }
       return response
     }
   } catch {
-    const loginUrl = new URL('/login', request.url)
+    const loginUrl = new URL('/login', canonicalOrigin)
     loginUrl.searchParams.set('error', 'auth_callback_failed')
     return NextResponse.redirect(loginUrl)
   }

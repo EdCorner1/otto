@@ -56,7 +56,8 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setLoading(true)
-    const callbackUrl = new URL('/auth/callback', window.location.origin)
+    const appOrigin = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+    const callbackUrl = new URL('/auth/callback', appOrigin)
     callbackUrl.searchParams.set('next', redirectTo)
 
     const { error } = await supabase.auth.signInWithOAuth({
