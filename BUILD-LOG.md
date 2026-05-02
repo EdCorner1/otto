@@ -119,3 +119,13 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-05-02
+### Brand creator-invite brief handoff
+- Fixed the brand invite path from creator discovery so `/jobs/new?invite=<creatorId>` now carries the selected creator through brief creation instead of silently dropping the invite intent.
+- When a brand posts a brief from an invite flow, Otto now creates the job, opens an initial deal thread for the invited creator, and notifies the creator with a direct next-step link.
+- Added clear invite-attached messaging on the brief form and a more specific submit CTA so brands understand that posting the brief also starts the creator invite.
+
+### Validation
+- TypeScript: pass
+- Build: pass

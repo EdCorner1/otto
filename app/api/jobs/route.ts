@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createNotification } from '@/lib/server/notifications'
 
 export const runtime = 'nodejs'
 
@@ -15,6 +16,7 @@ type CreateJobPayload = {
   budgetRange?: string
   payType?: string
   deadline?: string
+  invitedCreatorId?: string | null
 }
 
 function getEnv(name: string) {
@@ -63,6 +65,7 @@ export async function POST(request: NextRequest) {
     const budgetRange = payload.budgetRange?.trim() || ''
     const payType = payload.payType?.trim() || ''
     const deadline = payload.deadline?.trim() || ''
+    const invitedCreatorId = payload.invitedCreatorId?.trim() || ''
 
     if (!title || !description || !jobType) {
       return NextResponse.json({ error: 'Missing required job basics.' }, { status: 400 })
@@ -114,7 +117,42 @@ export async function POST(request: NextRequest) {
       throw new Error(insertError?.message || 'Failed to create job.')
     }
 
-    return NextResponse.json({ ok: true, id: created.id })
+    let invitedDealId: string | null = null
+
+    if (invitedCreatorId) {
+      const { data: invitedCreator } = await adminClient
+        .from('creators')
+        .select('id, user_id')
+        .eq('id', invitedCreatorId)
+        .maybeSingle()
+
+      if (invitedCreator?.id) {
+        const { data: deal, error: dealError } = await adminClient
+          .from('deals')
+          .insert({
+            job_id: created.id,
+            brand_id: brandData.id,
+            creator_id: invitedCreator.id,
+            status: 'application_sent',
+          })
+          .select('id')
+          .single()
+
+        if (dealError) throw new Error(`Creator invite failed: ${dealError.message}`)
+        invitedDealId = deal?.id || null
+
+        if (invitedCreator.user_id) {
+          await createNotification(adminClient, {
+            userId: invitedCreator.user_id,
+            type: 'deal_update',
+            content: `A brand invited you to apply to "${title}".`,
+            linkUrl: invitedDealId ? `/deals/${invitedDealId}` : `/jobs/${created.id}`,
+          })
+        }
+      }
+    }
+
+    return NextResponse.json({ ok: true, id: created.id, invitedDealId })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not create job.'
     return NextResponse.json({ error: message }, { status: 500 })

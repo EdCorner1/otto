@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 type Step = 1 | 2 | 3 | 4
@@ -57,6 +57,8 @@ export default function NewJobPage() {
   })
 
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const invitedCreatorId = searchParams.get('invite')?.trim() || ''
   const supabase = createClient()
 
   useEffect(() => {
@@ -158,7 +160,7 @@ export default function NewJobPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, invitedCreatorId: invitedCreatorId || null }),
       })
 
       const body = await response.json().catch(() => ({}))
@@ -166,7 +168,7 @@ export default function NewJobPage() {
         throw new Error(body?.error || 'Could not post brief. Please try again.')
       }
 
-      router.push(`/jobs/${body.id}/manage?posted=1`)
+      router.push(`/jobs/${body.id}/manage?posted=1${body.invitedDealId ? '&invited=1' : ''}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
@@ -191,7 +193,7 @@ export default function NewJobPage() {
             Back to dashboard
           </Link>
           <h1 style={headlineStyle}>Create a new brief</h1>
-          <p className="mt-2 text-sm text-[#6b6b6b]">A clean brief gets better creator matches. This takes about 3 minutes.</p>
+          <p className="mt-2 text-sm text-[#6b6b6b]">{invitedCreatorId ? 'Create a focused brief for this creator. Once posted, Otto will open the invite thread.' : 'A clean brief gets better creator matches. This takes about 3 minutes.'}</p>
         </div>
 
         <div className="mb-8 rounded-2xl border border-[#ecece7] bg-white p-4 sm:p-5">
@@ -206,6 +208,9 @@ export default function NewJobPage() {
             ))}
           </div>
           <p className="mt-3 text-xs text-[#9a9a9a]">Step {step} of 4</p>
+          {invitedCreatorId && (
+            <p className="mt-2 rounded-xl bg-[#efffd3] px-3 py-2 text-xs font-medium text-[#355400]">Creator invite attached — posting this brief will start a deal thread with the selected creator.</p>
+          )}
         </div>
 
         <section className="rounded-3xl border border-[#ecece7] bg-white p-6 sm:p-8 shadow-[0_16px_35px_rgba(28,28,30,0.04)]">
@@ -437,7 +442,7 @@ export default function NewJobPage() {
                 disabled={!canSubmit || submitting}
                 className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting ? 'Posting...' : 'Post brief'}
+                {submitting ? 'Posting...' : invitedCreatorId ? 'Post brief and invite creator' : 'Post brief'}
               </button>
             )}
           </div>
