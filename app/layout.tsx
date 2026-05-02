@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Bricolage_Grotesque, Open_Sans } from 'next/font/google'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 
 const bricolage = Bricolage_Grotesque({
@@ -53,6 +54,7 @@ export default function RootLayout({
     <html lang="en" className={`${bricolage.variable} ${openSans.variable}`}>
       <body>
         {children}
+        <SpeedInsights />
         <script
           dangerouslySetInnerHTML={{
             __html: `
