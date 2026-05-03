@@ -169,14 +169,15 @@ function FeaturedWorkCard({ item, onOpen }: { item: NonNullable<PublicCreatorPor
           type="button"
           onClick={onOpen}
           className="group relative block w-full overflow-hidden border-t border-[#eeeeea] bg-[#111111] text-left"
-          aria-label={`Play ${item.title}`}
+          aria-label={`Open ${item.title}`}
         >
           <div className="aspect-[9/16] max-h-[420px] w-full">
             <VideoThumbnail item={item.video} />
           </div>
-          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/10">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/92 text-[#111111] shadow-[0_18px_40px_rgba(0,0,0,0.25)] transition group-hover:scale-105">
-              <Play className="h-5 w-5 fill-current" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/8 to-black/20" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-[#111111] shadow-[0_14px_30px_rgba(0,0,0,0.25)] transition group-hover:scale-105">
+              <Play className="h-4 w-4 fill-current" />
             </span>
           </div>
         </button>
@@ -184,6 +185,7 @@ function FeaturedWorkCard({ item, onOpen }: { item: NonNullable<PublicCreatorPor
     </article>
   )
 }
+
 
 function ownerPrimaryAction(isOwner: boolean) {
   if (!isOwner) return null
@@ -244,45 +246,56 @@ function VideoThumbnail({ item }: { item: PublicPortfolioVideo }) {
   )
 }
 
-function IntroVideoCard({ item, creatorFirstName, onOpen }: { item: PublicPortfolioVideo; creatorFirstName: string; onOpen: () => void }) {
+function InlineVideoPlayer({ item, title }: { item: PublicPortfolioVideo; title?: string }) {
+  const playerTitle = title || getVideoTitle(item)
+
+  if (item.kind === 'youtube' && item.youtubeId) {
+    return (
+      <iframe
+        title={playerTitle}
+        src={getYouTubeEmbedUrl(item.youtubeId)}
+        className="h-full w-full"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+      />
+    )
+  }
+
+  if (item.kind === 'cloudflare' && item.cloudflareIframeUrl) {
+    return (
+      <iframe
+        title={playerTitle}
+        src={item.cloudflareIframeUrl}
+        className="h-full w-full"
+        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+      />
+    )
+  }
+
+  if (item.kind === 'mux' && item.playbackId) {
+    return <MuxPlayer streamType="on-demand" playbackId={item.playbackId} className="h-full w-full object-cover" />
+  }
+
+  return <video src={item.url} controls playsInline className="h-full w-full bg-black object-cover" />
+}
+
+function IntroVideoCard({ item, creatorFirstName }: { item: PublicPortfolioVideo; creatorFirstName: string }) {
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="group relative w-full overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#151515] text-left shadow-[0_14px_34px_rgba(0,0,0,0.14)] transition hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(0,0,0,0.18)] lg:max-w-[240px]"
-      aria-label={`Play ${creatorFirstName}'s intro video`}
-    >
+    <div className="overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#111111] shadow-[0_14px_34px_rgba(0,0,0,0.14)] lg:max-w-[240px]">
       <div className="aspect-[9/16] bg-[#111111]">
-        {item.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.thumbnailUrl} alt={`${creatorFirstName} intro video`} className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100" />
-        ) : item.kind === 'cloudflare' && item.cloudflareIframeUrl ? (
-          <iframe
-            title={`${creatorFirstName} intro video`}
-            src={item.cloudflareIframeUrl}
-            className="h-full w-full pointer-events-none"
-            allow="accelerometer; gyroscope; encrypted-media; picture-in-picture"
-            tabIndex={-1}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(204,255,0,0.22),transparent_35%),#111111]">
-            <Video className="h-10 w-10 text-white/55" />
-          </div>
-        )}
+        <InlineVideoPlayer item={item} title={`${creatorFirstName} intro video`} />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/10 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-        <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#ccff00] text-[#1c1c1e] shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition group-hover:scale-105">
-          <Play className="h-5 w-5 fill-current" />
-        </div>
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55">Intro video</p>
-        <p className="mt-1 text-2xl leading-tight text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.045em' }}>
+      <div className="border-t border-white/10 bg-[#151515] px-4 py-3 text-white">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Intro video</p>
+        <p className="mt-1 text-lg leading-tight text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
           Meet {creatorFirstName}
         </p>
       </div>
-    </button>
+    </div>
   )
 }
+
 
 function VideoCard({ item, onOpen }: { item: PublicPortfolioVideo; onOpen: () => void }) {
   return (
@@ -575,7 +588,7 @@ export default function PortfolioPageClient({
                 </div>
 
                 {portfolio.introVideo ? (
-                  <IntroVideoCard item={portfolio.introVideo} creatorFirstName={creatorFirstName} onOpen={() => setActiveVideo(portfolio.introVideo || null)} />
+                  <IntroVideoCard item={portfolio.introVideo} creatorFirstName={creatorFirstName} />
                 ) : ownerPrimaryAction(isOwner)}
               </div>
             </div>

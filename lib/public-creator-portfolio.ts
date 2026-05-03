@@ -266,7 +266,7 @@ export async function getPublicCreatorPortfolioByHandle(
       youtubeId: youtubeId || undefined,
       playbackId: isMux ? url : undefined,
       cloudflareId,
-      cloudflareIframeUrl: cloudflareId ? `https://${process.env.CLOUDFLARE_STREAM_SUBDOMAIN || 'customer-hl0vh4j6c5g7f8bb'}.cloudflarestream.com/${cloudflareId}/iframe` : undefined,
+      cloudflareIframeUrl: cloudflareId ? `https://${process.env.CLOUDFLARE_STREAM_SUBDOMAIN || 'customer-ptaqr8qc63pdtfzg'}.cloudflarestream.com/${cloudflareId}/iframe` : undefined,
       thumbnailUrl: inferThumbnail(url, platform, item.thumbnail_url),
       caption: item.caption?.trim() || item.title?.trim() || null,
       viewCount: typeof item.views === 'number' ? item.views : 0,
