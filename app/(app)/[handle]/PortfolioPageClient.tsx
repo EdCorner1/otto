@@ -486,6 +486,25 @@ export default function PortfolioPageClient({
             </div>
           </section>
 
+          {workedWithLogos.length > 0 && (
+            <section className="mt-12">
+              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Worked with</p>
+                  <h2 className="mt-2 text-[clamp(1.8rem,4vw,2.8rem)] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.045em' }}>
+                    Brand experience
+                  </h2>
+                </div>
+                <p className="max-w-lg text-sm leading-6 text-[#6d6d66]">
+                  Creator-uploaded brand logos will live here. Recommended logo format: transparent PNG or SVG, square or horizontal, at least 600px wide.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {workedWithLogos.map((logo) => <BrandLogoPill key={logo} label={logo} />)}
+              </div>
+            </section>
+          )}
+
           <section id="portfolio" className="mt-12">
             <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -535,25 +554,6 @@ export default function PortfolioPageClient({
               </>
             )}
           </section>
-
-          {workedWithLogos.length > 0 && (
-            <section className="mt-12">
-              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Worked with</p>
-                  <h2 className="mt-2 text-[clamp(1.8rem,4vw,2.8rem)] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.045em' }}>
-                    Brand experience
-                  </h2>
-                </div>
-                <p className="max-w-lg text-sm leading-6 text-[#6d6d66]">
-                  Creator-uploaded brand logos will live here. Recommended logo format: transparent PNG or SVG, square or horizontal, at least 600px wide.
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {workedWithLogos.map((logo) => <BrandLogoPill key={logo} label={logo} />)}
-              </div>
-            </section>
-          )}
 
           <section className="mt-12 overflow-hidden rounded-[36px] bg-[#111111] px-6 py-8 text-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-10">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
