@@ -151,11 +151,11 @@ function ReviewCard({ review, featured = false }: { review: NonNullable<PublicCr
 
 function FeaturedWorkCard({ item, onOpen }: { item: NonNullable<PublicCreatorPortfolio['featuredWork']>[number]; onOpen?: () => void }) {
   return (
-    <article className="flex min-h-[260px] flex-col justify-between rounded-[11px] border border-[#e2e2dc] bg-white p-6 text-left shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(0,0,0,0.09)]">
-      <div>
+    <article className="overflow-hidden rounded-[11px] border border-[#e2e2dc] bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(0,0,0,0.09)]">
+      <div className="p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">{item.label}</p>
         {item.metric && (
-          <p className="mt-5 text-[clamp(2.9rem,6vw,4.5rem)] leading-[0.82] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.075em' }}>
+          <p className="mt-5 text-[clamp(2.7rem,5vw,4rem)] leading-[0.84] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.075em' }}>
             {item.metric}
           </p>
         )}
@@ -164,14 +164,21 @@ function FeaturedWorkCard({ item, onOpen }: { item: NonNullable<PublicCreatorPor
         </h3>
         {item.note && <p className="mt-4 text-sm leading-6 text-[#686862]">{item.note}</p>}
       </div>
-      {item.video && onOpen && (
+      {item.video && (
         <button
           type="button"
           onClick={onOpen}
-          className="mt-6 inline-flex w-fit items-center gap-2 rounded-full border border-[#deded8] px-4 py-2 text-xs font-semibold text-[#363535] transition hover:border-[#ccff00] hover:bg-[#f7ffd9]"
+          className="group relative block w-full overflow-hidden border-t border-[#eeeeea] bg-[#111111] text-left"
+          aria-label={`Play ${item.title}`}
         >
-          <Play className="h-3.5 w-3.5 fill-current" />
-          Watch example
+          <div className="aspect-[9/16] max-h-[420px] w-full">
+            <VideoThumbnail item={item.video} />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/10">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/92 text-[#111111] shadow-[0_18px_40px_rgba(0,0,0,0.25)] transition group-hover:scale-105">
+              <Play className="h-5 w-5 fill-current" />
+            </span>
+          </div>
         </button>
       )}
     </article>
