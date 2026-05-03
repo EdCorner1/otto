@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
 import { sendEmail } from '@/lib/maton'
 
+export const runtime = 'nodejs'
+
 const HEADLINE_STYLE = 'font-family:system-ui,sans-serif;font-weight:700;letter-spacing:-2px;line-height:1.0;color:#363535'
 const BODY_STYLE = 'font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#363535'
 
-function emailShell(content: string, brandName?: string) {
+function emailShell(content: string) {
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f4f0;font-family:system-ui,sans-serif">
   <div style="max-width:520px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e8e8e4">
     <div style="padding:28px 32px;border-bottom:1px solid #f0f0ec">
@@ -22,16 +24,23 @@ function ctaButton(text: string, href: string) {
   return `<div style="margin-top:24px"><a href="${href}" style="display:inline-block;padding:12px 28px;background:#ccff00;color:#1c1c1c;font-weight:700;font-size:14px;border-radius:10px;text-decoration:none">${text} →</a></div>`
 }
 
-// POST /api/notify — body: { event: string, data: object }
+// POST /api/notify — internal-only body: { event: string, data: object }
 export async function POST(req: NextRequest) {
   try {
+    const internalSecret = process.env.OTTO_INTERNAL_NOTIFY_SECRET
+    const providedSecret = req.headers.get('x-otto-internal-secret') || ''
+
+    if (!internalSecret || providedSecret !== internalSecret) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const { event, data } = await req.json()
     const supabase = createClient()
 
     switch (event) {
 
       case 'new_proposal': {
-        const { dealId, brandId, creatorId, jobTitle, creatorName } = data
+        const { dealId, brandId, jobTitle, creatorName } = data
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ottougc.com'
 
         // Get brand user email via users table
@@ -53,7 +62,7 @@ export async function POST(req: NextRequest) {
       }
 
       case 'work_submitted': {
-        const { dealId, brandId, creatorId, jobTitle, creatorName } = data
+        const { dealId, brandId, jobTitle, creatorName } = data
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ottougc.com'
 
         const { data: brandUser } = await supabase

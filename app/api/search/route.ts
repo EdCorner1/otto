@@ -123,7 +123,7 @@ function parseCreatorMeta(tags: Array<{ tag: string | null }> | null | undefined
 async function fetchUsersByRole(admin: any, role: 'creator' | 'brand') {
   const { data, error } = await admin
     .from('users')
-    .select('*')
+    .select('id, email, name, avatar_url, role')
     .eq('role', role)
     .limit(400)
 

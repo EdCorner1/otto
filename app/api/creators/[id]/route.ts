@@ -143,7 +143,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({
       id: data.id,
-      userId: data.user_id,
       fullName: data.display_name || '',
       handle: meta.handle,
       bio: data.bio || '',
