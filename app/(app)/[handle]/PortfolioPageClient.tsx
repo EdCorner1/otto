@@ -149,7 +149,7 @@ function ReviewCard({ review, featured = false }: { review: NonNullable<PublicCr
   )
 }
 
-function FeaturedWorkCard({ item, onOpen }: { item: NonNullable<PublicCreatorPortfolio['featuredWork']>[number]; onOpen?: () => void }) {
+function FeaturedWorkCard({ item }: { item: NonNullable<PublicCreatorPortfolio['featuredWork']>[number] }) {
   return (
     <article className="overflow-hidden rounded-[11px] border border-[#e2e2dc] bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(0,0,0,0.09)]">
       <div className="p-6">
@@ -165,22 +165,11 @@ function FeaturedWorkCard({ item, onOpen }: { item: NonNullable<PublicCreatorPor
         {item.note && <p className="mt-4 text-sm leading-6 text-[#686862]">{item.note}</p>}
       </div>
       {item.video && (
-        <button
-          type="button"
-          onClick={onOpen}
-          className="group relative block w-full overflow-hidden border-t border-[#eeeeea] bg-[#111111] text-left"
-          aria-label={`Open ${item.title}`}
-        >
+        <div className="border-t border-[#eeeeea] bg-[#111111]">
           <div className="aspect-[9/16] max-h-[420px] w-full">
-            <VideoThumbnail item={item.video} />
+            <InlinePlayableVideo item={item.video} title={item.title} className="h-full w-full" />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/8 to-black/20" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-[#111111] shadow-[0_14px_30px_rgba(0,0,0,0.25)] transition group-hover:scale-105">
-              <Play className="h-4 w-4 fill-current" />
-            </span>
-          </div>
-        </button>
+        </div>
       )}
     </article>
   )
@@ -280,11 +269,38 @@ function InlineVideoPlayer({ item, title }: { item: PublicPortfolioVideo; title?
   return <video src={item.url} controls playsInline className="h-full w-full bg-black object-cover" />
 }
 
+function InlinePlayableVideo({ item, title, className = '' }: { item: PublicPortfolioVideo; title?: string; className?: string }) {
+  const [playing, setPlaying] = useState(false)
+
+  return (
+    <div className={`relative overflow-hidden bg-[#111111] ${className}`}>
+      {playing ? (
+        <InlineVideoPlayer item={item} title={title} />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPlaying(true)}
+          className="group relative block h-full w-full text-left"
+          aria-label={`Play ${title || getVideoTitle(item)}`}
+        >
+          <VideoThumbnail item={item} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/8 to-black/20" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/92 text-[#111111] shadow-[0_18px_40px_rgba(0,0,0,0.25)] transition group-hover:scale-105">
+              <Play className="h-5 w-5 fill-current" />
+            </span>
+          </div>
+        </button>
+      )}
+    </div>
+  )
+}
+
 function IntroVideoCard({ item, creatorFirstName }: { item: PublicPortfolioVideo; creatorFirstName: string }) {
   return (
-    <div className="overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#111111] shadow-[0_14px_34px_rgba(0,0,0,0.14)] lg:max-w-[240px]">
+    <div className="overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#111111] shadow-[0_14px_34px_rgba(0,0,0,0.14)] lg:max-w-[320px]">
       <div className="aspect-[9/16] bg-[#111111]">
-        <InlineVideoPlayer item={item} title={`${creatorFirstName} intro video`} />
+        <InlinePlayableVideo item={item} title={`${creatorFirstName} intro video`} className="h-full w-full" />
       </div>
       <div className="border-t border-white/10 bg-[#151515] px-4 py-3 text-white">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Intro video</p>
@@ -297,28 +313,15 @@ function IntroVideoCard({ item, creatorFirstName }: { item: PublicPortfolioVideo
 }
 
 
-function VideoCard({ item, onOpen }: { item: PublicPortfolioVideo; onOpen: () => void }) {
+function VideoCard({ item }: { item: PublicPortfolioVideo }) {
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="group overflow-hidden rounded-[11px] border border-[#e2e2dc] bg-white text-left shadow-[0_10px_28px_rgba(0,0,0,0.07)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.1)]"
-      aria-label={`Open ${getVideoTitle(item)}`}
-    >
+    <article className="overflow-hidden rounded-[11px] border border-[#e2e2dc] bg-white text-left shadow-[0_10px_28px_rgba(0,0,0,0.07)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.1)]">
       <div className="relative aspect-[9/16] overflow-hidden bg-[#111111]">
-        <VideoThumbnail item={item} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/12 to-black/20" />
-
-        <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-[#1c1c1e] shadow-sm">
+        <InlinePlayableVideo item={item} className="h-full w-full" />
+        <div className="pointer-events-none absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-[#1c1c1e] shadow-sm">
           {platformIcon(item.platform, 'h-3.5 w-3.5')}
           <span>{platformLabel(item.platform)}</span>
         </div>
-
-        <span className="absolute inset-0 flex items-center justify-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-[#111111] shadow-[0_18px_40px_rgba(0,0,0,0.25)] transition duration-200 group-hover:scale-105">
-            <Play className="ml-1 h-6 w-6 fill-current" />
-          </span>
-        </span>
       </div>
 
       <div className="space-y-3 p-5">
@@ -329,112 +332,12 @@ function VideoCard({ item, onOpen }: { item: PublicPortfolioVideo; onOpen: () =>
           <span>{formatDate(item.createdAt)}</span>
         </div>
       </div>
-    </button>
+    </article>
   )
 }
 
-function VideoLightbox({ item, onClose }: { item: PublicPortfolioVideo; onClose: () => void }) {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
 
-    window.addEventListener('keydown', onKeyDown)
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
 
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = previousOverflow
-    }
-  }, [onClose])
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm" onClick={onClose}>
-      <div
-        className="relative w-full max-w-5xl overflow-hidden rounded-[14px] bg-[#0f0f10] text-white shadow-[0_28px_90px_rgba(0,0,0,0.42)]"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white transition hover:bg-black/75"
-          aria-label="Close video"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
-        <div className="grid lg:grid-cols-[minmax(0,1.1fr)_340px]">
-          <div className="bg-black">
-            <div className="aspect-video w-full bg-black lg:min-h-[560px] lg:aspect-auto">
-              {item.kind === 'youtube' && item.youtubeId ? (
-                <iframe
-                  title={getVideoTitle(item)}
-                  src={getYouTubeEmbedUrl(item.youtubeId)}
-                  className="h-full w-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              ) : item.kind === 'cloudflare' && item.cloudflareIframeUrl ? (
-                <iframe
-                  title={getVideoTitle(item)}
-                  src={item.cloudflareIframeUrl}
-                  className="h-full w-full"
-                  allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : item.kind === 'mux' && item.playbackId ? (
-                <MuxPlayer streamType="on-demand" playbackId={item.playbackId} autoPlay className="h-full w-full object-contain" />
-              ) : (
-                <video src={item.url} controls autoPlay playsInline className="h-full w-full bg-black object-contain" />
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col justify-between gap-6 border-t border-white/10 p-6 lg:border-l lg:border-t-0">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80">
-                {platformIcon(item.platform, 'h-3.5 w-3.5')}
-                <span>{platformLabel(item.platform)}</span>
-              </div>
-
-              <h3 className="mt-4 text-2xl leading-tight text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
-                {getVideoTitle(item)}
-              </h3>
-
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-white/65">
-                <span className="inline-flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4" />
-                  {formatDate(item.createdAt)}
-                </span>
-                <span>{formatCompactNumber(item.viewCount)} views</span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <a
-                href={getVideoDisplayUrl(item)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#ccff00] px-5 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]"
-              >
-                Open original
-                <ArrowUpRight className="h-4 w-4" />
-              </a>
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex w-full items-center justify-center rounded-full border border-white/12 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function EmptyPortfolioState({ socials }: { socials: PublicPortfolioSocial[] }) {
   return (
@@ -477,7 +380,6 @@ export default function PortfolioPageClient({
   portfolio: PublicCreatorPortfolio
   isOwner: boolean
 }) {
-  const [activeVideo, setActiveVideo] = useState<PublicPortfolioVideo | null>(null)
   const [activeCategory, setActiveCategory] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
   const contactEmail = useMemo(() => getContactEmail(portfolio), [portfolio])
   const socialCTAs = useMemo(
@@ -538,7 +440,7 @@ export default function PortfolioPageClient({
 
           <section className="px-1 pt-10 sm:px-6 lg:px-10 lg:pt-14">
             <div className="mx-auto max-w-6xl">
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-center">
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
                 <div className="max-w-4xl">
                   <div className="mb-5 flex flex-col gap-4">
                     <div className="inline-flex items-center gap-2 text-sm text-[#55554f]">
@@ -651,7 +553,7 @@ export default function PortfolioPageClient({
                 ) : (
                   <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     {filteredPortfolioItems.map((item) => (
-                      <VideoCard key={item.id} item={item} onOpen={() => setActiveVideo(item)} />
+                      <VideoCard key={item.id} item={item} />
                     ))}
                   </div>
                 )}
@@ -688,7 +590,7 @@ export default function PortfolioPageClient({
                 </h2>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
-                {featuredWork.map((item) => <FeaturedWorkCard key={`${item.label}-${item.title}`} item={item} onOpen={item.video ? () => setActiveVideo(item.video || null) : undefined} />)}
+                {featuredWork.map((item) => <FeaturedWorkCard key={`${item.label}-${item.title}`} item={item} />)}
               </div>
             </section>
           )}
@@ -741,7 +643,6 @@ export default function PortfolioPageClient({
         </div>
       </main>
 
-      {activeVideo && <VideoLightbox item={activeVideo} onClose={() => setActiveVideo(null)} />}
     </>
   )
 }

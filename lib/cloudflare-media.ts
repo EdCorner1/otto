@@ -1,7 +1,7 @@
 export const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID!
 export const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN!
 export const CLOUDFLARE_STREAM_ZONE = process.env.CLOUDFLARE_STREAM_ZONE || 'stream'
-export const CLOUDFLARE_STREAM_SUBDOMAIN = process.env.CLOUDFLARE_STREAM_SUBDOMAIN || 'customer-hl0vh4j6c5g7f8bb'
+export const CLOUDFLARE_STREAM_SUBDOMAIN = process.env.CLOUDFLARE_STREAM_SUBDOMAIN || 'customer-ptaqr8qc63pdtfzg'
 
 /**
  * Build a Cloudflare Stream playback URL from a media ID.
