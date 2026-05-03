@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { PORTFOLIO_CATEGORIES, normalizePortfolioCategory } from '@/lib/portfolio-media'
+
 import Link from 'next/link'
 import MuxPlayer from '@mux/mux-player-react'
 import {
@@ -119,6 +119,28 @@ function platformIcon(platform: string, className = 'h-4 w-4') {
   }
   if (platform === 'website') return <ArrowUpRight className={className} />
   return <Video className={className} />
+}
+
+function socialButtonClass(platform: string) {
+  if (platform === 'tiktok') return 'border-[#111111] bg-[#111111] text-white hover:bg-black'
+  if (platform === 'instagram') return 'border-[#f1d4e6] bg-[#fff4fb] text-[#8a255f] hover:border-[#e7bdd9]'
+  if (platform === 'youtube') return 'border-[#ffd6d6] bg-[#fff5f5] text-[#b42323] hover:border-[#ffbcbc]'
+  return 'border-[#e1e1da] bg-white text-[#363535] hover:border-[#cfcfc7]'
+}
+
+function BrandLogoPill({ label }: { label: string }) {
+  const initials = label
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'UGC'
+
+  return (
+    <div className="flex h-20 items-center justify-center rounded-2xl border border-[#e8e8e4] bg-white px-5 text-center shadow-[0_12px_30px_rgba(0,0,0,0.035)]">
+      <span className="text-sm font-semibold tracking-[-0.02em] text-[#363535]">{initials}</span>
+    </div>
+  )
 }
 
 function ownerPrimaryAction(isOwner: boolean) {
@@ -361,33 +383,17 @@ export default function PortfolioPageClient({
   isOwner: boolean
 }) {
   const [activeVideo, setActiveVideo] = useState<PublicPortfolioVideo | null>(null)
-  const [activeCategory, setActiveCategory] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
-
   const contactEmail = useMemo(() => getContactEmail(portfolio), [portfolio])
   const socialCTAs = useMemo(
     () => portfolio.socials.filter((social) => ['tiktok', 'instagram', 'youtube'].includes(social.platform)).slice(0, 3),
     [portfolio.socials],
   )
 
-  const categoryCounts = useMemo(() => {
-    return PORTFOLIO_CATEGORIES.reduce<Record<string, number>>((acc, category) => {
-      if (category === 'All') {
-        acc[category] = portfolio.portfolioItems.length
-      } else {
-        acc[category] = portfolio.portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === category).length
-      }
-      return acc
-    }, {})
-  }, [portfolio.portfolioItems])
 
-  const filteredPortfolioItems = useMemo(() => {
-    if (activeCategory === 'All') return portfolio.portfolioItems
-    return portfolio.portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === activeCategory)
-  }, [activeCategory, portfolio.portfolioItems])
 
-  const primaryContactHref = contactEmail
-    ? `mailto:${contactEmail}`
-    : socialCTAs[0]?.url || `/signup?creator=${encodeURIComponent(portfolio.id)}&handle=${encodeURIComponent(portfolio.handle)}`
+  const primaryContactHref = 'https://ottougc.com'
+
+  const workedWithLogos = portfolio.nicheTags.slice(0, 4).map((tag) => tag.replace(/&/g, '').trim()).filter(Boolean)
 
   const responseTimeLabel = formatResponseTime(portfolio.stats.responseTimeHours)
   const availabilityText = portfolio.isAvailable ? 'Available now' : 'Busy right now'
@@ -438,8 +444,6 @@ export default function PortfolioPageClient({
                   <div className="mt-7 flex flex-wrap items-center gap-3">
                     <a
                       href={primaryContactHref}
-                      target={primaryContactHref.startsWith('http') ? '_blank' : undefined}
-                      rel={primaryContactHref.startsWith('http') ? 'noopener noreferrer' : undefined}
                       className="inline-flex items-center justify-center rounded-full bg-[#ccff00] px-6 py-3 text-base font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]"
                     >
                       Work with {creatorFirstName}
@@ -451,7 +455,7 @@ export default function PortfolioPageClient({
                         href={social.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full border border-[#e1e1da] bg-white px-4 py-3 text-sm font-semibold text-[#363535] transition hover:-translate-y-0.5 hover:border-[#cfcfc7]"
+                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${socialButtonClass(social.platform)}`}
                       >
                         {platformIcon(social.platform)}
                         {platformLabel(social.platform)}
@@ -491,39 +495,32 @@ export default function PortfolioPageClient({
             {portfolio.portfolioItems.length === 0 ? (
               <EmptyPortfolioState socials={socialCTAs} />
             ) : (
-              <>
-                <div className="mb-6 flex flex-wrap gap-2">
-                  {PORTFOLIO_CATEGORIES.map((category) => {
-                    const active = activeCategory === category
-                    const count = categoryCounts[category] || 0
-                    return (
-                      <button
-                        key={category}
-                        type="button"
-                        onClick={() => setActiveCategory(category)}
-                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${active ? 'border-[#ccff00] bg-[#ccff00] text-[#1c1c1e]' : 'border-[#e8e8e4] bg-white text-[#1c1c1e] hover:border-[#ccff00]'}`}
-                      >
-                        <span>{category}</span>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${active ? 'bg-[#1c1c1e] text-[#ccff00]' : 'bg-[#f0f0ec] text-[#6b6b6b]'}`}>{count}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {filteredPortfolioItems.length === 0 ? (
-                  <div className="rounded-[24px] border border-dashed border-[#dbdbd5] bg-[#fcfcfa] p-6 text-sm text-[#6b6b6b]">
-                    No videos in this category yet.
-                  </div>
-                ) : (
-                  <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                    {filteredPortfolioItems.map((item) => (
-                      <VideoCard key={item.id} item={item} onOpen={() => setActiveVideo(item)} />
-                    ))}
-                  </div>
-                )}
-              </>
+              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {portfolio.portfolioItems.map((item) => (
+                  <VideoCard key={item.id} item={item} onOpen={() => setActiveVideo(item)} />
+                ))}
+              </div>
             )}
           </section>
+
+          {workedWithLogos.length > 0 && (
+            <section className="mt-12">
+              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Worked with</p>
+                  <h2 className="mt-2 text-[clamp(1.8rem,4vw,2.8rem)] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.045em' }}>
+                    Brand experience
+                  </h2>
+                </div>
+                <p className="max-w-lg text-sm leading-6 text-[#6d6d66]">
+                  Creator-uploaded brand logos will live here. Recommended logo format: transparent PNG or SVG, square or horizontal, at least 600px wide.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {workedWithLogos.map((logo) => <BrandLogoPill key={logo} label={logo} />)}
+              </div>
+            </section>
+          )}
 
           <section className="mt-12 overflow-hidden rounded-[36px] bg-[#111111] px-6 py-8 text-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-10">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
@@ -540,8 +537,6 @@ export default function PortfolioPageClient({
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
                 <a
                   href={primaryContactHref}
-                  target={primaryContactHref.startsWith('http') ? '_blank' : undefined}
-                  rel={primaryContactHref.startsWith('http') ? 'noopener noreferrer' : undefined}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-[#ccff00] px-6 py-3.5 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]"
                 >
                   Work with {portfolio.fullName.split(' ')[0] || portfolio.fullName}

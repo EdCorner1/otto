@@ -129,3 +129,9 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-05-03
+### Public creator portfolio direction
+- Confirmed public creator URLs such as `ottougc.com/handle` should behave like standalone creator portfolio websites: public by default, no app login gate, and no edit controls on the public view.
+- Public profile primary CTA temporarily points back to `https://ottougc.com`; when brand onboarding is ready, change this to the correct brand signup/login flow.
+- Added a planned "Worked with" brand-logo section direction for creator profiles. Logo uploads should guide creators toward clean transparent PNG/SVG assets, ideally at least 600px wide. Future implementation should normalize/resize uploaded logo images automatically; Cloudflare Stream is for video, so logo processing should use image upload/resizing infrastructure rather than Stream.
