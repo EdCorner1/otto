@@ -26,6 +26,7 @@ import {
   isRealPortfolioVideoUrl,
   MAX_PORTFOLIO_VIDEOS,
   MIN_PORTFOLIO_VIDEOS,
+  MAX_VIDEO_SIZE_BYTES,
 } from '@/lib/portfolio-media'
 
 const TOTAL_STEPS = 5
@@ -34,7 +35,7 @@ const ONBOARDING_DRAFT_STORAGE_KEY = 'otto:onboarding:draft'
 const MAX_PORTFOLIO_ITEMS = MAX_PORTFOLIO_VIDEOS
 const MIN_PORTFOLIO_ITEMS = MIN_PORTFOLIO_VIDEOS
 const MAX_BIO_LENGTH = 280
-const MAX_VIDEO_SIZE = 500 * 1024 * 1024
+const MAX_VIDEO_SIZE = MAX_VIDEO_SIZE_BYTES
 
 type Role = 'creator' | 'brand'
 
@@ -566,7 +567,7 @@ export default function OnboardingPage() {
     }
 
     if (file.size > MAX_VIDEO_SIZE) {
-      setError('Videos must be 500MB or smaller.')
+      setError('Videos must be 100MB or smaller.')
       return
     }
 
@@ -578,28 +579,44 @@ export default function OnboardingPage() {
       const accessToken = sessionData.session?.access_token
       if (!accessToken) throw new Error('You need to sign in again before uploading.')
 
-      const formData = new FormData()
-      formData.append('creatorId', creatorId)
-      formData.append('file', file)
-
-      const response = await fetch('/api/portfolio/upload-video', {
+      const uploadUrlResponse = await fetch('/api/portfolio/create-direct-upload', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify({
+          creatorId,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+        }),
       })
 
-      const result = (await response.json()) as {
+      const result = (await uploadUrlResponse.json()) as {
         error?: string
+        uploadUrl?: string
         videoUrl?: string
         title?: string
         platform?: string
         thumbnailUrl?: string | null
       }
 
-      if (!response.ok || !result.videoUrl) {
-        throw new Error(result.error || 'Could not upload video.')
+      if (!uploadUrlResponse.ok || !result.uploadUrl || !result.videoUrl) {
+        throw new Error(result.error || 'Could not prepare video upload.')
+      }
+
+      const cloudflareUpload = await fetch(result.uploadUrl, {
+        method: 'POST',
+        body: (() => {
+          const directFormData = new FormData()
+          directFormData.append('file', file)
+          return directFormData
+        })(),
+      })
+
+      if (!cloudflareUpload.ok) {
+        throw new Error('Cloudflare could not accept the video upload. Try a shorter MP4 or MOV file.')
       }
 
       updateDraft({
@@ -978,7 +995,7 @@ export default function OnboardingPage() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-lg font-semibold text-[#1c1c1e]">Portfolio uploads</p>
-                        <p className="mt-1 text-sm text-[#6b6b6b]">MP4, MOV, WebM, or M4V · up to 500MB each · {draft.portfolioItems.length}/{MAX_PORTFOLIO_ITEMS} added · {viablePortfolioCount}/{MIN_PORTFOLIO_ITEMS} minimum ready</p>
+                        <p className="mt-1 text-sm text-[#6b6b6b]">MP4, MOV, WebM, or M4V · up to 100MB each · {draft.portfolioItems.length}/{MAX_PORTFOLIO_ITEMS} added · {viablePortfolioCount}/{MIN_PORTFOLIO_ITEMS} minimum ready</p>
                       </div>
                       <div>
                         <input

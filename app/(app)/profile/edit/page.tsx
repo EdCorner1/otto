@@ -16,6 +16,7 @@ import {
   isManagedPortfolioVideoUrl,
   isRealPortfolioVideoUrl,
   normalizePortfolioCategory,
+  MAX_VIDEO_SIZE_BYTES,
 } from '@/lib/portfolio-media'
 
 type Role = 'creator' | 'brand'
@@ -76,7 +77,7 @@ const FOLLOWER_RANGES = ['< 1K', '1K – 10K', '10K – 50K', '50K – 250K', '2
 const INCOME_RANGES = ['Not sharing', '$0 – $500/mo', '$500 – $2K/mo', '$2K – $5K/mo', '$5K+/mo']
 const STEPS = ['Basic Info', 'Stats', 'Portfolio', 'Review'] as const
 const MAX_PORTFOLIO_ITEMS = 6
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024
+const MAX_VIDEO_SIZE = MAX_VIDEO_SIZE_BYTES
 const MIN_PORTFOLIO_VIDEOS = 3
 const AVATAR_BUCKET = 'avatars'
 const PORTFOLIO_TAB_STORAGE_KEY = 'otto:profile:portfolio-active-tab'
@@ -618,7 +619,7 @@ export default function ProfileEditPage() {
     }
 
     if (file.size > MAX_VIDEO_SIZE) {
-      setStatusMessage('Videos must be 50MB or smaller.')
+      setStatusMessage('Videos must be 100MB or smaller.')
       return
     }
 
@@ -635,18 +636,37 @@ export default function ProfileEditPage() {
         return
       }
 
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('creatorId', creatorId)
+      const uploadUrlResponse = await fetch('/api/portfolio/create-direct-upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          creatorId,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+        }),
+      })
+
+      const preparedUpload = (await uploadUrlResponse.json()) as {
+        error?: string
+        uploadUrl?: string
+        videoUrl?: string
+        title?: string
+        platform?: string
+        thumbnailUrl?: string | null
+      }
+
+      if (!uploadUrlResponse.ok || !preparedUpload.uploadUrl || !preparedUpload.videoUrl) {
+        setStatusMessage(preparedUpload.error || 'Could not prepare video upload.')
+        return
+      }
 
       const xhr = new XMLHttpRequest()
-      const uploadResult = await new Promise<{
-        status: number
-        body: { error?: string; videoUrl?: string; title?: string; platform?: string; thumbnailUrl?: string | null }
-      }>((resolve, reject) => {
-        xhr.open('POST', '/api/portfolio/upload-video-cloudflare')
-        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
-        xhr.responseType = 'json'
+      const uploadResult = await new Promise<{ status: number }>((resolve, reject) => {
+        xhr.open('POST', preparedUpload.uploadUrl || '')
 
         xhr.upload.onprogress = (progressEvent) => {
           if (progressEvent.lengthComputable) {
@@ -655,18 +675,15 @@ export default function ProfileEditPage() {
         }
 
         xhr.onerror = () => reject(new Error('Upload failed'))
-        xhr.onload = () => {
-          resolve({
-            status: xhr.status,
-            body: (xhr.response as { error?: string; videoUrl?: string; title?: string; platform?: string; thumbnailUrl?: string | null }) || {},
-          })
-        }
+        xhr.onload = () => resolve({ status: xhr.status })
 
-        xhr.send(formData)
+        const directFormData = new FormData()
+        directFormData.append('file', file)
+        xhr.send(directFormData)
       })
 
-      if (uploadResult.status < 200 || uploadResult.status >= 300 || !uploadResult.body.videoUrl) {
-        setStatusMessage(uploadResult.body.error || 'Could not upload video.')
+      if (uploadResult.status < 200 || uploadResult.status >= 300) {
+        setStatusMessage('Cloudflare could not accept the video upload. Try a shorter MP4 or MOV file.')
         return
       }
 
@@ -674,11 +691,11 @@ export default function ProfileEditPage() {
         ...prev,
         {
           id: `new-upload-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-          url: uploadResult.body.videoUrl || '',
-          platform: uploadResult.body.platform || DIRECT_VIDEO_PLATFORM,
-          caption: uploadResult.body.title || 'Untitled video',
-          category: inferPortfolioCategory({ caption: uploadResult.body.title || 'Untitled video', platform: uploadResult.body.platform || DIRECT_VIDEO_PLATFORM }),
-          thumbnailUrl: uploadResult.body.thumbnailUrl || null,
+          url: preparedUpload.videoUrl || '',
+          platform: preparedUpload.platform || 'Cloudflare',
+          caption: preparedUpload.title || 'Untitled video',
+          category: inferPortfolioCategory({ caption: preparedUpload.title || 'Untitled video', platform: preparedUpload.platform || 'Cloudflare' }),
+          thumbnailUrl: preparedUpload.thumbnailUrl || null,
         },
       ].slice(0, MAX_PORTFOLIO_ITEMS))
       setVideoUploadProgress(100)
@@ -1091,7 +1108,7 @@ export default function ProfileEditPage() {
                   <input ref={videoInputRef} type="file" accept={VIDEO_ACCEPT} className="hidden" onChange={uploadPortfolioVideo} disabled={videoUploading || saving || portfolioItems.length >= MAX_PORTFOLIO_ITEMS} />
                   <button type="button" onClick={() => videoInputRef.current?.click()} disabled={videoUploading || saving || portfolioItems.length >= MAX_PORTFOLIO_ITEMS} className="btn-primary disabled:opacity-40 inline-flex items-center gap-2">
                     {videoUploading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    {videoUploading ? 'Uploading...' : 'Add video'}
+                    {videoUploading ? 'Uploading…' : 'Add video'}
                   </button>
                   <button onClick={addPortfolioItem} disabled={portfolioItems.length >= MAX_PORTFOLIO_ITEMS || saving} className="btn-ghost border border-[#e8e8e4] disabled:opacity-40">
                     Add YouTube link
@@ -1108,7 +1125,7 @@ export default function ProfileEditPage() {
                   <div className="h-2 overflow-hidden rounded-full bg-[#ecece7]">
                     <div className="h-full rounded-full bg-[#ccff00] transition-all" style={{ width: `${videoUploadProgress}%` }} />
                   </div>
-                  <p className="mt-2 text-xs text-[#6b6b6b]">MP4, MOV, or WebM up to 50MB.</p>
+                  <p className="mt-2 text-xs text-[#6b6b6b]">MP4, MOV, WebM, or M4V up to 100MB.</p>
                 </div>
               )}
 
