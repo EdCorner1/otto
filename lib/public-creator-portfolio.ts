@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { inferPortfolioCategory, isCloudflareStreamUrl, normalizePortfolioCategory, PORTFOLIO_CATEGORIES, type PortfolioCategory } from '@/lib/portfolio-media'
+import { inferPortfolioCategory, isCloudflareStreamUrl, type PortfolioCategory } from '@/lib/portfolio-media'
 import { extractCloudflareMediaId, buildCloudflareThumbnailUrl } from '@/lib/cloudflare-media'
 
 const supabase = createClient(

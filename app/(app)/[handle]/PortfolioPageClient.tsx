@@ -1,22 +1,15 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { PORTFOLIO_CATEGORIES, normalizePortfolioCategory } from '@/lib/portfolio-media'
 import Link from 'next/link'
 import MuxPlayer from '@mux/mux-player-react'
 import {
   ArrowLeft,
   ArrowUpRight,
-  Calendar,
-  Circle,
-  Clock3,
-  Mail,
-  MapPin,
   Pencil,
   Play,
-  UserRound,
   Video,
-  X,
 } from 'lucide-react'
 import type { PublicCreatorPortfolio, PublicPortfolioSocial, PublicPortfolioVideo } from '@/lib/public-creator-portfolio'
 
@@ -29,13 +22,6 @@ function formatDate(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Recent'
   return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(date)
-}
-
-function formatResponseTime(hours: number | null) {
-  if (!hours) return 'Replies in ~24 hours'
-  if (hours < 24) return `Replies in ~${hours} hour${hours === 1 ? '' : 's'}`
-  const days = Math.max(1, Math.round(hours / 24))
-  return `Replies in ~${days} day${days === 1 ? '' : 's'}`
 }
 
 function platformLabel(platform: string) {
@@ -56,36 +42,12 @@ function getFirstName(name: string) {
   return name.trim().split(/\s+/).filter(Boolean)[0] || name
 }
 
-function getContactEmail(portfolio: PublicCreatorPortfolio) {
-  const websiteSocial = portfolio.socials.find((social) => social.platform === 'website')
-  if (websiteSocial?.url.startsWith('mailto:')) {
-    return websiteSocial.url.replace(/^mailto:/i, '')
-  }
-  return null
-}
-
-function maskEmail(email: string) {
-  const [local, domain] = email.split('@')
-  if (!local || !domain) return email
-  if (local.length <= 2) return `${local[0] || '*'}***@${domain}`
-  return `${local.slice(0, 2)}***@${domain}`
-}
-
 function getVideoTitle(item: PublicPortfolioVideo) {
   return item.caption?.trim() || `${platformLabel(item.platform)} portfolio sample`
 }
 
-function getVideoSubtitle(item: PublicPortfolioVideo) {
-  return `${formatCompactNumber(item.viewCount)} views • ${formatDate(item.createdAt)}`
-}
-
 function getYouTubeEmbedUrl(youtubeId: string) {
   return `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`
-}
-
-function getVideoDisplayUrl(item: PublicPortfolioVideo) {
-  if (item.kind === 'youtube' && item.youtubeId) return `https://youtu.be/${item.youtubeId}`
-  return item.url
 }
 
 function platformIcon(platform: string, className = 'h-4 w-4') {
@@ -187,28 +149,6 @@ function ownerPrimaryAction(isOwner: boolean) {
       <Pencil className="h-4 w-4" />
       Edit Profile
     </Link>
-  )
-}
-
-function SocialLinksRow({ socials }: { socials: PublicPortfolioSocial[] }) {
-  if (!socials.length) return null
-
-  return (
-    <div className="flex flex-wrap gap-3">
-      {socials.map((social) => (
-        <a
-          key={`${social.platform}-${social.url}`}
-          href={social.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full border border-[#e7e7e0] bg-white px-4 py-2.5 text-sm font-medium text-[#363535] transition hover:-translate-y-0.5 hover:border-[#d0d0c8] hover:shadow-[0_14px_30px_rgba(0,0,0,0.05)]"
-        >
-          <span className="text-[#1c1c1e]">{platformIcon(social.platform)}</span>
-          <span>{platformLabel(social.platform)}</span>
-          <span className="text-[#8a8a84]">{social.label}</span>
-        </a>
-      ))}
-    </div>
   )
 }
 
@@ -381,7 +321,6 @@ export default function PortfolioPageClient({
   isOwner: boolean
 }) {
   const [activeCategory, setActiveCategory] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
-  const contactEmail = useMemo(() => getContactEmail(portfolio), [portfolio])
   const socialCTAs = useMemo(
     () => portfolio.socials.filter((social) => ['tiktok', 'instagram', 'youtube'].includes(social.platform)).slice(0, 3),
     [portfolio.socials],
@@ -419,8 +358,6 @@ export default function PortfolioPageClient({
       ? `Worked with ${workedWithLogos.length} brand${workedWithLogos.length === 1 ? '' : 's'}`
       : `${portfolio.stats.totalVideos} portfolio video${portfolio.stats.totalVideos === 1 ? '' : 's'}`
 
-  const responseTimeLabel = formatResponseTime(portfolio.stats.responseTimeHours)
-  const availabilityText = portfolio.isAvailable ? 'Available now' : 'Busy right now'
   const creatorFirstName = getFirstName(portfolio.fullName)
 
   return (
