@@ -16,11 +16,8 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import type { PublicCreatorPortfolio, PublicPortfolioSocial, PublicPortfolioVideo } from '@/lib/public-creator-portfolio'
-
-type CreatorIdentityResponse = {
-  id: string
-  handle: string
-}
+import { buildCloudflareThumbnailUrl, extractCloudflareMediaId } from '@/lib/cloudflare-media'
+import { inferPortfolioCategory, isCloudflareStreamUrl } from '@/lib/portfolio-media'
 
 function formatCompactNumber(value: number) {
   if (!value) return '0'
@@ -65,6 +62,129 @@ function getYouTubeEmbedUrl(youtubeId: string) {
 function getVideoDisplayUrl(item: PublicPortfolioVideo) {
   if (item.kind === 'youtube' && item.youtubeId) return `https://youtu.be/${item.youtubeId}`
   return item.url
+}
+
+function normalizeHandle(value: string) {
+  return value.trim().replace(/^@+/, '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '')
+}
+
+function readTag(tags: Array<{ tag: string | null }>, prefix: string) {
+  return tags.find((item) => String(item.tag || '').startsWith(prefix))?.tag?.slice(prefix.length).trim() || ''
+}
+
+function parseYoutubeId(url: string) {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return match?.[1] || ''
+}
+
+function buildPortfolioFromCreator(row: {
+  id: string
+  user_id: string
+  display_name: string | null
+  bio: string | null
+  avatar_url: string | null
+  availability: string | null
+  creator_tags?: Array<{ tag: string | null }> | null
+  creator_socials?: Array<{ platform: string | null; url: string | null }> | null
+  portfolio_items?: Array<{
+    id: string
+    url: string | null
+    platform: string | null
+    caption: string | null
+    thumbnail_url: string | null
+    created_at: string
+    sort_order: number | null
+  }> | null
+}): PublicCreatorPortfolio {
+  const tags = row.creator_tags || []
+  const handle = normalizeHandle(readTag(tags, 'handle:') || row.display_name || 'creator')
+  const mainPlatform = readTag(tags, 'main_platform:')
+  const followerRange = readTag(tags, 'followers:')
+  const nicheTags = tags
+    .map((item) => String(item.tag || ''))
+    .filter((tag) => tag.startsWith('niche:'))
+    .map((tag) => tag.slice('niche:'.length))
+    .filter(Boolean)
+
+  const socials = (row.creator_socials || [])
+    .map((social) => ({ platform: String(social.platform || '').toLowerCase(), url: String(social.url || '') }))
+    .filter((social) => social.platform && social.url)
+
+  const portfolioItems = [...(row.portfolio_items || [])]
+    .sort((a, b) => {
+      const aSort = a.sort_order ?? 9999
+      const bSort = b.sort_order ?? 9999
+      if (aSort !== bSort) return aSort - bSort
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+    .map((item) => {
+      const url = String(item.url || '').trim()
+      const youtubeId = parseYoutubeId(url)
+      const isYoutube = Boolean(youtubeId)
+      const isCloudflare = !isYoutube && isCloudflareStreamUrl(url)
+      const cloudflareId = isCloudflare ? extractCloudflareMediaId(url) || undefined : undefined
+      const isMux = !isYoutube && !isCloudflare && !!url && !/^https?:\/\//i.test(url)
+      const platform = String(item.platform || (isYoutube ? 'youtube' : isCloudflare ? 'cloudflare' : mainPlatform || 'portfolio')).toLowerCase()
+      const thumbnailUrl = item.thumbnail_url || (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : cloudflareId ? buildCloudflareThumbnailUrl(cloudflareId) : null)
+
+      return {
+        id: item.id,
+        video_url: url,
+        url,
+        title: item.caption?.trim() || 'Untitled',
+        platform,
+        category: inferPortfolioCategory({ caption: item.caption, platform }),
+        kind: isYoutube ? 'youtube' : isCloudflare ? 'cloudflare' : isMux ? 'mux' : 'direct',
+        youtubeId: youtubeId || undefined,
+        playbackId: isMux ? url : undefined,
+        cloudflareId,
+        cloudflareIframeUrl: cloudflareId ? `https://${process.env.NEXT_PUBLIC_CLOUDFLARE_STREAM_SUBDOMAIN || 'customer-hl0vh4j6c5g7f8bb'}.cloudflarestream.com/${cloudflareId}/iframe` : undefined,
+        thumbnailUrl,
+        caption: item.caption?.trim() || null,
+        viewCount: 0,
+        createdAt: item.created_at,
+      }
+    })
+
+  const totalViews = portfolioItems.reduce((sum, item) => sum + item.viewCount, 0)
+  const responseTimeHours = 24
+
+  return {
+    id: row.id,
+    handle,
+    fullName: row.display_name || handle,
+    bio: row.bio || null,
+    avatarUrl: row.avatar_url || null,
+    userId: row.user_id,
+    availability: row.availability || null,
+    isAvailable: row.availability === 'open' || row.availability === 'available',
+    location: null,
+    tiktok_url: socials.find((social) => social.platform === 'tiktok')?.url || null,
+    instagram_url: socials.find((social) => social.platform === 'instagram')?.url || null,
+    youtube_url: socials.find((social) => social.platform === 'youtube')?.url || null,
+    facebook_url: socials.find((social) => social.platform === 'facebook')?.url || null,
+    niche_tags: nicheTags,
+    nicheTags,
+    main_platform: mainPlatform || null,
+    mainPlatform: mainPlatform || undefined,
+    follower_count: followerRange || null,
+    socials,
+    social_links: socials,
+    portfolioItems,
+    videos: portfolioItems,
+    stats: {
+      campaignsCompleted: 0,
+      completedCampaigns: 0,
+      videosDelivered: portfolioItems.length,
+      totalVideos: portfolioItems.length,
+      avgViews: portfolioItems.length ? Math.round(totalViews / portfolioItems.length) : 0,
+      responseTime: formatResponseTime(responseTimeHours),
+      responseTimeHours,
+      onTimeRate: 100,
+      onTimePercentage: 100,
+    },
+    isOwner: true,
+  }
 }
 
 function platformIcon(platform: string, className = 'h-4 w-4') {
@@ -330,7 +450,7 @@ export default function InternalPortfolioPage() {
 
         const { data: creatorRow, error: creatorError } = await supabase
           .from('creators')
-          .select('id')
+          .select('id, user_id, display_name, bio, avatar_url, availability, creator_tags(tag), creator_socials(platform, url), portfolio_items(id, url, platform, caption, thumbnail_url, created_at, sort_order)')
           .eq('user_id', user.id)
           .maybeSingle()
 
@@ -338,22 +458,8 @@ export default function InternalPortfolioPage() {
           throw new Error('No creator profile found yet. Complete onboarding first.')
         }
 
-        const identityResponse = await fetch(`/api/creators/${creatorRow.id}`, { cache: 'no-store' })
-        const identityPayload = (await identityResponse.json()) as (CreatorIdentityResponse & { error?: string })
-
-        if (!identityResponse.ok || !identityPayload.handle) {
-          throw new Error(identityPayload.error || 'Could not load your portfolio.')
-        }
-
-        const portfolioResponse = await fetch(`/api/creators/handle/${encodeURIComponent(identityPayload.handle)}`, { cache: 'no-store' })
-        const portfolioPayload = (await portfolioResponse.json()) as (PublicCreatorPortfolio & { error?: string })
-
-        if (!portfolioResponse.ok) {
-          throw new Error(portfolioPayload.error || 'Could not load your portfolio.')
-        }
-
         if (!cancelled) {
-          setPortfolio(portfolioPayload)
+          setPortfolio(buildPortfolioFromCreator(creatorRow))
           setError('')
         }
       } catch (err) {
