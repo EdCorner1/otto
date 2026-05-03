@@ -149,6 +149,18 @@ function ReviewCard({ review, featured = false }: { review: NonNullable<PublicCr
   )
 }
 
+function FeaturedWorkCard({ item }: { item: NonNullable<PublicCreatorPortfolio['featuredWork']>[number] }) {
+  return (
+    <div className="rounded-[11px] border border-[#e2e2dc] bg-white p-5 shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(0,0,0,0.09)]">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">{item.label}</p>
+      <h3 className="mt-4 text-2xl leading-[0.98] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
+        {item.title}
+      </h3>
+      {item.note && <p className="mt-4 text-sm leading-6 text-[#686862]">{item.note}</p>}
+    </div>
+  )
+}
+
 function ownerPrimaryAction(isOwner: boolean) {
   if (!isOwner) return null
 
@@ -213,10 +225,10 @@ function IntroVideoCard({ item, creatorFirstName, onOpen }: { item: PublicPortfo
     <button
       type="button"
       onClick={onOpen}
-      className="group relative w-full overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#151515] text-left shadow-[0_14px_34px_rgba(0,0,0,0.14)] transition hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(0,0,0,0.18)] lg:max-w-[360px]"
+      className="group relative w-full overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#151515] text-left shadow-[0_14px_34px_rgba(0,0,0,0.14)] transition hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(0,0,0,0.18)] lg:max-w-[300px]"
       aria-label={`Play ${creatorFirstName}'s intro video`}
     >
-      <div className="aspect-[4/5] bg-[#111111]">
+      <div className="aspect-[9/16] bg-[#111111]">
         {item.thumbnailUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.thumbnailUrl} alt={`${creatorFirstName} intro video`} className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100" />
@@ -458,6 +470,7 @@ export default function PortfolioPageClient({
 
   const workedWithLogos = (portfolio.brandLogos || []).slice(0, 6)
   const reviews = (portfolio.reviews || []).slice(0, 8)
+  const featuredWork = (portfolio.featuredWork || []).slice(0, 4)
 
   const responseTimeLabel = formatResponseTime(portfolio.stats.responseTimeHours)
   const availabilityText = portfolio.isAvailable ? 'Available now' : 'Busy right now'
@@ -616,6 +629,20 @@ export default function PortfolioPageClient({
                     <ReviewCard key={`${review.reviewerName}-${index}`} review={review} featured={index % reviews.length === 0} />
                   ))}
                 </div>
+              </div>
+            </section>
+          )}
+
+          {featuredWork.length > 0 && (
+            <section className="mt-16">
+              <div className="mb-8 max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Featured work</p>
+                <h2 className="mt-3 text-[clamp(2.5rem,6vw,4.8rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
+                  Videos I’m proud of
+                </h2>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                {featuredWork.map((item) => <FeaturedWorkCard key={`${item.label}-${item.title}`} item={item} />)}
               </div>
             </section>
           )}

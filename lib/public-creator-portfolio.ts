@@ -19,6 +19,12 @@ export interface PublicPortfolioReview {
   reviewerTitle: string | null
 }
 
+export interface PublicFeaturedWork {
+  label: string
+  title: string
+  note: string | null
+}
+
 export interface PublicPortfolioVideo {
   id: string
   video_url: string
@@ -61,6 +67,7 @@ export interface PublicCreatorPortfolio {
   brandLogos?: string[]
   introVideo?: PublicPortfolioVideo | null
   reviews?: PublicPortfolioReview[]
+  featuredWork?: PublicFeaturedWork[]
   portfolioItems: PublicPortfolioVideo[]
   videos: PublicPortfolioVideo[]
   stats: {
@@ -133,6 +140,13 @@ function parseCreatorMeta(tags: CreatorTagRow[]) {
         return { quote: parts[0] || '', reviewerName: parts[1] || 'Brand partner', reviewerTitle: parts[2] || null }
       })
       .filter((review) => review.quote),
+    featuredWork: tags
+      .filter((t) => t.tag.startsWith('featured:'))
+      .map((t) => {
+        const parts = t.tag.replace('featured:', '').split('|').map((part) => part.trim())
+        return { label: parts[0] || 'Featured', title: parts[1] || '', note: parts[2] || null }
+      })
+      .filter((item) => item.title),
   }
 }
 
@@ -305,6 +319,7 @@ export async function getPublicCreatorPortfolioByHandle(
     brandLogos,
     introVideo,
     reviews: meta.reviews,
+    featuredWork: meta.featuredWork,
     portfolioItems: videos,
     videos,
     stats: {
