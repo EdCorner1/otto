@@ -230,7 +230,7 @@ function IntroVideoCard({ item, creatorFirstName, onOpen }: { item: PublicPortfo
     <button
       type="button"
       onClick={onOpen}
-      className="group relative w-full overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#151515] text-left shadow-[0_14px_34px_rgba(0,0,0,0.14)] transition hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(0,0,0,0.18)] lg:max-w-[300px]"
+      className="group relative w-full overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#151515] text-left shadow-[0_14px_34px_rgba(0,0,0,0.14)] transition hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(0,0,0,0.18)] lg:max-w-[240px]"
       aria-label={`Play ${creatorFirstName}'s intro video`}
     >
       <div className="aspect-[9/16] bg-[#111111]">
@@ -511,7 +511,7 @@ export default function PortfolioPageClient({
                 <span>{topProofLabel}</span>
               </div>
 
-              <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-center">
                 <div className="max-w-4xl">
                   <div className="mb-5 flex items-center gap-4">
                     <p className="text-xl font-semibold text-[#363535]">Hi, I’m {creatorFirstName}</p>
