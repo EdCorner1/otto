@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import PortfolioPageClient from './PortfolioPageClient'
 import { getPublicCreatorPortfolioByHandle } from '@/lib/public-creator-portfolio'
 
@@ -40,28 +38,7 @@ function buildCanonicalUrl(handle: string) {
   return `${base.replace(/\/$/, '')}/${handle}`
 }
 
-async function getCurrentUserId() {
-  const cookieStore = await cookies()
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll() {},
-      },
-    },
-  )
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  return user?.id || null
-}
 
 export async function generateMetadata({ params }: RouteContext): Promise<Metadata> {
   const { handle } = await params
@@ -117,8 +94,5 @@ export default async function PublicCreatorPortfolioPage({ params }: RouteContex
     notFound()
   }
 
-  const currentUserId = await getCurrentUserId()
-  const isOwner = currentUserId === portfolio.userId
-
-  return <PortfolioPageClient portfolio={portfolio} isOwner={isOwner} />
+  return <PortfolioPageClient portfolio={portfolio} isOwner={false} />
 }
