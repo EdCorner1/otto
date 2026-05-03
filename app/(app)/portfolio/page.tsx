@@ -223,6 +223,14 @@ function VideoLightbox({ item, onClose }: { item: PublicPortfolioVideo; onClose:
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
+              ) : item.kind === 'cloudflare' && item.cloudflareIframeUrl ? (
+                <iframe
+                  title={getVideoTitle(item)}
+                  src={item.cloudflareIframeUrl}
+                  className="h-full w-full"
+                  allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                />
               ) : item.kind === 'mux' && item.playbackId ? (
                 <MuxPlayer streamType="on-demand" playbackId={item.playbackId} autoPlay className="h-full w-full object-contain" />
               ) : (

@@ -672,7 +672,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-[#fafaf9] text-[#1c1c1e]">
       <Header />
       <main className="mx-auto w-full max-w-6xl px-5 pb-12 pt-28 sm:px-8 onboarding-compact">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+        <div className={`grid gap-6 lg:items-start ${role === 'creator' && step === 5 ? 'lg:grid-cols-1' : 'lg:grid-cols-[minmax(0,1fr)_380px]'}`}>
           <section>
             <ProgressBar step={step} />
 
@@ -1108,83 +1108,60 @@ export default function OnboardingPage() {
               )}
 
               {step === 5 && (
-                <div className="space-y-8">
+                <div className="space-y-6">
                   <div>
-                    <p className="section-label mb-2">Preview</p>
+                    <p className="section-label mb-2">Review</p>
                     <h2 className="text-[clamp(30px,5vw,46px)] leading-none text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-                      {role === 'creator' ? 'This is how brands will see you.' : 'You’re ready to roll.'}
+                      {role === 'creator' ? 'Review your creator page.' : 'You’re ready to roll.'}
                     </h2>
-                    <p className="mt-4 text-sm text-[#6b6b6b]">
+                    <p className="mt-4 max-w-2xl text-sm text-[#6b6b6b]">
                       {role === 'creator'
-                        ? 'Your public profile now looks real. This is the moment it clicks for creators and brands alike.'
+                        ? 'Check the basics before you finish. Brands will use this page to review your work.'
                         : 'Your setup is locked in. Finish onboarding and drop into the workflow you picked.'}
                     </p>
                   </div>
 
                   {role === 'creator' && creatorId ? (
                     <div className="space-y-5">
-                      <div className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-sm">
-                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Ready to go live</p>
-                            <h3 className="mt-2 text-[clamp(24px,4vw,34px)] leading-none text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-                              Your public profile now feels real.
-                            </h3>
-                            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5d5d58]">
-                              Brands will judge this page fast. Otto is now showing your name, niche, platform, and portfolio together in one clean public profile.
-                            </p>
-                          </div>
-
-                          <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] px-4 py-3 lg:min-w-[260px]">
-                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a8a86]">Live URL</p>
-                            <p className="mt-2 break-all text-base font-semibold text-[#1c1c1e]">ottougc.com/{creatorHandle}</p>
-                            <a href={creatorProfileUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-sm font-medium text-[#1c1c1e] underline decoration-[#ccff00] underline-offset-4">
-                              Open profile
-                            </a>
+                      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                        <div className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-sm">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Ready to publish</p>
+                          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                            <div className="rounded-2xl bg-[#fbfbf8] p-4">
+                              <p className="text-2xl font-semibold text-[#1c1c1e]">{viablePortfolioCount}</p>
+                              <p className="mt-1 text-sm text-[#6b6b6b]">portfolio video{viablePortfolioCount === 1 ? '' : 's'}</p>
+                            </div>
+                            <div className="rounded-2xl bg-[#fbfbf8] p-4">
+                              <p className="text-2xl font-semibold text-[#1c1c1e]">{draft.nicheTags.length}</p>
+                              <p className="mt-1 text-sm text-[#6b6b6b]">niche tag{draft.nicheTags.length === 1 ? '' : 's'}</p>
+                            </div>
+                            <div className="rounded-2xl bg-[#fbfbf8] p-4">
+                              <p className="text-base font-semibold text-[#1c1c1e]">{draft.mainPlatform || 'Platform set'}</p>
+                              <p className="mt-1 text-sm text-[#6b6b6b]">main channel</p>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="mt-5 grid gap-3 md:grid-cols-3">
-                          <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] p-4">
-                            <div className="flex items-center gap-2 text-[#1c1c1e]">
-                              <Video className="h-4 w-4" />
-                              <p className="text-sm font-semibold">Portfolio quality bar</p>
-                            </div>
-                            <p className="mt-2 text-2xl font-semibold text-[#1c1c1e]">{viablePortfolioCount}</p>
-                            <p className="mt-1 text-sm text-[#6b6b6b]">valid video{viablePortfolioCount === 1 ? '' : 's'} ready for review</p>
-                          </div>
-
-                          <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] p-4">
-                            <div className="flex items-center gap-2 text-[#1c1c1e]">
-                              <Users className="h-4 w-4" />
-                              <p className="text-sm font-semibold">Niche positioning</p>
-                            </div>
-                            <p className="mt-2 text-2xl font-semibold text-[#1c1c1e]">{draft.nicheTags.length}</p>
-                            <p className="mt-1 text-sm text-[#6b6b6b]">niche tag{draft.nicheTags.length === 1 ? '' : 's'} helping brands place you quickly</p>
-                          </div>
-
-                          <div className="rounded-2xl border border-[#e8e8e4] bg-[#fbfbf8] p-4">
-                            <div className="flex items-center gap-2 text-[#1c1c1e]">
-                              <Check className="h-4 w-4" />
-                              <p className="text-sm font-semibold">What brands see first</p>
-                            </div>
-                            <p className="mt-2 text-base font-semibold text-[#1c1c1e]">{draft.mainPlatform || 'Creator profile'}</p>
-                            <p className="mt-1 text-sm text-[#6b6b6b]">Clear platform signal, public profile link, and proof of work in one place</p>
-                          </div>
+                        <div className="rounded-[28px] border border-[#e8e8e4] bg-[#1c1c1e] p-5 text-white shadow-sm">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">Public URL</p>
+                          <p className="mt-3 break-all text-xl leading-tight" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>ottougc.com/{creatorHandle}</p>
+                          <a href={creatorProfileUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#ccff00] px-4 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
+                            Open profile
+                          </a>
                         </div>
                       </div>
 
                       <div className="overflow-hidden rounded-[28px] border border-[#e8e8e4] bg-[#f5f5f2] shadow-sm">
-                        <div className="flex items-center justify-between border-b border-[#e8e8e4] bg-white px-5 py-3">
+                        <div className="flex flex-col gap-3 border-b border-[#e8e8e4] bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                           <div>
-                            <p className="text-sm font-semibold text-[#1c1c1e]">Public profile preview</p>
-                            <p className="text-xs text-[#8a8a86]">Live preview · {creatorProfileUrl}</p>
+                            <p className="text-sm font-semibold text-[#1c1c1e]">Profile preview</p>
+                            <p className="text-xs text-[#8a8a86]">{creatorProfileUrl}</p>
                           </div>
-                          <a href={creatorProfileUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-[#1c1c1e] underline decoration-[#ccff00] underline-offset-4">
-                            Open profile
+                          <a href={creatorProfileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full border border-[#d9d9d2] px-4 py-2 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#f7f7f5]">
+                            Open in new tab
                           </a>
                         </div>
-                        <iframe title="Creator profile preview" src={creatorProfileUrl} className="h-[780px] w-full bg-white" />
+                        <iframe title="Creator profile preview" src={creatorProfileUrl} className="h-[680px] w-full bg-white" />
                       </div>
                     </div>
                   ) : role === 'creator' ? (
@@ -1265,6 +1242,7 @@ export default function OnboardingPage() {
             </div>
           </section>
 
+          {!(role === 'creator' && step === 5) && (
           <aside className="space-y-4 lg:sticky lg:top-28">
             <div className="rounded-[28px] border border-[#e8e8e4] bg-white p-6 shadow-sm">
               <p className="section-label mb-2">What happens next</p>
@@ -1312,6 +1290,7 @@ export default function OnboardingPage() {
               </div>
             )}
           </aside>
+          )}
         </div>
       </main>
     </div>

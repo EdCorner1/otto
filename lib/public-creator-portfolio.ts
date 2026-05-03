@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
-import { inferPortfolioCategory, normalizePortfolioCategory, PORTFOLIO_CATEGORIES, type PortfolioCategory } from '@/lib/portfolio-media'
+import { inferPortfolioCategory, isCloudflareStreamUrl, normalizePortfolioCategory, PORTFOLIO_CATEGORIES, type PortfolioCategory } from '@/lib/portfolio-media'
+import { extractCloudflareMediaId, buildCloudflareThumbnailUrl } from '@/lib/cloudflare-media'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,6 +23,8 @@ export interface PublicPortfolioVideo {
   kind: string
   youtubeId?: string
   playbackId?: string
+  cloudflareId?: string
+  cloudflareIframeUrl?: string
   thumbnailUrl: string | null
   caption: string | null
   viewCount: number
@@ -136,6 +139,10 @@ function inferThumbnail(url: string, platform: string, explicitThumbnail: string
     const youtubeId = getYoutubeId(url)
     if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`
   }
+  if (platform === 'cloudflare' || isCloudflareStreamUrl(url)) {
+    const mediaId = extractCloudflareMediaId(url)
+    if (mediaId) return buildCloudflareThumbnailUrl(mediaId)
+  }
   return null
 }
 
@@ -202,7 +209,9 @@ export async function getPublicCreatorPortfolioByHandle(
     const platform = normalizePlatform(item.platform) || inferPlatformFromUrl(url) || meta.mainPlatform || 'portfolio'
     const youtubeId = getYoutubeId(url)
     const isYoutube = Boolean(youtubeId)
-    const isMux = !isYoutube && !!url && !/^https?:\/\//i.test(url)
+    const isCloudflare = !isYoutube && isCloudflareStreamUrl(url)
+    const cloudflareId = isCloudflare ? extractCloudflareMediaId(url) || undefined : undefined
+    const isMux = !isYoutube && !isCloudflare && !!url && !/^https?:\/\//i.test(url)
 
     return {
       id: item.id,
@@ -211,9 +220,11 @@ export async function getPublicCreatorPortfolioByHandle(
       title: item.title?.trim() || item.caption?.trim() || 'Untitled',
       platform,
       category: inferPortfolioCategory({ caption: item.caption, platform, category: item.category }),
-      kind: isYoutube ? 'youtube' : isMux ? 'mux' : 'direct',
+      kind: isYoutube ? 'youtube' : isCloudflare ? 'cloudflare' : isMux ? 'mux' : 'direct',
       youtubeId: youtubeId || undefined,
       playbackId: isMux ? url : undefined,
+      cloudflareId,
+      cloudflareIframeUrl: cloudflareId ? `https://${process.env.CLOUDFLARE_STREAM_SUBDOMAIN || 'customer-hl0vh4j6c5g7f8bb'}.cloudflarestream.com/${cloudflareId}/iframe` : undefined,
       thumbnailUrl: inferThumbnail(url, platform, item.thumbnail_url),
       caption: item.caption?.trim() || item.title?.trim() || null,
       viewCount: typeof item.views === 'number' ? item.views : 0,

@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Camera, Clock3, ExternalLink, Globe, Link2, Music4, Play, Search, Sparkles, Star } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { buildYouTubeEmbedUrl, detectPortfolioPlatform, inferPortfolioThumbnail, isDirectVideoUrl, isRealPortfolioVideoUrl } from '@/lib/portfolio-media'
+import { buildYouTubeEmbedUrl, detectPortfolioPlatform, inferPortfolioThumbnail, isCloudflareStreamUrl, isDirectVideoUrl, isRealPortfolioVideoUrl } from '@/lib/portfolio-media'
+import { extractCloudflareMediaId } from '@/lib/cloudflare-media'
 
 type CreatorProfileResponse = {
   id: string
@@ -305,7 +306,9 @@ export default function CreatorPublicProfilePage() {
                 const platform = detectPortfolioPlatform(item.url, item.platform)
                 const thumbnail = deriveThumbnail(item)
                 const youtubeEmbedUrl = buildYouTubeEmbedUrl(item.url)
-                const directVideo = isDirectVideoUrl(item.url)
+                const cloudflareId = isCloudflareStreamUrl(item.url) ? extractCloudflareMediaId(item.url) : null
+                const cloudflareIframeUrl = cloudflareId ? `https://${process.env.NEXT_PUBLIC_CLOUDFLARE_STREAM_SUBDOMAIN || 'customer-hl0vh4j6c5g7f8bb'}.cloudflarestream.com/${cloudflareId}/iframe` : ''
+                const directVideo = isDirectVideoUrl(item.url) && !cloudflareIframeUrl
 
                 return (
                   <div
@@ -313,7 +316,15 @@ export default function CreatorPublicProfilePage() {
                     className="overflow-hidden rounded-2xl border border-[#e8e8e4] bg-white shadow-sm transition-transform hover:-translate-y-1"
                   >
                     <div className="relative aspect-[9/16] bg-[#1c1c1e]">
-                      {directVideo ? (
+                      {cloudflareIframeUrl ? (
+                        <iframe
+                          src={cloudflareIframeUrl}
+                          title={item.caption || 'Cloudflare portfolio sample'}
+                          className="h-full w-full"
+                          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : directVideo ? (
                         <video src={item.url} controls className="h-full w-full object-cover" />
                       ) : youtubeEmbedUrl ? (
                         <iframe
