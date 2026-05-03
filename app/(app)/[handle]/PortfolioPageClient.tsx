@@ -467,8 +467,10 @@ export default function PortfolioPageClient({
   }, [portfolio.portfolioItems])
 
   const filteredPortfolioItems = useMemo(() => {
-    if (activeCategory === 'All') return portfolio.portfolioItems
-    return portfolio.portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === activeCategory)
+    const items = activeCategory === 'All'
+      ? portfolio.portfolioItems
+      : portfolio.portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === activeCategory)
+    return items.slice(0, 4)
   }, [activeCategory, portfolio.portfolioItems])
 
   const primaryContactHref = 'https://ottougc.com'
@@ -614,7 +616,7 @@ export default function PortfolioPageClient({
                     No videos in this category yet.
                   </div>
                 ) : (
-                  <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     {filteredPortfolioItems.map((item) => (
                       <VideoCard key={item.id} item={item} onOpen={() => setActiveVideo(item)} />
                     ))}
