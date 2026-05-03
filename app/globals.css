@@ -346,3 +346,24 @@ h2, .headline-lg {
   border-top: 2px solid #f0f0ec;
   margin: 2.5em 0;
 }
+
+
+@keyframes brand-logo-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.333%); }
+}
+
+.brand-logo-track {
+  animation: brand-logo-marquee 24s linear infinite;
+}
+
+.brand-logo-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-track {
+    animation: none;
+    transform: none;
+  }
+}

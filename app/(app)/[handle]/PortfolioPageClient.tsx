@@ -128,17 +128,10 @@ function socialButtonClass(platform: string) {
   return 'border-[#e1e1da] bg-white text-[#363535] hover:border-[#cfcfc7]'
 }
 
-function BrandLogoPill({ label }: { label: string }) {
-  const initials = label
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || '')
-    .join('') || 'UGC'
-
+function BrandLogoMark({ label }: { label: string }) {
   return (
-    <div className="flex h-20 items-center justify-center rounded-2xl border border-[#e8e8e4] bg-white px-5 text-center shadow-[0_12px_30px_rgba(0,0,0,0.035)]">
-      <span className="text-sm font-semibold tracking-[-0.02em] text-[#363535]">{initials}</span>
+    <div className="mx-8 flex shrink-0 items-center justify-center whitespace-nowrap text-[clamp(1.6rem,3vw,2.6rem)] font-semibold tracking-[-0.055em] text-[#22221f]/55 transition hover:text-[#22221f] sm:mx-10">
+      {label}
     </div>
   )
 }
@@ -487,20 +480,16 @@ export default function PortfolioPageClient({
           </section>
 
           {workedWithLogos.length > 0 && (
-            <section className="mt-12">
-              <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Worked with</p>
-                  <h2 className="mt-2 text-[clamp(1.8rem,4vw,2.8rem)] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.045em' }}>
-                    Brand experience
-                  </h2>
+            <section className="mt-12 overflow-hidden border-y border-[#e7e7df] py-7">
+              <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Brands I’ve worked with</p>
+              <div className="relative -mx-5 sm:-mx-8 lg:-mx-12">
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#f7f7f2] to-transparent" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#f7f7f2] to-transparent" />
+                <div className="brand-logo-track flex w-max items-center">
+                  {[...workedWithLogos, ...workedWithLogos, ...workedWithLogos].map((logo, index) => (
+                    <BrandLogoMark key={`${logo}-${index}`} label={logo} />
+                  ))}
                 </div>
-                <p className="max-w-lg text-sm leading-6 text-[#6d6d66]">
-                  Creator-uploaded brand logos will live here. Recommended logo format: transparent PNG or SVG, square or horizontal, at least 600px wide.
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {workedWithLogos.map((logo) => <BrandLogoPill key={logo} label={logo} />)}
               </div>
             </section>
           )}
