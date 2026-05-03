@@ -16,7 +16,10 @@ export async function GET(request: NextRequest) {
   const type = requestUrl.searchParams.get('type') as OtpType | null
   const next = requestUrl.searchParams.get('next') || '/dashboard'
   const safeNext = next.startsWith('/') ? next : '/dashboard'
-  const canonicalOrigin = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+  const canonicalOrigin = configuredOrigin.includes('edcorner.co.uk')
+    ? 'https://ottougc.com'
+    : configuredOrigin
 
   let response = NextResponse.redirect(new URL(safeNext, canonicalOrigin))
 
