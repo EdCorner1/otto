@@ -360,7 +360,7 @@ export default function LiveCampaignDetailPage() {
       const token = sessionData.session?.access_token
       if (!token) throw new Error('Please log in again.')
 
-      const response = await fetch(`/api/ed/live-campaigns/${params.id}`, {
+      const response = await fetch(`/api/live-campaigns/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',
       })
@@ -396,7 +396,7 @@ export default function LiveCampaignDetailPage() {
     const token = sessionData.session?.access_token
     if (!token) throw new Error('Please log in again.')
 
-    const response = await fetch(`/api/ed/live-campaigns/${params.id}`, {
+    const response = await fetch(`/api/live-campaigns/${params.id}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,

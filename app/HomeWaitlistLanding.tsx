@@ -88,9 +88,9 @@ const ROADMAP_CARDS: RoadmapCard[] = [
   {
     id: 'ai-coach',
     status: 'Under consideration',
-    tag: 'AI tools',
+    tag: 'Content tools',
     title: 'Help creators improve content and engagement',
-    body: 'A light-touch coach could help with hooks, positioning, and growth without making everything feel generic.',
+    body: 'A light-touch coach could help with hooks, positioning, and growth while keeping the creator’s voice intact.',
     upvotes: 33,
     downvotes: 6,
   },

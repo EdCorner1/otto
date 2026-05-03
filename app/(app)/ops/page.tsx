@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
-const OWNER_EMAILS = ['edcorner1@gmail.com']
+const OWNER_EMAILS = (process.env.NEXT_PUBLIC_OTTO_OWNER_EMAILS || '').split(',').map((email) => email.trim().toLowerCase()).filter(Boolean)
 
 const headlineStyle: React.CSSProperties = {
   fontFamily: 'var(--font-bricolage)',

@@ -97,10 +97,10 @@ export type LiveCampaignStats = {
   status: LiveCampaignStatus
 }
 
-export const ED_LIVE_CAMPAIGN_SEEDS: LiveCampaignSeed[] = [
+export const LIVE_CAMPAIGN_SEEDS: LiveCampaignSeed[] = [
   {
     clientName: 'Detris',
-    seedKey: 'ed-live-campaign-detris',
+    seedKey: 'live-campaign-detris',
     startDate: '2026-04-06',
     contractDays: 30,
     monthlyRate: 1200,
@@ -111,7 +111,7 @@ export const ED_LIVE_CAMPAIGN_SEEDS: LiveCampaignSeed[] = [
   },
   {
     clientName: 'Clawbite',
-    seedKey: 'ed-live-campaign-clawbite',
+    seedKey: 'live-campaign-clawbite',
     startDate: '2026-04-06',
     contractDays: 30,
     monthlyRate: 1200,
@@ -461,7 +461,7 @@ export function makeBrandEmail(seed: LiveCampaignSeed) {
 
 export function buildJobDescription(seed: LiveCampaignSeed) {
   return [
-    `${seed.clientName} live content retainer for Ed.`,
+    `${seed.clientName} live content retainer for the creator.`,
     `Start date: ${seed.startDate}.`,
     `Contract: ${seed.contractDays} days.`,
     `Platforms: ${seed.platforms.join(', ')}.`,

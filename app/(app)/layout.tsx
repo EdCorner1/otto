@@ -22,7 +22,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
-const OWNER_EMAILS = ['edcorner1@gmail.com']
+const OWNER_EMAILS = (process.env.NEXT_PUBLIC_OTTO_OWNER_EMAILS || '').split(',').map((email) => email.trim().toLowerCase()).filter(Boolean)
 const SIDEBAR_ORDER_KEY = 'otto:sidebar:order'
 const SIDEBAR_COLLAPSED_KEY = 'otto:sidebar:collapsed'
 const DEFAULT_ORDER = ['dashboard', 'messages', 'notifications', 'portfolio', 'live-campaigns', 'payments', 'affiliates']
@@ -466,7 +466,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   ], [user?.email])
 
   const isOnboardingRoute = pathname === '/onboarding'
-  const isPublicPortfolioRoute = !!pathname && /^\/[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(pathname) && !['/dashboard', '/messages', '/notifications', '/profile', '/portfolio', '/jobs', '/live-campaigns', '/search', '/settings', '/explore', '/creators', '/brands', '/blog', '/resources', '/platform', '/login', '/signup', '/onboarding', '/ops', '/ed', '/auth', '/api'].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  const isPublicPortfolioRoute = !!pathname && /^\/[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(pathname) && !['/dashboard', '/messages', '/notifications', '/profile', '/portfolio', '/jobs', '/live-campaigns', '/search', '/settings', '/explore', '/creators', '/brands', '/blog', '/resources', '/platform', '/login', '/signup', '/onboarding', '/ops', '/ops', '/auth', '/api'].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 
   if (isPublicPortfolioRoute) {
     return <div className="min-h-screen bg-[#fafaf9]">{children}</div>

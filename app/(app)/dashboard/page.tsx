@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { Banknote, Bookmark, BriefcaseBusiness, ClipboardList, Copy, RefreshCw, Send, Sparkles } from 'lucide-react'
+import { Banknote, Bookmark, BriefcaseBusiness, ClipboardList, Copy, ExternalLink, RefreshCw, Send, Sparkles } from 'lucide-react'
 import { FALLBACK_HOOK_ROULETTE_ITEMS } from '@/lib/hook-roulette'
 
 type Role = 'creator' | 'brand'
@@ -531,7 +531,7 @@ export default function DashboardPage() {
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={rollHookIdea} disabled={rollingHook} className="btn-primary inline-flex items-center gap-2">
                   <RefreshCw className={`h-4 w-4 ${rollingHook ? 'animate-spin' : ''}`} />
-                  {rollingHook ? 'Loading...' : 'New hook'}
+                  {rollingHook ? 'Loading…' : 'New hook'}
                 </button>
                 <button type="button" onClick={saveCurrentHookToNotes} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4]">
                   <Bookmark className="h-4 w-4" />
@@ -599,7 +599,10 @@ export default function DashboardPage() {
                 <p className="section-label mb-1">Active deals</p>
                 <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.activeDeals.count}</p>
               </div>
-              <Link href="/deals" className="text-xs text-[#6b6b6b] hover:text-[#1c1c1e]">View all →</Link>
+              <Link href="/deals" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
+                View all
+                <ExternalLink className="h-3 w-3" />
+              </Link>
             </div>
             <div className="space-y-3">
               {creator.activeDeals.items.length === 0 ? (
@@ -645,7 +648,10 @@ export default function DashboardPage() {
                 <p className="section-label mb-1">Applications sent</p>
                 <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.applications.count}</p>
               </div>
-              <Link href="/jobs" className="text-xs text-[#6b6b6b] hover:text-[#1c1c1e]">Find work →</Link>
+              <Link href="/jobs" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
+                Find work
+                <ExternalLink className="h-3 w-3" />
+              </Link>
             </div>
             <div className="space-y-3">
               {creator.applications.items.length === 0 ? (
@@ -689,7 +695,10 @@ export default function DashboardPage() {
                 <p className="section-label mb-1">New opportunities</p>
                 <p className="text-sm text-[#6b6b6b]">Recent open jobs matching your niche and platforms</p>
               </div>
-              <Link href="/jobs" className="text-xs text-[#6b6b6b] hover:text-[#1c1c1e]">Browse all →</Link>
+              <Link href="/jobs" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
+                Browse all
+                <ExternalLink className="h-3 w-3" />
+              </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {creator.opportunities.items.length === 0 ? (
@@ -716,7 +725,10 @@ export default function DashboardPage() {
                 <p className="section-label mb-1">Active briefs</p>
                 <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{brand.activeBriefs.count}</p>
               </div>
-              <Link href="/jobs" className="text-xs text-[#6b6b6b] hover:text-[#1c1c1e]">Manage briefs →</Link>
+              <Link href="/jobs" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
+                Manage briefs
+                <ExternalLink className="h-3 w-3" />
+              </Link>
             </div>
             <div className="space-y-3">
               {brand.activeBriefs.items.length === 0 ? (

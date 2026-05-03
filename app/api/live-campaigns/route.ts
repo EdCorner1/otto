@@ -5,7 +5,7 @@ import {
   buildJobDescription,
   computeLiveCampaignStats,
   createLiveCampaignMetadata,
-  ED_LIVE_CAMPAIGN_SEEDS,
+  LIVE_CAMPAIGN_SEEDS,
   makeBrandEmail,
   parseLiveCampaignMetadata,
   serializeLiveCampaignMetadata,
@@ -82,12 +82,12 @@ async function getAuthContext(request: NextRequest) {
     role,
     creatorId: creatorRow?.id || null,
     brandId: brandRow?.id || null,
-    isEd: (user.email || '').toLowerCase().trim() === 'edcorner1@gmail.com',
+    isOwner: (user.email || '').toLowerCase().trim() === (process.env.OTTO_OWNER_EMAIL || '').toLowerCase().trim(),
   }
 }
 
 async function ensureUserRow(admin: any, user: { id: string; email?: string | null }) {
-  const email = user.email || 'edcorner1@gmail.com'
+  const email = user.email || 'owner@ottougc.local'
 
   const { data: existing } = await admin
     .from('users')
@@ -116,7 +116,7 @@ async function ensureCreatorRow(
     }
   },
 ) {
-  const fallbackName = user.user_metadata?.full_name || user.user_metadata?.name || 'Ed Corner'
+  const fallbackName = user.user_metadata?.full_name || user.user_metadata?.name || 'Otto Creator'
   const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
 
   const { data: existing } = await admin
@@ -156,7 +156,7 @@ async function ensureCreatorRow(
   return data.id
 }
 
-async function ensureBrand(admin: any, seed: (typeof ED_LIVE_CAMPAIGN_SEEDS)[number]) {
+async function ensureBrand(admin: any, seed: (typeof LIVE_CAMPAIGN_SEEDS)[number]) {
   const email = makeBrandEmail(seed)
 
   const { data: userRow } = await admin
@@ -202,7 +202,7 @@ async function ensureBrand(admin: any, seed: (typeof ED_LIVE_CAMPAIGN_SEEDS)[num
   return brand.id
 }
 
-async function ensureJob(admin: any, brandId: string, seed: (typeof ED_LIVE_CAMPAIGN_SEEDS)[number]) {
+async function ensureJob(admin: any, brandId: string, seed: (typeof LIVE_CAMPAIGN_SEEDS)[number]) {
   const title = `${seed.clientName} live campaign retainer`
 
   const { data: existing } = await admin
@@ -237,13 +237,13 @@ async function ensureJob(admin: any, brandId: string, seed: (typeof ED_LIVE_CAMP
   return data.id
 }
 
-async function seedEdLiveCampaignDeals(auth: Awaited<ReturnType<typeof getAuthContext>>) {
-  if ('error' in auth || !auth.isEd) return auth
+async function seedOwnerLiveCampaignDeals(auth: Awaited<ReturnType<typeof getAuthContext>>) {
+  if ('error' in auth || !auth.isOwner) return auth
 
   await ensureUserRow(auth.admin, auth.user)
   const creatorId = auth.creatorId || await ensureCreatorRow(auth.admin, auth.user)
 
-  for (const seed of ED_LIVE_CAMPAIGN_SEEDS) {
+  for (const seed of LIVE_CAMPAIGN_SEEDS) {
     const brandId = await ensureBrand(auth.admin, seed)
     const jobId = await ensureJob(auth.admin, brandId, seed)
 
@@ -366,22 +366,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
 
-    const resolvedAuth = await seedEdLiveCampaignDeals(auth)
-    if ('error' in resolvedAuth) {
-      return NextResponse.json({ error: resolvedAuth.error }, { status: resolvedAuth.status })
+    const resolvownerAuth = await seedOwnerLiveCampaignDeals(auth)
+    if ('error' in resolvownerAuth) {
+      return NextResponse.json({ error: resolvownerAuth.error }, { status: resolvownerAuth.status })
     }
 
-    const query = resolvedAuth.admin
+    const query = resolvownerAuth.admin
       .from('deals')
       .select('id, creator_id, brand_id, job_id, amount, status, created_at, updated_at, submitted_notes, brands(company_name, logo_url), jobs(title)')
       .order('created_at', { ascending: false })
 
-    const scopedQuery = resolvedAuth.role === 'brand'
-      ? resolvedAuth.brandId
-        ? query.eq('brand_id', resolvedAuth.brandId)
+    const scopedQuery = resolvownerAuth.role === 'brand'
+      ? resolvownerAuth.brandId
+        ? query.eq('brand_id', resolvownerAuth.brandId)
         : query.limit(0)
-      : resolvedAuth.creatorId
-        ? query.eq('creator_id', resolvedAuth.creatorId)
+      : resolvownerAuth.creatorId
+        ? query.eq('creator_id', resolvownerAuth.creatorId)
         : query.limit(0)
 
     const { data, error } = await scopedQuery
