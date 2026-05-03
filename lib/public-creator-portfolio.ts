@@ -24,6 +24,7 @@ export interface PublicFeaturedWork {
   metric: string | null
   title: string
   note: string | null
+  video?: PublicPortfolioVideo | null
 }
 
 export interface PublicPortfolioVideo {
@@ -323,7 +324,7 @@ export async function getPublicCreatorPortfolioByHandle(
     brandLogos,
     introVideo,
     reviews: meta.reviews,
-    featuredWork: meta.featuredWork,
+    featuredWork: meta.featuredWork.map((item, index) => ({ ...item, video: videos[index] || null })),
     portfolioItems: videos,
     videos,
     stats: {
