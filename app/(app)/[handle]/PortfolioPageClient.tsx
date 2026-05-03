@@ -518,21 +518,22 @@ export default function PortfolioPageClient({
 
           <section className="px-1 pt-10 sm:px-6 lg:px-10 lg:pt-14">
             <div className="mx-auto max-w-6xl">
-              <div className="mb-6 inline-flex items-center gap-2 text-sm text-[#55554f]">
-                <span className="tracking-[0.08em] text-[#2f8f55]">★★★★★</span>
-                <span>{topProofLabel}</span>
-              </div>
-
               <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-center">
                 <div className="max-w-4xl">
-                  <div className="mb-5 flex items-center gap-4">
-                    <p className="text-xl font-semibold text-[#363535]">Hi, I’m {creatorFirstName}</p>
+                  <div className="mb-5 flex flex-col gap-4">
+                    <div className="inline-flex items-center gap-2 text-sm text-[#55554f]">
+                      <span className="tracking-[0.08em] text-[#2f8f55]">★★★★★</span>
+                      <span>{topProofLabel}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <p className="text-xl font-semibold text-[#363535]">Hi, I’m {creatorFirstName}</p>
                     {portfolio.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={portfolio.avatarUrl} alt={portfolio.fullName} className="h-12 w-12 rounded-full border-4 border-[#ccff00] bg-[#ccff00] object-cover shadow-[0_12px_34px_rgba(0,0,0,0.14)]" />
                     ) : (
                       <span className="flex h-12 w-12 items-center justify-center rounded-full border-4 border-[#ccff00] bg-[#1c1c1e] text-sm font-semibold text-white shadow-[0_12px_34px_rgba(0,0,0,0.14)]">{getInitials(portfolio.fullName)}</span>
                     )}
+                    </div>
                   </div>
 
                   <h1 className="text-[clamp(3.8rem,11vw,7.8rem)] leading-[0.88] text-[#363535]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.075em' }}>
