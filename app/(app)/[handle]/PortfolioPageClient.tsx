@@ -213,7 +213,7 @@ function IntroVideoCard({ item, creatorFirstName, onOpen }: { item: PublicPortfo
     <button
       type="button"
       onClick={onOpen}
-      className="group relative w-full overflow-hidden rounded-[32px] border border-[#e4e4dc] bg-[#151515] text-left shadow-[0_24px_80px_rgba(0,0,0,0.16)] transition hover:-translate-y-1 hover:shadow-[0_32px_100px_rgba(0,0,0,0.2)] lg:max-w-[360px]"
+      className="group relative w-full overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#151515] text-left shadow-[0_14px_34px_rgba(0,0,0,0.14)] transition hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(0,0,0,0.18)] lg:max-w-[360px]"
       aria-label={`Play ${creatorFirstName}'s intro video`}
     >
       <div className="aspect-[4/5] bg-[#111111]">
@@ -253,7 +253,7 @@ function VideoCard({ item, onOpen }: { item: PublicPortfolioVideo; onOpen: () =>
     <button
       type="button"
       onClick={onOpen}
-      className="group overflow-hidden rounded-[28px] border border-[#e8e8e4] bg-white text-left shadow-[0_18px_48px_rgba(0,0,0,0.05)] transition duration-200 hover:-translate-y-1.5 hover:shadow-[0_24px_56px_rgba(0,0,0,0.08)]"
+      className="group overflow-hidden rounded-[11px] border border-[#e2e2dc] bg-white text-left shadow-[0_10px_28px_rgba(0,0,0,0.07)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.1)]"
       aria-label={`Open ${getVideoTitle(item)}`}
     >
       <div className="relative aspect-[9/16] overflow-hidden bg-[#111111]">
@@ -303,7 +303,7 @@ function VideoLightbox({ item, onClose }: { item: PublicPortfolioVideo; onClose:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="relative w-full max-w-5xl overflow-hidden rounded-[32px] bg-[#0f0f10] text-white shadow-[0_32px_120px_rgba(0,0,0,0.45)]"
+        className="relative w-full max-w-5xl overflow-hidden rounded-[14px] bg-[#0f0f10] text-white shadow-[0_28px_90px_rgba(0,0,0,0.42)]"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -586,7 +586,7 @@ export default function PortfolioPageClient({
                 </div>
 
                 {filteredPortfolioItems.length === 0 ? (
-                  <div className="rounded-[24px] border border-dashed border-[#dbdbd5] bg-[#fcfcfa] p-6 text-sm text-[#6b6b6b]">
+                  <div className="rounded-[11px] border border-dashed border-[#dbdbd5] bg-[#fcfcfa] p-6 text-sm text-[#6b6b6b]">
                     No videos in this category yet.
                   </div>
                 ) : (
