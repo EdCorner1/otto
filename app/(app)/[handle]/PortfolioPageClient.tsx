@@ -392,7 +392,6 @@ export default function PortfolioPageClient({
   const responseTimeLabel = formatResponseTime(portfolio.stats.responseTimeHours)
   const availabilityText = portfolio.isAvailable ? 'Available now' : 'Busy right now'
   const creatorFirstName = getFirstName(portfolio.fullName)
-  const readinessLabel = portfolio.portfolioItems.length >= 6 ? 'Strong proof of work' : portfolio.portfolioItems.length >= 3 ? 'Ready for brand review' : 'Still building depth'
 
   return (
     <>
@@ -549,82 +548,49 @@ export default function PortfolioPageClient({
                     </div>
                   </div>
                 </div>
-
-                <div className="mt-5 rounded-[28px] border border-[#e8e8e1] bg-white p-6 shadow-[0_16px_40px_rgba(0,0,0,0.04)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">Portfolio summary</p>
-                  <dl className="mt-5 space-y-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <dt className="text-sm text-[#6c6c66]">Completed campaigns</dt>
-                      <dd className="text-lg font-semibold text-[#1c1c1e]">{portfolio.stats.completedCampaigns}</dd>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <dt className="text-sm text-[#6c6c66]">Videos delivered</dt>
-                      <dd className="text-lg font-semibold text-[#1c1c1e]">{portfolio.stats.videosDelivered}</dd>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <dt className="text-sm text-[#6c6c66]">Average views</dt>
-                      <dd className="text-lg font-semibold text-[#1c1c1e]">{formatCompactNumber(portfolio.stats.avgViews)}</dd>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <dt className="text-sm text-[#6c6c66]">Delivery reliability</dt>
-                      <dd className="text-lg font-semibold text-[#1c1c1e]">
-                        {portfolio.stats.onTimePercentage !== null ? `${portfolio.stats.onTimePercentage}% on time` : 'Building history'}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
               </aside>
             </div>
           </section>
 
-          <section className="mt-8 grid gap-4 md:grid-cols-3">
-            <div className="rounded-[24px] border border-[#ecece5] bg-white p-5 shadow-[0_14px_36px_rgba(0,0,0,0.04)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">Why this profile feels credible</p>
-              <p className="mt-3 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-                {readinessLabel}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[#6d6d66]">
-                {creatorFirstName} has enough public proof here for a brand to judge fit quickly instead of guessing from a thin profile.
-              </p>
-            </div>
+          <section className="relative z-10 -mt-8 px-4 sm:px-8 lg:px-12">
+            <div className="rounded-[32px] border border-[#e8e8e4] bg-white/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.10)] backdrop-blur sm:p-5">
+              <div className="mb-4 flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Portfolio</p>
+                  <h2 className="mt-1 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
+                    Recent work
+                  </h2>
+                </div>
+                <a href="#portfolio" className="text-sm font-semibold text-[#1c1c1e] underline decoration-[#ccff00] underline-offset-4">
+                  View all
+                </a>
+              </div>
 
-            <div className="rounded-[24px] border border-[#ecece5] bg-white p-5 shadow-[0_14px_36px_rgba(0,0,0,0.04)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">Fast brand read</p>
-              <p className="mt-3 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-                {portfolio.mainPlatform ? `${platformLabel(portfolio.mainPlatform)} creator` : 'UGC creator'}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[#6d6d66]">
-                Clear niche tags, social links, and portfolio samples make this page easier to scan in the first 10 seconds.
-              </p>
-            </div>
-
-            <div className="rounded-[24px] border border-[#ecece5] bg-white p-5 shadow-[0_14px_36px_rgba(0,0,0,0.04)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">Best next action</p>
-              <p className="mt-3 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-                Reach out with a brief
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[#6d6d66]">
-                If {creatorFirstName.toLowerCase()} looks right, move straight into deliverables, timing, and content goals instead of asking for more basic profile info.
-              </p>
+              {portfolio.portfolioItems.length === 0 ? (
+                <EmptyPortfolioState socials={socialCTAs} />
+              ) : (
+                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                  {portfolio.portfolioItems.slice(0, 4).map((item) => (
+                    <div key={`peek-${item.id}`} className="w-[190px] shrink-0 sm:w-[220px]">
+                      <VideoCard item={item} onOpen={() => setActiveVideo(item)} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 
-          <section className="mt-12">
+          <section id="portfolio" className="mt-10">
             <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Portfolio</p>
                 <h2 className="mt-2 text-[clamp(2rem,5vw,3.5rem)] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-                  Portfolio
+                  Videos
                 </h2>
                 <p className="mt-2 text-sm text-[#6d6d66]">
                   {portfolio.portfolioItems.length} video{portfolio.portfolioItems.length === 1 ? '' : 's'}
                 </p>
               </div>
-              {portfolio.portfolioItems.length > 0 && (
-                <p className="max-w-xl text-sm leading-6 text-[#6d6d66]">
-                  Selected work designed to show style, edit quality, and platform fit at a glance.
-                </p>
-              )}
             </div>
 
             {portfolio.portfolioItems.length === 0 ? (
@@ -664,54 +630,6 @@ export default function PortfolioPageClient({
             )}
           </section>
 
-          <section className="mt-12 rounded-[32px] border border-[#ecece5] bg-white p-6 shadow-[0_18px_48px_rgba(0,0,0,0.05)] sm:p-8 lg:p-10">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Trust stats</p>
-                <h2 className="mt-2 text-[clamp(1.8rem,4vw,3rem)] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-                  Verified performance
-                </h2>
-              </div>
-              <p className="max-w-xl text-sm leading-6 text-[#6d6d66]">
-                Pulled from Otto deal history, delivery logs, portfolio data, and message response patterns.
-              </p>
-            </div>
-
-            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-[24px] border border-[#edede7] bg-[#fafaf7] p-5">
-                <p className="text-sm text-[#707069]">Campaigns completed</p>
-                <p className="mt-3 text-4xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-                  {portfolio.stats.completedCampaigns}
-                </p>
-                <p className="mt-2 text-sm text-[#6d6d66]">Completed through active brand work on Otto.</p>
-              </div>
-
-              <div className="rounded-[24px] border border-[#edede7] bg-[#fafaf7] p-5">
-                <p className="text-sm text-[#707069]">Videos delivered</p>
-                <p className="mt-3 text-4xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-                  {portfolio.stats.videosDelivered}
-                </p>
-                <p className="mt-2 text-sm text-[#6d6d66]">Submitted content across campaigns and portfolio work.</p>
-              </div>
-
-              <div className="rounded-[24px] border border-[#edede7] bg-[#fafaf7] p-5">
-                <p className="text-sm text-[#707069]">Average views</p>
-                <p className="mt-3 text-4xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-                  {formatCompactNumber(portfolio.stats.avgViews)}
-                </p>
-                <p className="mt-2 text-sm text-[#6d6d66]">Average performance across videos with available view counts.</p>
-              </div>
-
-              <div className="rounded-[24px] border border-[#edede7] bg-[#fafaf7] p-5">
-                <p className="text-sm text-[#707069]">Response time</p>
-                <p className="mt-3 text-4xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-                  {portfolio.stats.responseTimeHours ? `${portfolio.stats.responseTimeHours}h` : '—'}
-                </p>
-                <p className="mt-2 text-sm text-[#6d6d66]">{responseTimeLabel}</p>
-              </div>
-            </div>
-          </section>
-
           <section className="mt-12 overflow-hidden rounded-[36px] bg-[#111111] px-6 py-8 text-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-10">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-2xl">
@@ -720,7 +638,7 @@ export default function PortfolioPageClient({
                   Work with {portfolio.fullName}
                 </h2>
                 <p className="mt-4 text-base leading-7 text-white/70">
-                  Reach out with your brief, content goals, deliverables, and timeline. This page is built to make first review easy — now move the conversation forward.
+                  Send a brief, timeline, and the kind of content you need. Keep it specific so the creator can reply with a clear next step.
                 </p>
               </div>
 

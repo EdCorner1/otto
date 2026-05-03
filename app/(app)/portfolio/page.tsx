@@ -528,7 +528,7 @@ export default function InternalPortfolioPage() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Creator portfolio</p>
                   <h1 className="mt-2 text-[clamp(2rem,6vw,3.75rem)] leading-[0.94] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.06em' }}>
-                    What brands see
+                    Your portfolio
                   </h1>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -617,7 +617,7 @@ export default function InternalPortfolioPage() {
 
             <aside className="border-t border-[#ecece5] bg-[#fafaf7] p-6 sm:p-8 lg:border-l lg:border-t-0 lg:p-10">
               <div className="rounded-[28px] bg-[#111111] p-6 text-white shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">At a glance</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">Summary</p>
                 <div className="mt-5 space-y-5">
                   <div>
                     <p className="text-sm text-white/65">Main platform</p>
@@ -667,28 +667,32 @@ export default function InternalPortfolioPage() {
           </div>
         </section>
 
-        <section className="mt-12">
-          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Best performing</p>
-              <h2 className="mt-2 text-[clamp(2rem,5vw,3.5rem)] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-                Top videos
-              </h2>
+        <section className="relative z-10 -mt-8 px-4 sm:px-8 lg:px-12">
+          <div className="rounded-[32px] border border-[#e8e8e4] bg-white/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.10)] backdrop-blur sm:p-5">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Portfolio</p>
+                <h2 className="mt-1 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
+                  Recent work
+                </h2>
+              </div>
+              <Link href="/profile/edit?tab=portfolio" className="text-sm font-semibold text-[#1c1c1e] underline decoration-[#ccff00] underline-offset-4">
+                Edit videos
+              </Link>
             </div>
-            <p className="max-w-xl text-sm leading-6 text-[#6d6d66]">
-              Ranked automatically using portfolio view counts so you can see what a brand sees first.
-            </p>
-          </div>
 
-          {topVideos.length === 0 ? (
-            <EmptyPortfolioState />
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {topVideos.map((item) => (
-                <VideoCard key={`top-${item.id}`} item={item} onOpen={() => setActiveVideo(item)} />
-              ))}
-            </div>
-          )}
+            {portfolio.portfolioItems.length === 0 ? (
+              <EmptyPortfolioState />
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                {portfolio.portfolioItems.slice(0, 4).map((item) => (
+                  <div key={`peek-${item.id}`} className="w-[190px] shrink-0 sm:w-[220px]">
+                    <VideoCard item={item} onOpen={() => setActiveVideo(item)} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="mt-12">
