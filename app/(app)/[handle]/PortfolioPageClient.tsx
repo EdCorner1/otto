@@ -532,6 +532,43 @@ export default function PortfolioPageClient({
             </section>
           )}
 
+          <section className="mt-16 overflow-hidden rounded-[28px] border border-[#e6e6df] bg-[#111111] p-1 shadow-[0_28px_90px_rgba(0,0,0,0.16)]">
+            <div className="rounded-[24px] bg-[radial-gradient(circle_at_top_left,rgba(204,255,0,0.18),transparent_32%),#111111] px-6 py-8 text-white sm:px-8 lg:px-10">
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-end">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Rate card</p>
+                  <h2 className="mt-3 text-[clamp(2.4rem,6vw,4.8rem)] leading-[0.9] text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
+                    Ways to work with me
+                  </h2>
+                  <p className="mt-5 max-w-xl text-base leading-7 text-white/68">
+                    Simple starting points for brands that already know what they need. Final scope depends on usage rights, timelines, and deliverables.
+                  </p>
+                </div>
+                <div className="rounded-[20px] border border-white/10 bg-white/[0.06] p-5 backdrop-blur-sm">
+                  <p className="text-sm font-semibold text-white">Want to check fit first?</p>
+                  <p className="mt-2 text-sm leading-6 text-white/62">For now this routes back through Otto. Later creators will connect a booking calendar or an Otto-native availability flow.</p>
+                  <a href={primaryContactHref} className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#ccff00] px-5 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
+                    Request a booking
+                  </a>
+                </div>
+              </div>
+
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                {[
+                  { name: 'Single UGC video', price: 'From £250', desc: 'One short-form concept, filmed and edited for organic social.' },
+                  { name: '3-video test pack', price: 'From £650', desc: 'Three hooks or angles so the brand can test what lands fastest.' },
+                  { name: 'Monthly creator retainer', price: 'From £1.5K', desc: 'Ongoing product-led content with a consistent creator face.' },
+                ].map((item) => (
+                  <div key={item.name} className="rounded-[18px] border border-white/10 bg-white/[0.07] p-5">
+                    <p className="text-sm font-semibold text-white/70">{item.name}</p>
+                    <p className="mt-4 text-[clamp(2rem,4vw,3.2rem)] leading-[0.88] text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>{item.price}</p>
+                    <p className="mt-4 text-sm leading-6 text-white/58">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           <section className="mt-12 overflow-hidden rounded-[36px] bg-[#111111] px-6 py-8 text-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-10">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-2xl">
