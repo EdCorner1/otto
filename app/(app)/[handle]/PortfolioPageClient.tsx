@@ -151,33 +151,30 @@ function ReviewCard({ review, featured = false }: { review: NonNullable<PublicCr
 
 function FeaturedWorkCard({ item, onOpen }: { item: NonNullable<PublicCreatorPortfolio['featuredWork']>[number]; onOpen?: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      disabled={!item.video}
-      className="group grid overflow-hidden rounded-[11px] border border-[#e2e2dc] bg-white text-left shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(0,0,0,0.09)] disabled:cursor-default sm:grid-cols-[120px,1fr]"
-    >
-      <div className="relative aspect-[9/16] bg-[#111111] sm:h-full sm:min-h-[238px]">
-        {item.video ? <VideoThumbnail item={item.video} /> : <div className="h-full w-full bg-[#111111]" />}
-        {item.video && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 transition group-hover:opacity-100">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/92 text-[#111111] shadow-[0_14px_30px_rgba(0,0,0,0.2)]"><Play className="h-4 w-4 fill-current" /></span>
-          </div>
-        )}
-      </div>
-      <div className="p-5">
+    <article className="flex min-h-[260px] flex-col justify-between rounded-[11px] border border-[#e2e2dc] bg-white p-6 text-left shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(0,0,0,0.09)]">
+      <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">{item.label}</p>
         {item.metric && (
-          <p className="mt-4 text-[clamp(2.2rem,5vw,3.2rem)] leading-[0.85] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.07em' }}>
+          <p className="mt-5 text-[clamp(2.9rem,6vw,4.5rem)] leading-[0.82] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.075em' }}>
             {item.metric}
           </p>
         )}
-        <h3 className={`${item.metric ? 'mt-4 text-xl' : 'mt-4 text-2xl'} leading-[0.98] text-[#1c1c1e]`} style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
+        <h3 className={`${item.metric ? 'mt-5 text-2xl' : 'mt-4 text-3xl'} leading-[0.95] text-[#1c1c1e]`} style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.055em' }}>
           {item.title}
         </h3>
         {item.note && <p className="mt-4 text-sm leading-6 text-[#686862]">{item.note}</p>}
       </div>
-    </button>
+      {item.video && onOpen && (
+        <button
+          type="button"
+          onClick={onOpen}
+          className="mt-6 inline-flex w-fit items-center gap-2 rounded-full border border-[#deded8] px-4 py-2 text-xs font-semibold text-[#363535] transition hover:border-[#ccff00] hover:bg-[#f7ffd9]"
+        >
+          <Play className="h-3.5 w-3.5 fill-current" />
+          Watch example
+        </button>
+      )}
+    </article>
   )
 }
 
