@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-
+import { PORTFOLIO_CATEGORIES, normalizePortfolioCategory } from '@/lib/portfolio-media'
 import Link from 'next/link'
 import MuxPlayer from '@mux/mux-player-react'
 import {
@@ -383,6 +383,7 @@ export default function PortfolioPageClient({
   isOwner: boolean
 }) {
   const [activeVideo, setActiveVideo] = useState<PublicPortfolioVideo | null>(null)
+  const [activeCategory, setActiveCategory] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
   const contactEmail = useMemo(() => getContactEmail(portfolio), [portfolio])
   const socialCTAs = useMemo(
     () => portfolio.socials.filter((social) => ['tiktok', 'instagram', 'youtube'].includes(social.platform)).slice(0, 3),
@@ -391,9 +392,25 @@ export default function PortfolioPageClient({
 
 
 
+  const categoryCounts = useMemo(() => {
+    return PORTFOLIO_CATEGORIES.reduce<Record<string, number>>((acc, category) => {
+      if (category === 'All') {
+        acc[category] = portfolio.portfolioItems.length
+      } else {
+        acc[category] = portfolio.portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === category).length
+      }
+      return acc
+    }, {})
+  }, [portfolio.portfolioItems])
+
+  const filteredPortfolioItems = useMemo(() => {
+    if (activeCategory === 'All') return portfolio.portfolioItems
+    return portfolio.portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === activeCategory)
+  }, [activeCategory, portfolio.portfolioItems])
+
   const primaryContactHref = 'https://ottougc.com'
 
-  const workedWithLogos = portfolio.nicheTags.slice(0, 4).map((tag) => tag.replace(/&/g, '').trim()).filter(Boolean)
+  const workedWithLogos = (portfolio.brandLogos || []).slice(0, 6)
 
   const responseTimeLabel = formatResponseTime(portfolio.stats.responseTimeHours)
   const availabilityText = portfolio.isAvailable ? 'Available now' : 'Busy right now'
@@ -462,16 +479,6 @@ export default function PortfolioPageClient({
                       </a>
                     ))}
                   </div>
-
-                  {portfolio.nicheTags.length > 0 && (
-                    <div className="mt-7 flex flex-wrap gap-2.5">
-                      {portfolio.nicheTags.slice(0, 6).map((tag) => (
-                        <span key={tag} className="rounded-full border border-[#e7e7df] bg-[#fafaf7] px-3.5 py-2 text-sm font-medium text-[#4c4c46]">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {ownerPrimaryAction(isOwner)}
@@ -495,11 +502,37 @@ export default function PortfolioPageClient({
             {portfolio.portfolioItems.length === 0 ? (
               <EmptyPortfolioState socials={socialCTAs} />
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                {portfolio.portfolioItems.map((item) => (
-                  <VideoCard key={item.id} item={item} onOpen={() => setActiveVideo(item)} />
-                ))}
-              </div>
+              <>
+                <div className="mb-6 flex flex-wrap gap-2">
+                  {PORTFOLIO_CATEGORIES.map((category) => {
+                    const active = activeCategory === category
+                    const count = categoryCounts[category] || 0
+                    return (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => setActiveCategory(category)}
+                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${active ? 'border-[#ccff00] bg-[#ccff00] text-[#1c1c1e]' : 'border-[#e8e8e4] bg-white text-[#1c1c1e] hover:border-[#ccff00]'}`}
+                      >
+                        <span>{category}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${active ? 'bg-[#1c1c1e] text-[#ccff00]' : 'bg-[#f0f0ec] text-[#6b6b6b]'}`}>{count}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {filteredPortfolioItems.length === 0 ? (
+                  <div className="rounded-[24px] border border-dashed border-[#dbdbd5] bg-[#fcfcfa] p-6 text-sm text-[#6b6b6b]">
+                    No videos in this category yet.
+                  </div>
+                ) : (
+                  <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                    {filteredPortfolioItems.map((item) => (
+                      <VideoCard key={item.id} item={item} onOpen={() => setActiveVideo(item)} />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </section>
 

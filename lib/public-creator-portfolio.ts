@@ -52,6 +52,7 @@ export interface PublicCreatorPortfolio {
   follower_count: string | null
   socials: PublicPortfolioSocial[]
   social_links: PublicPortfolioSocial[]
+  brandLogos?: string[]
   portfolioItems: PublicPortfolioVideo[]
   videos: PublicPortfolioVideo[]
   stats: {
@@ -197,6 +198,12 @@ export async function getPublicCreatorPortfolioByHandle(
   const socialsRaw = (creatorRow.creator_socials || []) as CreatorSocialRow[]
   const meta = parseCreatorMeta(tags)
 
+  const brandLogos = tags
+    .map((item) => item.tag || '')
+    .filter((tag) => tag.startsWith('brand:'))
+    .map((tag) => tag.slice('brand:'.length).trim())
+    .filter(Boolean)
+
   const socials: PublicPortfolioSocial[] = socialsRaw
     .map((social) => ({
       platform: normalizePlatform(social.platform),
@@ -261,6 +268,7 @@ export async function getPublicCreatorPortfolioByHandle(
     follower_count: meta.followerRange || null,
     socials,
     social_links: socials,
+    brandLogos,
     portfolioItems: videos,
     videos,
     stats: {
