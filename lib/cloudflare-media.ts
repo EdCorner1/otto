@@ -29,7 +29,7 @@ export function extractCloudflareMediaId(url: string): string | null {
  * Build a thumbnail URL from a Cloudflare media ID.
  */
 export function buildCloudflareThumbnailUrl(mediaId: string): string {
-  return `https://${CLOUDFLARE_STREAM_SUBDOMAIN}.cloudflarestream.com/${mediaId}/thumb.jpg`
+  return `https://${CLOUDFLARE_STREAM_SUBDOMAIN}.cloudflarestream.com/${mediaId}/thumbnails/thumbnail.jpg`
 }
 
 /**
