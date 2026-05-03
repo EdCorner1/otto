@@ -153,7 +153,12 @@ function FeaturedWorkCard({ item }: { item: NonNullable<PublicCreatorPortfolio['
   return (
     <div className="rounded-[11px] border border-[#e2e2dc] bg-white p-5 shadow-[0_12px_30px_rgba(0,0,0,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(0,0,0,0.09)]">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">{item.label}</p>
-      <h3 className="mt-4 text-2xl leading-[0.98] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
+      {item.metric && (
+        <p className="mt-5 text-[clamp(2.6rem,6vw,4.2rem)] leading-[0.85] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.07em' }}>
+          {item.metric}
+        </p>
+      )}
+      <h3 className={`${item.metric ? 'mt-5 text-xl' : 'mt-4 text-2xl'} leading-[0.98] text-[#1c1c1e]`} style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
         {item.title}
       </h3>
       {item.note && <p className="mt-4 text-sm leading-6 text-[#686862]">{item.note}</p>}
@@ -499,12 +504,12 @@ export default function PortfolioPageClient({
 
           <section className="px-1 pt-10 sm:px-6 lg:px-10 lg:pt-14">
             <div className="mx-auto max-w-6xl">
-              <div className="mb-8 inline-flex items-center gap-2 text-sm text-[#55554f]">
+              <div className="mb-6 inline-flex items-center gap-2 text-sm text-[#55554f]">
                 <span className="tracking-[0.08em] text-[#2f8f55]">★★★★★</span>
                 <span>{topProofLabel}</span>
               </div>
 
-              <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+              <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
                 <div className="max-w-4xl">
                   <div className="mb-5 flex items-center gap-4">
                     <p className="text-xl font-semibold text-[#363535]">Hi, I’m {creatorFirstName}</p>

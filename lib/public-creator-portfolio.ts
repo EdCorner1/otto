@@ -21,6 +21,7 @@ export interface PublicPortfolioReview {
 
 export interface PublicFeaturedWork {
   label: string
+  metric: string | null
   title: string
   note: string | null
 }
@@ -144,7 +145,10 @@ function parseCreatorMeta(tags: CreatorTagRow[]) {
       .filter((t) => t.tag.startsWith('featured:'))
       .map((t) => {
         const parts = t.tag.replace('featured:', '').split('|').map((part) => part.trim())
-        return { label: parts[0] || 'Featured', title: parts[1] || '', note: parts[2] || null }
+        if (parts.length >= 4) {
+          return { label: parts[0] || 'Featured', metric: parts[1] || null, title: parts[2] || '', note: parts[3] || null }
+        }
+        return { label: parts[0] || 'Featured', metric: null, title: parts[1] || '', note: parts[2] || null }
       })
       .filter((item) => item.title),
   }
@@ -160,7 +164,7 @@ function inferPlatformFromUrl(url: string) {
 }
 
 function getYoutubeId(url: string) {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/)
   return match?.[1]
 }
 
