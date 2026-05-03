@@ -667,35 +667,7 @@ export default function InternalPortfolioPage() {
           </div>
         </section>
 
-        <section className="relative z-10 -mt-8 px-4 sm:px-8 lg:px-12">
-          <div className="rounded-[32px] border border-[#e8e8e4] bg-white/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.10)] backdrop-blur sm:p-5">
-            <div className="mb-4 flex items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Portfolio</p>
-                <h2 className="mt-1 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-                  Recent work
-                </h2>
-              </div>
-              <Link href="/profile/edit?tab=portfolio" className="text-sm font-semibold text-[#1c1c1e] underline decoration-[#ccff00] underline-offset-4">
-                Edit videos
-              </Link>
-            </div>
-
-            {portfolio.portfolioItems.length === 0 ? (
-              <EmptyPortfolioState />
-            ) : (
-              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                {portfolio.portfolioItems.slice(0, 4).map((item) => (
-                  <div key={`peek-${item.id}`} className="w-[190px] shrink-0 sm:w-[220px]">
-                    <VideoCard item={item} onOpen={() => setActiveVideo(item)} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="mt-12">
+        <section className="mt-8">
           <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Portfolio</p>

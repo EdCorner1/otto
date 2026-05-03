@@ -408,179 +408,74 @@ export default function PortfolioPageClient({
             {ownerPrimaryAction(isOwner)}
           </div>
 
-          <section className="overflow-hidden rounded-[36px] border border-[#ecece5] bg-white shadow-[0_30px_80px_rgba(0,0,0,0.06)]">
-            <div className="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="p-6 sm:p-8 lg:p-12">
-                <div className="flex flex-col gap-6 md:flex-row md:items-start">
-                  {portfolio.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={portfolio.avatarUrl}
-                      alt={portfolio.fullName}
-                      className="h-32 w-32 rounded-[32px] border border-[#e7e7df] object-cover shadow-[0_20px_50px_rgba(0,0,0,0.08)] sm:h-36 sm:w-36"
-                    />
-                  ) : (
-                    <div className="flex h-32 w-32 items-center justify-center rounded-[32px] border border-dashed border-[#d7d7cf] bg-[#f3f3ee] text-3xl font-semibold text-[#7b7b74] sm:h-36 sm:w-36">
-                      {getInitials(portfolio.fullName)}
-                    </div>
-                  )}
+          <section className="px-1 pt-10 sm:px-6 lg:px-10 lg:pt-14">
+            <div className="mx-auto max-w-6xl">
+              <div className="mb-8 inline-flex items-center gap-2 text-sm text-[#55554f]">
+                <span className="tracking-[0.08em] text-[#2f8f55]">★★★★★</span>
+                <span>{portfolio.stats.totalVideos} portfolio video{portfolio.stats.totalVideos === 1 ? '' : 's'} ready to review</span>
+              </div>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Creator profile</p>
-                        <h1
-                          className="mt-2 text-[clamp(2.4rem,7vw,4.8rem)] leading-[0.92] text-[#111111]"
-                          style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.06em' }}
-                        >
-                          {portfolio.fullName}
-                        </h1>
-                      </div>
-                      <span className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold ${portfolio.isAvailable ? 'bg-[#efffd3] text-[#355400]' : 'bg-[#f3f3ef] text-[#64645d]'}`}>
-                        <Circle className={`h-2.5 w-2.5 fill-current ${portfolio.isAvailable ? 'text-[#98d800]' : 'text-[#a3a39b]'}`} />
-                        {availabilityText}
-                      </span>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-[#6d6d66]">
-                      <span className="inline-flex items-center gap-2 rounded-full bg-[#f6f6f2] px-3 py-1.5 text-[#4f4f49]">
-                        <UserRound className="h-4 w-4" />
-                        @{portfolio.handle}
-                      </span>
-                      {portfolio.location && (
-                        <span className="inline-flex items-center gap-1.5">
-                          <MapPin className="h-4 w-4 text-[#7a7a73]" />
-                          {portfolio.location}
-                        </span>
-                      )}
-                    </div>
-
-                    {(contactEmail || socialCTAs.length > 0 || isOwner) && (
-                      <div className="mt-5 flex flex-wrap gap-3">
-                        {contactEmail ? (
-                          <a
-                            href={`mailto:${contactEmail}`}
-                            className="inline-flex items-center gap-2 rounded-full bg-[#111111] px-5 py-3 text-sm font-semibold text-white transition hover:bg-black"
-                          >
-                            <Mail className="h-4 w-4" />
-                            {isOwner ? contactEmail : maskEmail(contactEmail)}
-                          </a>
-                        ) : (
-                          <a
-                            href={primaryContactHref}
-                            target={primaryContactHref.startsWith('http') ? '_blank' : undefined}
-                            rel={primaryContactHref.startsWith('http') ? 'noopener noreferrer' : undefined}
-                            className="inline-flex items-center gap-2 rounded-full bg-[#111111] px-5 py-3 text-sm font-semibold text-white transition hover:bg-black"
-                          >
-                            <Mail className="h-4 w-4" />
-                            Contact
-                          </a>
-                        )}
-
-                        {!isOwner && (
-                          <a
-                            href={primaryContactHref}
-                            target={primaryContactHref.startsWith('http') ? '_blank' : undefined}
-                            rel={primaryContactHref.startsWith('http') ? 'noopener noreferrer' : undefined}
-                            className="inline-flex items-center gap-2 rounded-full border border-[#dbdbd3] bg-white px-5 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:-translate-y-0.5 hover:border-[#c8c8bf]"
-                          >
-                            Work with {portfolio.fullName.split(' ')[0] || portfolio.fullName}
-                            <ArrowUpRight className="h-4 w-4" />
-                          </a>
-                        )}
-                      </div>
+              <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-4xl">
+                  <div className="mb-5 flex items-center gap-4">
+                    <p className="text-xl font-semibold text-[#363535]">Hi, I’m {creatorFirstName}</p>
+                    {portfolio.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={portfolio.avatarUrl} alt={portfolio.fullName} className="h-12 w-12 rounded-full border-4 border-[#ccff00] bg-[#ccff00] object-cover shadow-[0_12px_34px_rgba(0,0,0,0.14)]" />
+                    ) : (
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full border-4 border-[#ccff00] bg-[#1c1c1e] text-sm font-semibold text-white shadow-[0_12px_34px_rgba(0,0,0,0.14)]">{getInitials(portfolio.fullName)}</span>
                     )}
                   </div>
-                </div>
 
-                {portfolio.bio && (
-                  <div className="mt-8 max-w-3xl">
-                    <p className="text-lg leading-8 text-[#4f4f49]">{portfolio.bio}</p>
+                  <h1 className="text-[clamp(3.8rem,11vw,7.8rem)] leading-[0.88] text-[#363535]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.075em' }}>
+                    {portfolio.mainPlatform ? `${platformLabel(portfolio.mainPlatform)} creator` : 'UGC creator'}
+                  </h1>
+
+                  <p className="mt-7 max-w-3xl text-lg leading-8 text-[#5f5f59]">
+                    {portfolio.bio || `${portfolio.fullName} creates short-form product videos for brands that need clear demos, sharp hooks, and content people actually understand.`}
+                  </p>
+
+                  <div className="mt-7 flex flex-wrap items-center gap-3">
+                    <a
+                      href={primaryContactHref}
+                      target={primaryContactHref.startsWith('http') ? '_blank' : undefined}
+                      rel={primaryContactHref.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      className="inline-flex items-center justify-center rounded-full bg-[#ccff00] px-6 py-3 text-base font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]"
+                    >
+                      Work with {creatorFirstName}
+                    </a>
+
+                    {socialCTAs.slice(0, 3).map((social) => (
+                      <a
+                        key={`${social.platform}-hero`}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full border border-[#e1e1da] bg-white px-4 py-3 text-sm font-semibold text-[#363535] transition hover:-translate-y-0.5 hover:border-[#cfcfc7]"
+                      >
+                        {platformIcon(social.platform)}
+                        {platformLabel(social.platform)}
+                      </a>
+                    ))}
                   </div>
-                )}
 
-                {portfolio.nicheTags.length > 0 && (
-                  <div className="mt-8">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">Niches</p>
-                    <div className="mt-3 flex flex-wrap gap-2.5">
-                      {portfolio.nicheTags.map((tag) => (
+                  {portfolio.nicheTags.length > 0 && (
+                    <div className="mt-7 flex flex-wrap gap-2.5">
+                      {portfolio.nicheTags.slice(0, 6).map((tag) => (
                         <span key={tag} className="rounded-full border border-[#e7e7df] bg-[#fafaf7] px-3.5 py-2 text-sm font-medium text-[#4c4c46]">
                           {tag}
                         </span>
                       ))}
                     </div>
-                  </div>
-                )}
-
-                {portfolio.socials.length > 0 && (
-                  <div className="mt-8">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">Social links</p>
-                    <div className="mt-3">
-                      <SocialLinksRow socials={portfolio.socials} />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <aside className="border-t border-[#ecece5] bg-[#fafaf7] p-6 sm:p-8 lg:border-l lg:border-t-0 lg:p-10">
-                <div className="rounded-[28px] bg-[#111111] p-6 text-white shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">At a glance</p>
-                  <div className="mt-5 space-y-5">
-                    <div>
-                      <p className="text-sm text-white/65">Main platform</p>
-                      <p className="mt-1 inline-flex items-center gap-2 text-lg font-semibold text-white">
-                        {platformIcon(portfolio.mainPlatform ?? '')}
-                        {platformLabel(portfolio.mainPlatform ?? '')}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-white/65">Portfolio status</p>
-                      <p className="mt-1 text-lg font-semibold text-white">
-                        {portfolio.stats.totalVideos} video{portfolio.stats.totalVideos === 1 ? '' : 's'} ready to review
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-white/65">Response time</p>
-                      <p className="mt-1 inline-flex items-center gap-2 text-lg font-semibold text-white">
-                        <Clock3 className="h-4 w-4 text-[#ccff00]" />
-                        {responseTimeLabel}
-                      </p>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              </aside>
+
+                {ownerPrimaryAction(isOwner)}
+              </div>
             </div>
           </section>
 
-          <section className="relative z-10 -mt-8 px-4 sm:px-8 lg:px-12">
-            <div className="rounded-[32px] border border-[#e8e8e4] bg-white/95 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.10)] backdrop-blur sm:p-5">
-              <div className="mb-4 flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Portfolio</p>
-                  <h2 className="mt-1 text-2xl text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-                    Recent work
-                  </h2>
-                </div>
-                <a href="#portfolio" className="text-sm font-semibold text-[#1c1c1e] underline decoration-[#ccff00] underline-offset-4">
-                  View all
-                </a>
-              </div>
-
-              {portfolio.portfolioItems.length === 0 ? (
-                <EmptyPortfolioState socials={socialCTAs} />
-              ) : (
-                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                  {portfolio.portfolioItems.slice(0, 4).map((item) => (
-                    <div key={`peek-${item.id}`} className="w-[190px] shrink-0 sm:w-[220px]">
-                      <VideoCard item={item} onOpen={() => setActiveVideo(item)} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section id="portfolio" className="mt-10">
+          <section id="portfolio" className="mt-12">
             <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Portfolio</p>
@@ -635,10 +530,10 @@ export default function PortfolioPageClient({
               <div className="max-w-2xl">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Work together</p>
                 <h2 className="mt-3 text-[clamp(2rem,4vw,3.4rem)] leading-[0.96] text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-                  Work with {portfolio.fullName}
+                  Ready to brief {creatorFirstName}?
                 </h2>
                 <p className="mt-4 text-base leading-7 text-white/70">
-                  Send a brief, timeline, and the kind of content you need. Keep it specific so the creator can reply with a clear next step.
+                  Send the product, timeline, and deliverables you need. Keep it specific and easy to answer.
                 </p>
               </div>
 
