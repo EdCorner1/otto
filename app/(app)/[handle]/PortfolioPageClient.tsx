@@ -136,6 +136,19 @@ function BrandLogoMark({ label }: { label: string }) {
   )
 }
 
+function ReviewCard({ review, featured = false }: { review: NonNullable<PublicCreatorPortfolio['reviews']>[number]; featured?: boolean }) {
+  return (
+    <div className={`mx-3 shrink-0 rounded-[28px] border border-[#e7e7df] bg-white p-6 shadow-[0_18px_60px_rgba(0,0,0,0.06)] ${featured ? 'w-[330px] sm:w-[420px]' : 'w-[280px] opacity-70 sm:w-[340px]'}`}>
+      <div className="mb-4 tracking-[0.16em] text-[#d8a441]">★★★★★</div>
+      <p className={`leading-7 text-[#44443f] ${featured ? 'text-base' : 'text-sm'}`}>“{review.quote}”</p>
+      <div className="mt-6 border-t border-[#eeeeea] pt-4">
+        <p className="text-sm font-semibold text-[#1c1c1e]">{review.reviewerName}</p>
+        {review.reviewerTitle && <p className="mt-1 text-xs text-[#8a8a84]">{review.reviewerTitle}</p>}
+      </div>
+    </div>
+  )
+}
+
 function ownerPrimaryAction(isOwner: boolean) {
   if (!isOwner) return null
 
@@ -192,6 +205,46 @@ function VideoThumbnail({ item }: { item: PublicPortfolioVideo }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function IntroVideoCard({ item, creatorFirstName, onOpen }: { item: PublicPortfolioVideo; creatorFirstName: string; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group relative w-full overflow-hidden rounded-[32px] border border-[#e4e4dc] bg-[#151515] text-left shadow-[0_24px_80px_rgba(0,0,0,0.16)] transition hover:-translate-y-1 hover:shadow-[0_32px_100px_rgba(0,0,0,0.2)] lg:max-w-[360px]"
+      aria-label={`Play ${creatorFirstName}'s intro video`}
+    >
+      <div className="aspect-[4/5] bg-[#111111]">
+        {item.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.thumbnailUrl} alt={`${creatorFirstName} intro video`} className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100" />
+        ) : item.kind === 'cloudflare' && item.cloudflareIframeUrl ? (
+          <iframe
+            title={`${creatorFirstName} intro video`}
+            src={item.cloudflareIframeUrl}
+            className="h-full w-full pointer-events-none"
+            allow="accelerometer; gyroscope; encrypted-media; picture-in-picture"
+            tabIndex={-1}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(204,255,0,0.22),transparent_35%),#111111]">
+            <Video className="h-10 w-10 text-white/55" />
+          </div>
+        )}
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/10 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+        <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#ccff00] text-[#1c1c1e] shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition group-hover:scale-105">
+          <Play className="h-5 w-5 fill-current" />
+        </div>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55">Intro video</p>
+        <p className="mt-1 text-2xl leading-tight text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.045em' }}>
+          Meet {creatorFirstName}
+        </p>
+      </div>
+    </button>
   )
 }
 
@@ -404,6 +457,7 @@ export default function PortfolioPageClient({
   const primaryContactHref = 'https://ottougc.com'
 
   const workedWithLogos = (portfolio.brandLogos || []).slice(0, 6)
+  const reviews = (portfolio.reviews || []).slice(0, 8)
 
   const responseTimeLabel = formatResponseTime(portfolio.stats.responseTimeHours)
   const availabilityText = portfolio.isAvailable ? 'Available now' : 'Busy right now'
@@ -431,7 +485,7 @@ export default function PortfolioPageClient({
                 <span>{portfolio.stats.totalVideos} portfolio video{portfolio.stats.totalVideos === 1 ? '' : 's'} ready to review</span>
               </div>
 
-              <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+              <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
                 <div className="max-w-4xl">
                   <div className="mb-5 flex items-center gap-4">
                     <p className="text-xl font-semibold text-[#363535]">Hi, I’m {creatorFirstName}</p>
@@ -474,7 +528,9 @@ export default function PortfolioPageClient({
                   </div>
                 </div>
 
-                {ownerPrimaryAction(isOwner)}
+                {portfolio.introVideo ? (
+                  <IntroVideoCard item={portfolio.introVideo} creatorFirstName={creatorFirstName} onOpen={() => setActiveVideo(portfolio.introVideo || null)} />
+                ) : ownerPrimaryAction(isOwner)}
               </div>
             </div>
           </section>
@@ -543,6 +599,26 @@ export default function PortfolioPageClient({
               </>
             )}
           </section>
+
+          {reviews.length > 0 && (
+            <section className="mt-16 overflow-hidden py-8">
+              <div className="mx-auto mb-8 max-w-3xl text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Reviews</p>
+                <h2 className="mt-3 text-[clamp(2.4rem,6vw,4.6rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
+                  What brands say
+                </h2>
+              </div>
+              <div className="relative -mx-5 sm:-mx-8 lg:-mx-12">
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#f7f7f2] to-transparent" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#f7f7f2] to-transparent" />
+                <div className="review-card-track flex w-max items-center py-4">
+                  {[...reviews, ...reviews].map((review, index) => (
+                    <ReviewCard key={`${review.reviewerName}-${index}`} review={review} featured={index % reviews.length === 0} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
 
           <section className="mt-12 overflow-hidden rounded-[36px] bg-[#111111] px-6 py-8 text-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-10">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">

@@ -41,6 +41,7 @@ type CreatorProfileResponse = {
   followerRange: string
   incomeRange: string
   nicheTags: string[]
+  introVideoUrl?: string
   portfolioItems: Array<{
     id: string
     url: string
@@ -60,6 +61,7 @@ type CreatorDraftSnapshot = {
   followerRange: string
   incomeRange: string
   nicheInput: string
+  introVideoUrl: string
   portfolioItems: Array<{ url: string; platform: string; caption: string; category: string }>
 }
 
@@ -125,6 +127,7 @@ function createCreatorSnapshot(input: CreatorDraftSnapshot): string {
       .map((tag) => tag.trim())
       .filter(Boolean)
       .slice(0, 8),
+    introVideoUrl: input.introVideoUrl.trim(),
     portfolioItems: input.portfolioItems,
   })
 }
@@ -156,6 +159,7 @@ export default function ProfileEditPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const videoInputRef = useRef<HTMLInputElement | null>(null)
+  const introVideoInputRef = useRef<HTMLInputElement | null>(null)
   const saveSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [loading, setLoading] = useState(true)
@@ -180,6 +184,9 @@ export default function ProfileEditPage() {
   const [incomeRange, setIncomeRange] = useState('')
   const [nicheInput, setNicheInput] = useState('')
   const [portfolioItems, setPortfolioItems] = useState<PortfolioDraft[]>([])
+  const [introVideoUrl, setIntroVideoUrl] = useState('')
+  const [introVideoUploading, setIntroVideoUploading] = useState(false)
+  const [introVideoUploadProgress, setIntroVideoUploadProgress] = useState(0)
   const [portfolioFilterTab, setPortfolioFilterTab] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
   const [videoUploading, setVideoUploading] = useState(false)
   const [videoUploadProgress, setVideoUploadProgress] = useState(0)
@@ -294,6 +301,7 @@ export default function ProfileEditPage() {
         followerRange: profile.followerRange || '',
         incomeRange: profile.incomeRange || '',
         nicheInput: profile.nicheTags.join(', '),
+        introVideoUrl: profile.introVideoUrl || '',
         portfolioItems: normalizePortfolioDrafts(nextPortfolioItems),
       }
 
@@ -307,6 +315,7 @@ export default function ProfileEditPage() {
       setIncomeRange(nextCreator.incomeRange)
       setNicheInput(nextCreator.nicheInput)
       setPortfolioItems(nextPortfolioItems)
+      setIntroVideoUrl(nextCreator.introVideoUrl)
       setInitialCreatorSnapshot(createCreatorSnapshot(nextCreator))
 
       // If coming from dashboard "Update portfolio" link, jump to portfolio tab/step
@@ -346,9 +355,10 @@ export default function ProfileEditPage() {
       followerRange,
       incomeRange,
       nicheInput,
+      introVideoUrl,
       portfolioItems: normalizePortfolioDrafts(portfolioItems),
     }),
-    [avatarUrl, bio, followerRange, fullName, handle, incomeRange, mainPlatform, nicheInput, portfolioItems]
+    [avatarUrl, bio, followerRange, fullName, handle, incomeRange, introVideoUrl, mainPlatform, nicheInput, portfolioItems]
   )
 
   const currentBrandSnapshot = useMemo(
@@ -600,6 +610,87 @@ export default function ProfileEditPage() {
     }
   }
 
+  const uploadIntroVideo = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file || !creatorId) return
+
+    const allowedTypes = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v']
+    const extension = file.name.split('.').pop()?.toLowerCase() || ''
+    if (!allowedTypes.includes(file.type) && !['mp4', 'mov', 'webm', 'm4v'].includes(extension)) {
+      setStatusMessage('Upload an MP4, MOV, or WebM intro video.')
+      return
+    }
+
+    if (file.size > MAX_VIDEO_SIZE) {
+      setStatusMessage('Intro videos must be 100MB or smaller.')
+      return
+    }
+
+    setIntroVideoUploading(true)
+    setIntroVideoUploadProgress(0)
+    setSaveSuccess(false)
+    setStatusMessage('')
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData.session?.access_token
+      if (!accessToken) {
+        setStatusMessage('You need to sign in again before uploading an intro video.')
+        return
+      }
+
+      const uploadUrlResponse = await fetch('/api/portfolio/create-direct-upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          creatorId,
+          fileName: `intro-${file.name}`,
+          fileType: file.type,
+          fileSize: file.size,
+        }),
+      })
+
+      const preparedUpload = (await uploadUrlResponse.json()) as { error?: string; uploadUrl?: string; videoUrl?: string }
+      if (!uploadUrlResponse.ok || !preparedUpload.uploadUrl || !preparedUpload.videoUrl) {
+        setStatusMessage(preparedUpload.error || 'Could not prepare intro video upload.')
+        return
+      }
+
+      const xhr = new XMLHttpRequest()
+      const uploadResult = await new Promise<{ status: number }>((resolve, reject) => {
+        xhr.open('POST', preparedUpload.uploadUrl || '')
+        xhr.upload.onprogress = (progressEvent) => {
+          if (progressEvent.lengthComputable) setIntroVideoUploadProgress(Math.round((progressEvent.loaded / progressEvent.total) * 100))
+        }
+        xhr.onerror = () => reject(new Error('Upload failed'))
+        xhr.onload = () => resolve({ status: xhr.status })
+        const directFormData = new FormData()
+        directFormData.append('file', file)
+        xhr.send(directFormData)
+      })
+
+      if (uploadResult.status < 200 || uploadResult.status >= 300) {
+        setStatusMessage('Cloudflare could not accept the intro video upload. Try a shorter MP4 or MOV file.')
+        return
+      }
+
+      setIntroVideoUrl(preparedUpload.videoUrl || '')
+      setIntroVideoUploadProgress(100)
+      setStatusMessage('Intro video uploaded. Save changes to publish it to your public profile.')
+      setActiveTab('profile')
+      setStep(0)
+    } catch {
+      setStatusMessage('Could not upload intro video.')
+    } finally {
+      setIntroVideoUploading(false)
+      window.setTimeout(() => setIntroVideoUploadProgress(0), 500)
+    }
+  }
+
   const uploadPortfolioVideo = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
@@ -742,6 +833,7 @@ export default function ProfileEditPage() {
         .map((tag) => tag.trim())
         .filter(Boolean)
         .slice(0, 8),
+      introVideoUrl: introVideoUrl.trim() || null,
       portfolioItems: normalizePortfolioDrafts(portfolioItems),
     }
 
@@ -778,6 +870,7 @@ export default function ProfileEditPage() {
       followerRange,
       incomeRange,
       nicheInput,
+      introVideoUrl,
       portfolioItems: normalizePortfolioDrafts(portfolioItems),
     }))
   }
@@ -1045,6 +1138,37 @@ export default function ProfileEditPage() {
                   </div>
                 </div>
               </div>
+
+              <div className="rounded-2xl border border-[#e8e8e4] bg-[#fcfcfa] p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#1c1c1e]">Intro video</label>
+                    <p className="mt-1 max-w-md text-xs leading-5 text-[#6b6b6b]">Optional. This appears in the hero of your public portfolio if added.</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input ref={introVideoInputRef} type="file" accept={VIDEO_ACCEPT} className="hidden" onChange={uploadIntroVideo} disabled={introVideoUploading || saving} />
+                    <button type="button" onClick={() => introVideoInputRef.current?.click()} disabled={introVideoUploading || saving} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4] disabled:opacity-40">
+                      {introVideoUploading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {introVideoUploading ? 'Uploading…' : introVideoUrl ? 'Replace video' : 'Add intro video'}
+                    </button>
+                    {introVideoUrl && (
+                      <button type="button" onClick={() => { setIntroVideoUrl(''); setSaveSuccess(false); setStatusMessage('Intro video removed. Save changes to update your public profile.') }} disabled={introVideoUploading || saving} className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold text-[#8a3d3d] hover:bg-[#fff2f2] disabled:opacity-40">
+                        <X className="h-3.5 w-3.5" /> Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {introVideoUploading && (
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between text-sm font-medium text-[#1c1c1e]"><span>Uploading intro video</span><span>{introVideoUploadProgress}%</span></div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[#ecece7]"><div className="h-full rounded-full bg-[#ccff00] transition-all" style={{ width: `${introVideoUploadProgress}%` }} /></div>
+                  </div>
+                )}
+                {introVideoUrl && !introVideoUploading && (
+                  <video src={introVideoUrl} controls playsInline className="mt-4 aspect-video w-full max-w-md rounded-2xl bg-black object-cover" />
+                )}
+              </div>
+
               <div>
                 <label className="block text-xs text-[#6b6b6b] mb-1">Full name</label>
                 <input value={fullName} onChange={(event) => setFullName(event.target.value)} className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]" />
@@ -1278,7 +1402,7 @@ export default function ProfileEditPage() {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[#1c1c1e]">{hasUnsavedChanges ? 'You have unsaved changes' : 'Ready to publish your latest edits'}</p>
               <p className="text-xs text-[#6b6b6b]">
-                {saveSuccess ? 'Saved successfully.' : avatarUploading || videoUploading ? 'Uploads finish first, then save your profile.' : 'Save to update your public profile.'}
+                {saveSuccess ? 'Saved successfully.' : avatarUploading || videoUploading || introVideoUploading ? 'Uploads finish first, then save your profile.' : 'Save to update your public profile.'}
               </p>
             </div>
             <div className="flex items-center gap-2">

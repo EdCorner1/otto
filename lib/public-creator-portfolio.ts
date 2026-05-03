@@ -13,6 +13,12 @@ export interface PublicPortfolioSocial {
   label?: string
 }
 
+export interface PublicPortfolioReview {
+  quote: string
+  reviewerName: string
+  reviewerTitle: string | null
+}
+
 export interface PublicPortfolioVideo {
   id: string
   video_url: string
@@ -53,6 +59,8 @@ export interface PublicCreatorPortfolio {
   socials: PublicPortfolioSocial[]
   social_links: PublicPortfolioSocial[]
   brandLogos?: string[]
+  introVideo?: PublicPortfolioVideo | null
+  reviews?: PublicPortfolioReview[]
   portfolioItems: PublicPortfolioVideo[]
   videos: PublicPortfolioVideo[]
   stats: {
@@ -117,6 +125,14 @@ function parseCreatorMeta(tags: CreatorTagRow[]) {
       .filter((t) => t.tag.startsWith('niche:'))
       .map((t) => t.tag.replace('niche:', '').trim())
       .filter(Boolean),
+    introVideoUrl: read('intro_video:'),
+    reviews: tags
+      .filter((t) => t.tag.startsWith('review:'))
+      .map((t) => {
+        const parts = t.tag.replace('review:', '').split('|').map((part) => part.trim())
+        return { quote: parts[0] || '', reviewerName: parts[1] || 'Brand partner', reviewerTitle: parts[2] || null }
+      })
+      .filter((review) => review.quote),
   }
 }
 
@@ -211,7 +227,7 @@ export async function getPublicCreatorPortfolioByHandle(
     }))
     .filter((social) => social.platform && social.url)
 
-  const videos: PublicPortfolioVideo[] = ((items || []) as PortfolioItemRow[]).map((item) => {
+  const buildPublicVideo = (item: PortfolioItemRow, fallbackId: string): PublicPortfolioVideo => {
     const url = String(item.video_url || item.url || '').trim()
     const platform = normalizePlatform(item.platform) || inferPlatformFromUrl(url) || meta.mainPlatform || 'portfolio'
     const youtubeId = getYoutubeId(url)
@@ -221,7 +237,7 @@ export async function getPublicCreatorPortfolioByHandle(
     const isMux = !isYoutube && !isCloudflare && !!url && !/^https?:\/\//i.test(url)
 
     return {
-      id: item.id,
+      id: item.id || fallbackId,
       video_url: url,
       url,
       title: item.title?.trim() || item.caption?.trim() || 'Untitled',
@@ -237,7 +253,25 @@ export async function getPublicCreatorPortfolioByHandle(
       viewCount: typeof item.views === 'number' ? item.views : 0,
       createdAt: item.created_at,
     }
-  })
+  }
+
+  const videos: PublicPortfolioVideo[] = ((items || []) as PortfolioItemRow[]).map((item) => buildPublicVideo(item, item.id))
+
+  const introVideo = meta.introVideoUrl
+    ? buildPublicVideo({
+        id: `intro-${creatorRow.id}`,
+        url: meta.introVideoUrl,
+        video_url: meta.introVideoUrl,
+        title: 'Intro video',
+        platform: inferPlatformFromUrl(meta.introVideoUrl) || meta.mainPlatform || 'portfolio',
+        category: 'Tech & Apps',
+        caption: `Meet ${creatorRow.display_name?.trim() || meta.handle || normalizedHandle}`,
+        thumbnail_url: null,
+        created_at: new Date().toISOString(),
+        sort_order: -1,
+        views: 0,
+      }, `intro-${creatorRow.id}`)
+    : null
 
   const totalViews = videos.reduce((sum, video) => sum + video.viewCount, 0)
   const totalVideos = videos.length
@@ -269,6 +303,8 @@ export async function getPublicCreatorPortfolioByHandle(
     socials,
     social_links: socials,
     brandLogos,
+    introVideo,
+    reviews: meta.reviews,
     portfolioItems: videos,
     videos,
     stats: {

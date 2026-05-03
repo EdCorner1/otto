@@ -27,6 +27,7 @@ type PatchPayload = {
   followerRange?: string
   incomeRange?: string
   nicheTags?: string[]
+  introVideoUrl?: string | null
   socials?: SocialInput[]
   portfolioItems?: PortfolioInput[]
 }
@@ -80,6 +81,7 @@ function parseCreatorMeta(tags: Array<{ tag: string }>) {
     mainPlatform: read('main_platform:'),
     followerRange: read('followers:'),
     incomeRange: read('income:'),
+    introVideoUrl: read('intro_video:'),
     nicheTags: tags
       .filter((t) => t.tag.startsWith('niche:'))
       .map((t) => t.tag.replace('niche:', '').trim())
@@ -150,6 +152,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       followerRange: meta.followerRange,
       incomeRange: meta.incomeRange,
       nicheTags: meta.nicheTags,
+      introVideoUrl: meta.introVideoUrl || '',
       socials: data.creator_socials || [],
       portfolioItems,
       publicPortfolio,
@@ -182,6 +185,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const nicheTags = Array.isArray(body.nicheTags)
       ? body.nicheTags.map((tag) => cleanText(tag)).filter(Boolean).slice(0, 8)
       : []
+    const introVideoUrl = cleanOptionalUrl(body.introVideoUrl)
     const socials = Array.isArray(body.socials)
       ? body.socials
           .map((social) => ({
@@ -248,7 +252,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       .select('id, tag')
       .eq('creator_id', id)
 
-    const managedTagPrefixes = ['handle:', 'main_platform:', 'followers:', 'income:', 'niche:']
+    const managedTagPrefixes = ['handle:', 'main_platform:', 'followers:', 'income:', 'niche:', 'intro_video:']
     const managedIds = (existingTags || [])
       .filter((t: { tag: string }) => managedTagPrefixes.some((prefix) => t.tag.startsWith(prefix)))
       .map((t: { id: string }) => t.id)
@@ -263,6 +267,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       `main_platform:${mainPlatform}`,
       ...(followerRange ? [`followers:${followerRange}`] : []),
       ...(incomeRange ? [`income:${incomeRange}`] : []),
+      ...(introVideoUrl ? [`intro_video:${introVideoUrl}`] : []),
       ...nicheTags.map((tag) => `niche:${tag}`),
     ].map((tag) => ({ creator_id: id, tag }))
 
