@@ -472,6 +472,12 @@ export default function PortfolioPageClient({
   const reviews = (portfolio.reviews || []).slice(0, 8)
   const featuredWork = (portfolio.featuredWork || []).slice(0, 4)
 
+  const topProofLabel = reviews.length > 0
+    ? `${reviews.length} brand review${reviews.length === 1 ? '' : 's'}`
+    : workedWithLogos.length > 0
+      ? `Worked with ${workedWithLogos.length} brand${workedWithLogos.length === 1 ? '' : 's'}`
+      : `${portfolio.stats.totalVideos} portfolio video${portfolio.stats.totalVideos === 1 ? '' : 's'}`
+
   const responseTimeLabel = formatResponseTime(portfolio.stats.responseTimeHours)
   const availabilityText = portfolio.isAvailable ? 'Available now' : 'Busy right now'
   const creatorFirstName = getFirstName(portfolio.fullName)
@@ -495,7 +501,7 @@ export default function PortfolioPageClient({
             <div className="mx-auto max-w-6xl">
               <div className="mb-8 inline-flex items-center gap-2 text-sm text-[#55554f]">
                 <span className="tracking-[0.08em] text-[#2f8f55]">★★★★★</span>
-                <span>{portfolio.stats.totalVideos} portfolio video{portfolio.stats.totalVideos === 1 ? '' : 's'} ready to review</span>
+                <span>{topProofLabel}</span>
               </div>
 
               <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
