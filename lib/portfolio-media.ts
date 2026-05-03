@@ -76,9 +76,9 @@ export function inferPortfolioCategory(input: { caption?: string | null; platfor
   if (input.category && input.category.trim()) return explicit
 
   const source = `${input.caption || ''} ${input.platform || ''}`.toLowerCase()
-  if (/\bai\b|chatgpt|claude|openai|automation|llm|prompt/.test(source)) return 'AI'
-  if (/travel|hotel|flight|airbnb|trip|destination/.test(source)) return 'Travel'
   if (/health|fitness|gym|wellness|supplement|workout/.test(source)) return 'Health & Fitness'
+  if (/travel|hotel|flight|airbnb|trip|destination/.test(source)) return 'Travel'
+  if (/\bai\b|chatgpt|claude|openai|automation|llm|prompt/.test(source)) return 'AI'
   return 'Tech & Apps'
 }
 

@@ -226,7 +226,7 @@ export async function getPublicCreatorPortfolioByHandle(
     .eq('creator_id', creatorId)
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
-    .limit(6)
+    .limit(24)
 
   const creatorRow = creator as CreatorRow
   const tags = (creatorRow.creator_tags || []) as CreatorTagRow[]
