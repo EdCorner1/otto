@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { Banknote, Bookmark, BriefcaseBusiness, ClipboardList, Copy, ExternalLink, RefreshCw, Send, Sparkles } from 'lucide-react'
+import { Banknote, Bookmark, BriefcaseBusiness, ClipboardList, Copy, ExternalLink, RefreshCw, Send, Sparkles, WandSparkles } from 'lucide-react'
 import { FALLBACK_HOOK_ROULETTE_ITEMS } from '@/lib/hook-roulette'
 
 type Role = 'creator' | 'brand'
@@ -516,15 +516,19 @@ export default function DashboardPage() {
 
       {role === 'creator' && creator && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <section className="card shadow-sm lg:col-span-2 hook-roulette-card">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <section className="overflow-hidden rounded-[30px] border border-[#e6e6de] bg-white shadow-[0_18px_55px_rgba(28,28,30,0.08)] lg:col-span-2">
+            <div className="border-b border-[#eeeeea] bg-[radial-gradient(circle_at_top_left,rgba(204,255,0,0.22),transparent_34%),linear-gradient(135deg,#ffffff_0%,#fbfbf6_60%,#f3f3ec_100%)] p-5 md:p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="section-label mb-2">Creator workspace</p>
-                <h2 className="text-[24px] leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.6px' }}>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#e6efbf] bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#69733f]">
+                  <WandSparkles className="h-3.5 w-3.5" />
                   Hook lab
+                </div>
+                <h2 className="text-[26px] leading-tight text-[#1c1c1e] md:text-[30px]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.8px' }}>
+                  Shape the first line before you film
                 </h2>
-                <p className="mt-2 text-sm text-[#6b6b6b] max-w-2xl">
-                  A cleaner place to shape your opener, angle, and CTA before you film. Use it when the first line is not landing yet.
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5f5f5b]">
+                  Pick a natural opener, tighten the angle, then move. This should feel like a scratchpad, not another content machine.
                 </p>
               </div>
 
@@ -544,7 +548,9 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className={`mt-4 rounded-2xl border border-[#e6efbf] bg-[#f9ffd9] p-4 transition-all duration-300 ${rollingHook ? 'opacity-60 scale-[0.995]' : 'opacity-100 scale-100'}`}>
+            </div>
+            <div className="p-5 md:p-6">
+              <div className={`rounded-[24px] border border-[#e6efbf] bg-[#fbffdf] p-4 transition-all duration-300 md:p-5 ${rollingHook ? 'opacity-60 scale-[0.995]' : 'opacity-100 scale-100'}`}>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#78834a]">Hook starter</p>
               <p className="mt-2 text-lg font-semibold text-[#1c1c1e]">
                 {currentHookIdea?.hookStarter || 'Load a hook to start shaping your opener.'}
@@ -568,9 +574,8 @@ export default function DashboardPage() {
                   <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.ctaBeat || '—'}</p>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-3 flex items-center justify-between gap-3">
+              <div className="mt-3 flex items-center justify-between gap-3">
               <p className="text-xs text-[#8a8a86]">Keep it simple: pick the line that sounds most natural, then film before you overwork it.</p>
               <p className="text-xs font-medium text-[#4b5d00] min-h-[18px]">{hookFeedbackMessage}</p>
             </div>
@@ -591,6 +596,8 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+            </div>
+            </div>
           </section>
 
           <section className="card shadow-sm">
