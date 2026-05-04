@@ -223,6 +223,10 @@ export default function OpsPage() {
         <p className="text-[#6b6b6b] mt-3 text-sm max-w-2xl">
           Live view of waitlist demand, product readiness, content momentum, and what needs pushing next.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/ops/creators" className="btn-primary px-4 py-2 text-sm">Review creators →</Link>
+          <Link href="/creators/welcome" className="btn-ghost border border-[#e8e8e4] px-4 py-2 text-sm">Preview creator onboarding →</Link>
+        </div>
         {email ? <p className="text-xs text-[#9a9a9a] mt-2">Signed in as {email}</p> : null}
       </div>
 
