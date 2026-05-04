@@ -360,11 +360,10 @@ export default function PortfolioPageClient({
 
   const creatorFirstName = getFirstName(portfolio.fullName)
   const ratePackages = [
-    { name: 'Single UGC video', price: 'From £250', desc: 'One short-form concept, filmed and edited for organic social.', detail: 'Best for a first test or a single product moment.' },
-    { name: '3-video test pack', price: 'From £650', desc: 'Three hooks or angles so the brand can test what lands fastest.', detail: 'Best for paid-social testing or finding the strongest opener.' },
-    { name: 'Monthly creator retainer', price: 'From £1.5K', desc: 'Ongoing product-led content with a consistent creator face.', detail: 'Best for brands that need a reliable creator partner, not one-off assets.' },
+    { name: 'Pay per video', price: '$150', desc: 'One short-form UGC video for a single product, feature, or campaign angle.', detail: 'Good for testing one idea quickly.' },
+    { name: '3 video deal', price: '$400', desc: 'Three short-form videos so the brand can test different hooks, angles, or use cases.', detail: 'Best starting point for most brands.' },
+    { name: 'Monthly retainer', price: '$1,000', desc: 'One daily post plus daily engagement support for brands that want consistent creator output.', detail: 'For ongoing content, presence, and momentum.' },
   ]
-  const primaryRate = ratePackages[1] || ratePackages[0]
 
   return (
     <>
@@ -540,26 +539,21 @@ export default function PortfolioPageClient({
 
           <section className="mt-16">
             <div className="mx-auto max-w-3xl text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Rate card</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Payment options</p>
               <h2 className="mt-3 text-[clamp(2.4rem,6vw,4.6rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
                 Ways to work with me
               </h2>
             </div>
 
-            <div className="mx-auto mt-8 max-w-xl rounded-[24px] border border-[#e6e6df] bg-white p-7 text-center shadow-[0_18px_54px_rgba(0,0,0,0.06)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">{primaryRate.name}</p>
-              <p className="mt-5 text-[clamp(3.8rem,10vw,7rem)] leading-[0.82] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.08em' }}>{primaryRate.price}</p>
-              <p className="mx-auto mt-5 max-w-md text-base leading-7 text-[#5f5f59]">{primaryRate.desc}</p>
-              <p className="mx-auto mt-4 max-w-md rounded-[16px] border border-[#eeeeea] bg-[#fafaf7] px-4 py-3 text-sm leading-6 text-[#6b6b66]">{primaryRate.detail}</p>
-            </div>
-
-            <div className="mx-auto mt-5 max-w-xl rounded-[22px] border border-[#e8e8e4] bg-[#fafaf7] p-5 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">Calendar</p>
-              <h3 className="mt-2 text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>Booking calendar coming soon</h3>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#6b6b66]">For MVP, brands can request this creator through Otto. Calendar connections come later.</p>
-              <a href={primaryContactHref} className="mt-5 inline-flex items-center justify-center rounded-full bg-[#ccff00] px-6 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
-                Request this creator
-              </a>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {ratePackages.map((item) => (
+                <div key={item.name} className="rounded-[24px] border border-[#e6e6df] bg-white p-6 shadow-[0_18px_54px_rgba(0,0,0,0.05)]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">{item.name}</p>
+                  <p className="mt-5 text-[clamp(3.2rem,7vw,5.4rem)] leading-[0.82] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.08em' }}>{item.price}</p>
+                  <p className="mt-5 text-sm leading-6 text-[#5f5f59]">{item.desc}</p>
+                  <p className="mt-4 rounded-[16px] border border-[#eeeeea] bg-[#fafaf7] px-4 py-3 text-sm leading-6 text-[#6b6b66]">{item.detail}</p>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -602,51 +596,32 @@ export default function PortfolioPageClient({
             </div>
           </section>
 
-          <section className="mt-12 overflow-hidden rounded-[36px] bg-[#111111] px-6 py-8 text-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-10">
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-2xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Work together</p>
-                <h2 className="mt-3 text-[clamp(2rem,4vw,3.4rem)] leading-[0.96] text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-                  Ready to brief {creatorFirstName}?
-                </h2>
-                <p className="mt-4 text-base leading-7 text-white/70">
-                  Send the product, timeline, and deliverables you need. Keep it specific and easy to answer.
-                </p>
-              </div>
-
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-                <a
-                  href={primaryContactHref}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#ccff00] px-6 py-3.5 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]"
-                >
-                  Work with {portfolio.fullName.split(' ')[0] || portfolio.fullName}
-                </a>
-
-                {socialCTAs.map((social) => (
-                  <a
-                    key={`${social.platform}-cta`}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-                  >
-                    {platformIcon(social.platform)}
-                    View on {platformLabel(social.platform)}
-                  </a>
-                ))}
-
-                {isOwner && (
-                  <Link
-                    href="/profile/edit"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    Edit Profile
-                  </Link>
-                )}
-              </div>
-            </div>
+          <section className="mx-auto mt-12 max-w-xl rounded-[22px] border border-[#e8e8e4] bg-white p-6 text-center shadow-[0_18px_54px_rgba(0,0,0,0.05)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">Calendar</p>
+            <h3 className="mt-2 text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>Booking calendar coming soon</h3>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#6b6b66]">For MVP, brands can request this creator through Otto. Calendar connections come later.</p>
+            <a href={primaryContactHref} className="mt-5 inline-flex items-center justify-center rounded-full bg-[#ccff00] px-6 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
+              Request this creator
+            </a>
           </section>
+
+          <footer className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-[#e7e7df] py-6 text-sm text-[#6b6b66] sm:flex-row">
+            <p><span className="font-semibold text-[#363535]">{portfolio.fullName}</span> · Built with <a href="https://ottougc.com" className="font-semibold text-[#363535] hover:underline">OttoUGC.com</a></p>
+            <div className="flex items-center gap-3">
+              {socialCTAs.slice(0, 3).map((social) => (
+                <a
+                  key={`${social.platform}-footer`}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={platformLabel(social.platform)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e0e0d8] bg-white text-[#363535] transition hover:-translate-y-0.5 hover:border-[#ccff00]"
+                >
+                  {platformIcon(social.platform)}
+                </a>
+              ))}
+            </div>
+          </footer>
         </div>
       </main>
 
