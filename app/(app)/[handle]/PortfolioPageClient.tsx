@@ -321,7 +321,6 @@ export default function PortfolioPageClient({
   isOwner: boolean
 }) {
   const [activeCategory, setActiveCategory] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
-  const [activeRateIndex, setActiveRateIndex] = useState(0)
   const socialCTAs = useMemo(
     () => portfolio.socials.filter((social) => ['tiktok', 'instagram', 'youtube'].includes(social.platform)).slice(0, 3),
     [portfolio.socials],
@@ -365,7 +364,7 @@ export default function PortfolioPageClient({
     { name: '3-video test pack', price: 'From £650', desc: 'Three hooks or angles so the brand can test what lands fastest.', detail: 'Best for paid-social testing or finding the strongest opener.' },
     { name: 'Monthly creator retainer', price: 'From £1.5K', desc: 'Ongoing product-led content with a consistent creator face.', detail: 'Best for brands that need a reliable creator partner, not one-off assets.' },
   ]
-  const activeRate = ratePackages[activeRateIndex] || ratePackages[0]
+  const primaryRate = ratePackages[1] || ratePackages[0]
 
   return (
     <>
@@ -539,39 +538,26 @@ export default function PortfolioPageClient({
             </section>
           )}
 
-          <section className="mt-16 overflow-hidden rounded-[28px] border border-[#e7e7df] bg-white px-6 py-9 shadow-[0_18px_54px_rgba(0,0,0,0.05)] sm:px-8 lg:px-10">
-            <div className="mx-auto max-w-5xl text-center">
+          <section className="mt-16">
+            <div className="mx-auto max-w-3xl text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Rate card</p>
-              <h2 className="mt-3 text-[clamp(2.4rem,6vw,4.8rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
+              <h2 className="mt-3 text-[clamp(2.4rem,6vw,4.6rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
                 Ways to work with me
               </h2>
             </div>
 
-            <div className="mt-8 grid gap-4 lg:grid-cols-[0.72fr_1.1fr_0.72fr] lg:items-center">
-              {ratePackages.map((item, index) => {
-                const active = activeRateIndex === index
-                return (
-                  <button
-                    key={item.name}
-                    type="button"
-                    onClick={() => setActiveRateIndex(index)}
-                    className={`rounded-[22px] border p-5 text-left transition duration-300 ${active ? 'border-[#d6d6cf] bg-[#fafaf7] shadow-[0_18px_50px_rgba(0,0,0,0.08)] lg:scale-105' : 'border-[#eeeeea] bg-[#f7f7f2] opacity-70 hover:opacity-100'}`}
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">{item.name}</p>
-                    <p className={`${active ? 'mt-5 text-[clamp(3rem,7vw,5.4rem)]' : 'mt-4 text-3xl'} leading-[0.84] text-[#1c1c1e]`} style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.075em' }}>{item.price}</p>
-                    {active && <p className="mt-5 text-sm leading-6 text-[#5f5f59]">{item.desc}</p>}
-                  </button>
-                )
-              })}
+            <div className="mx-auto mt-8 max-w-xl rounded-[24px] border border-[#e6e6df] bg-white p-7 text-center shadow-[0_18px_54px_rgba(0,0,0,0.06)]">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">{primaryRate.name}</p>
+              <p className="mt-5 text-[clamp(3.8rem,10vw,7rem)] leading-[0.82] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.08em' }}>{primaryRate.price}</p>
+              <p className="mx-auto mt-5 max-w-md text-base leading-7 text-[#5f5f59]">{primaryRate.desc}</p>
+              <p className="mx-auto mt-4 max-w-md rounded-[16px] border border-[#eeeeea] bg-[#fafaf7] px-4 py-3 text-sm leading-6 text-[#6b6b66]">{primaryRate.detail}</p>
             </div>
 
-            <div className="mt-8 grid gap-4 rounded-[22px] border border-[#e8e8e4] bg-[#fafaf7] p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">Calendar</p>
-                <h3 className="mt-2 text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>Booking calendar coming soon</h3>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6b66]">For MVP, brands can request the creator through Otto. Later, creators can connect Calendly, Cal.com, or Google Calendar.</p>
-              </div>
-              <a href={primaryContactHref} className="inline-flex items-center justify-center rounded-full bg-[#ccff00] px-6 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
+            <div className="mx-auto mt-5 max-w-xl rounded-[22px] border border-[#e8e8e4] bg-[#fafaf7] p-5 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">Calendar</p>
+              <h3 className="mt-2 text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>Booking calendar coming soon</h3>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#6b6b66]">For MVP, brands can request this creator through Otto. Calendar connections come later.</p>
+              <a href={primaryContactHref} className="mt-5 inline-flex items-center justify-center rounded-full bg-[#ccff00] px-6 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
                 Request this creator
               </a>
             </div>
