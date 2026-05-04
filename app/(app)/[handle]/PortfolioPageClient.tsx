@@ -539,76 +539,77 @@ export default function PortfolioPageClient({
             </section>
           )}
 
-          <section className="mt-16 overflow-hidden rounded-[28px] border border-[#e6e6df] bg-[#111111] p-1 shadow-[0_28px_90px_rgba(0,0,0,0.16)]">
-            <div className="rounded-[24px] bg-[radial-gradient(circle_at_top_left,rgba(204,255,0,0.18),transparent_32%),#111111] px-6 py-8 text-white sm:px-8 lg:px-10">
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:items-start">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Rate card</p>
-                  <h2 className="mt-3 text-[clamp(2.4rem,6vw,4.8rem)] leading-[0.9] text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
-                    Ways to work with me
-                  </h2>
-                  <p className="mt-5 max-w-xl text-base leading-7 text-white/68">
-                    Pick the starting point that matches your campaign. Creators will be able to edit this headline, pricing, and packages later.
-                  </p>
+          <section className="mt-16 overflow-hidden rounded-[28px] border border-[#e7e7df] bg-white px-6 py-9 shadow-[0_18px_54px_rgba(0,0,0,0.05)] sm:px-8 lg:px-10">
+            <div className="mx-auto max-w-5xl text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Rate card</p>
+              <h2 className="mt-3 text-[clamp(2.4rem,6vw,4.8rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
+                Ways to work with me
+              </h2>
+            </div>
 
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {ratePackages.map((item, index) => (
-                      <button
-                        key={item.name}
-                        type="button"
-                        onClick={() => setActiveRateIndex(index)}
-                        className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${activeRateIndex === index ? 'border-[#ccff00] bg-[#ccff00] text-[#1c1c1e]' : 'border-white/12 bg-white/[0.06] text-white/72 hover:border-white/28 hover:text-white'}`}
-                      >
-                        {index + 1}. {item.name.replace('Monthly creator ', '')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <div className="mt-8 grid gap-4 lg:grid-cols-[0.72fr_1.1fr_0.72fr] lg:items-center">
+              {ratePackages.map((item, index) => {
+                const active = activeRateIndex === index
+                return (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => setActiveRateIndex(index)}
+                    className={`rounded-[22px] border p-5 text-left transition duration-300 ${active ? 'border-[#d6d6cf] bg-[#fafaf7] shadow-[0_18px_50px_rgba(0,0,0,0.08)] lg:scale-105' : 'border-[#eeeeea] bg-[#f7f7f2] opacity-70 hover:opacity-100'}`}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8b84]">{item.name}</p>
+                    <p className={`${active ? 'mt-5 text-[clamp(3rem,7vw,5.4rem)]' : 'mt-4 text-3xl'} leading-[0.84] text-[#1c1c1e]`} style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.075em' }}>{item.price}</p>
+                    {active && <p className="mt-5 text-sm leading-6 text-[#5f5f59]">{item.desc}</p>}
+                  </button>
+                )
+              })}
+            </div>
 
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-                  <div className="rounded-[22px] border border-white/12 bg-white/[0.07] p-6 transition-all duration-300">
-                    <p className="text-sm font-semibold text-white/65">{activeRate.name}</p>
-                    <p className="mt-5 text-[clamp(3rem,7vw,5.8rem)] leading-[0.82] text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.08em' }}>{activeRate.price}</p>
-                    <p className="mt-5 text-base leading-7 text-white/72">{activeRate.desc}</p>
-                    <p className="mt-4 rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm leading-6 text-white/56">{activeRate.detail}</p>
-                  </div>
-
-                  <div className="rounded-[22px] border border-white/12 bg-[#202020] p-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/38">Calendar</p>
-                    <p className="mt-3 text-xl leading-tight text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>Booking calendar coming soon</p>
-                    <p className="mt-3 text-sm leading-6 text-white/58">For MVP, brands can request the creator through Otto. Later, creators can connect Calendly, Cal.com, or Google Calendar.</p>
-                    <a href={primaryContactHref} className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#ccff00] px-5 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
-                      Request this creator
-                    </a>
-                  </div>
-                </div>
+            <div className="mt-8 grid gap-4 rounded-[22px] border border-[#e8e8e4] bg-[#fafaf7] p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">Calendar</p>
+                <h3 className="mt-2 text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>Booking calendar coming soon</h3>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6b66]">For MVP, brands can request the creator through Otto. Later, creators can connect Calendly, Cal.com, or Google Calendar.</p>
               </div>
+              <a href={primaryContactHref} className="inline-flex items-center justify-center rounded-full bg-[#ccff00] px-6 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
+                Request this creator
+              </a>
             </div>
           </section>
 
           <section className="mt-16 rounded-[28px] border border-[#e6e6df] bg-white px-6 py-8 shadow-[0_18px_54px_rgba(0,0,0,0.05)] sm:px-8 lg:px-10">
-            <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">About the creator</p>
-                <h2 className="mt-3 text-[clamp(2.3rem,5vw,4.4rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
-                  5 fun things to know about me
-                </h2>
-                <p className="mt-5 max-w-md text-sm leading-6 text-[#6b6b66]">
-                  A quick human read before you brief the work. This section will be creator-editable later.
-                </p>
+            <div className="mb-8 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">About the creator</p>
+              <h2 className="mt-3 text-[clamp(2.3rem,5vw,4.4rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
+                5 fun things to know about me
+              </h2>
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
+              <div className="overflow-hidden rounded-[22px] border border-[#e8e8e4] bg-[#111111] shadow-[0_18px_54px_rgba(0,0,0,0.12)]">
+                {portfolio.introVideo ? (
+                  <div className="aspect-[9/16]">
+                    <InlinePlayableVideo item={portfolio.introVideo} title={`${creatorFirstName} intro video`} className="h-full w-full" />
+                  </div>
+                ) : (
+                  <div className="flex aspect-[9/16] items-center justify-center bg-[#111111] text-white/50">Intro video coming soon</div>
+                )}
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-3">
                 {[
-                  'I’m at my best when I can turn a confusing product into a simple “oh, I get it” moment.',
-                  'I write the hook before I touch the camera — the first three seconds do most of the work.',
-                  'I genuinely enjoy testing AI apps, SaaS tools, and tiny workflow upgrades.',
-                  'I prefer clean, native-feeling videos over anything that looks like a polished ad.',
-                  'I like making technical products feel useful, human, and slightly less boring.',
-                ].map((item, index) => (
-                  <div key={item} className={`rounded-[18px] border border-[#ecece7] bg-[#fafaf7] p-5 ${index === 4 ? 'sm:col-span-2' : ''}`}>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">0{index + 1}</p>
-                    <p className="mt-3 text-sm leading-6 text-[#363535]">{item}</p>
+                  ['Hook-first brain', 'I write the hook before I touch the camera — the first three seconds do most of the work.'],
+                  ['Product nerd', 'I genuinely enjoy testing AI apps, SaaS tools, and tiny workflow upgrades.'],
+                  ['Simple beats shiny', 'I prefer clean, native-feeling videos over anything that looks like a polished ad.'],
+                  ['Useful over loud', 'I like making technical products feel useful, human, and slightly less boring.'],
+                  ['Fast clarity', 'I’m at my best when I can turn a confusing product into a simple “oh, I get it” moment.'],
+                ].map(([title, body], index) => (
+                  <div key={title} className="grid gap-4 rounded-[18px] border border-[#ecece7] bg-[#fafaf7] p-5 sm:grid-cols-[44px_1fr]">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ccff00] text-sm font-bold text-[#1c1c1e]">{index + 1}</div>
+                    <div>
+                      <p className="font-semibold text-[#1c1c1e]">{title}</p>
+                      <p className="mt-1 text-sm leading-6 text-[#66665f]">{body}</p>
+                    </div>
                   </div>
                 ))}
               </div>
