@@ -586,6 +586,35 @@ export default function PortfolioPageClient({
             </div>
           </section>
 
+          <section className="mt-16 rounded-[28px] border border-[#e6e6df] bg-white px-6 py-8 shadow-[0_18px_54px_rgba(0,0,0,0.05)] sm:px-8 lg:px-10">
+            <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">About the creator</p>
+                <h2 className="mt-3 text-[clamp(2.3rem,5vw,4.4rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
+                  5 fun things to know about me
+                </h2>
+                <p className="mt-5 max-w-md text-sm leading-6 text-[#6b6b66]">
+                  A quick human read before you brief the work. This section will be creator-editable later.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  'I’m at my best when I can turn a confusing product into a simple “oh, I get it” moment.',
+                  'I write the hook before I touch the camera — the first three seconds do most of the work.',
+                  'I genuinely enjoy testing AI apps, SaaS tools, and tiny workflow upgrades.',
+                  'I prefer clean, native-feeling videos over anything that looks like a polished ad.',
+                  'I like making technical products feel useful, human, and slightly less boring.',
+                ].map((item, index) => (
+                  <div key={item} className={`rounded-[18px] border border-[#ecece7] bg-[#fafaf7] p-5 ${index === 4 ? 'sm:col-span-2' : ''}`}>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8b84]">0{index + 1}</p>
+                    <p className="mt-3 text-sm leading-6 text-[#363535]">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           <section className="mt-12 overflow-hidden rounded-[36px] bg-[#111111] px-6 py-8 text-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-10">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-2xl">
