@@ -321,6 +321,7 @@ export default function PortfolioPageClient({
   isOwner: boolean
 }) {
   const [activeCategory, setActiveCategory] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
+  const [activeRateIndex, setActiveRateIndex] = useState(0)
   const socialCTAs = useMemo(
     () => portfolio.socials.filter((social) => ['tiktok', 'instagram', 'youtube'].includes(social.platform)).slice(0, 3),
     [portfolio.socials],
@@ -359,6 +360,12 @@ export default function PortfolioPageClient({
       : `${portfolio.stats.totalVideos} portfolio video${portfolio.stats.totalVideos === 1 ? '' : 's'}`
 
   const creatorFirstName = getFirstName(portfolio.fullName)
+  const ratePackages = [
+    { name: 'Single UGC video', price: 'From £250', desc: 'One short-form concept, filmed and edited for organic social.', detail: 'Best for a first test or a single product moment.' },
+    { name: '3-video test pack', price: 'From £650', desc: 'Three hooks or angles so the brand can test what lands fastest.', detail: 'Best for paid-social testing or finding the strongest opener.' },
+    { name: 'Monthly creator retainer', price: 'From £1.5K', desc: 'Ongoing product-led content with a consistent creator face.', detail: 'Best for brands that need a reliable creator partner, not one-off assets.' },
+  ]
+  const activeRate = ratePackages[activeRateIndex] || ratePackages[0]
 
   return (
     <>
@@ -534,37 +541,47 @@ export default function PortfolioPageClient({
 
           <section className="mt-16 overflow-hidden rounded-[28px] border border-[#e6e6df] bg-[#111111] p-1 shadow-[0_28px_90px_rgba(0,0,0,0.16)]">
             <div className="rounded-[24px] bg-[radial-gradient(circle_at_top_left,rgba(204,255,0,0.18),transparent_32%),#111111] px-6 py-8 text-white sm:px-8 lg:px-10">
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-end">
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:items-start">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Rate card</p>
                   <h2 className="mt-3 text-[clamp(2.4rem,6vw,4.8rem)] leading-[0.9] text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
                     Ways to work with me
                   </h2>
                   <p className="mt-5 max-w-xl text-base leading-7 text-white/68">
-                    Simple starting points for brands that already know what they need. Final scope depends on usage rights, timelines, and deliverables.
+                    Pick the starting point that matches your campaign. Creators will be able to edit this headline, pricing, and packages later.
                   </p>
-                </div>
-                <div className="rounded-[20px] border border-white/10 bg-white/[0.06] p-5 backdrop-blur-sm">
-                  <p className="text-sm font-semibold text-white">Want to check fit first?</p>
-                  <p className="mt-2 text-sm leading-6 text-white/62">For now this routes back through Otto. Later creators will connect a booking calendar or an Otto-native availability flow.</p>
-                  <a href={primaryContactHref} className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#ccff00] px-5 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
-                    Request a booking
-                  </a>
-                </div>
-              </div>
 
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                {[
-                  { name: 'Single UGC video', price: 'From £250', desc: 'One short-form concept, filmed and edited for organic social.' },
-                  { name: '3-video test pack', price: 'From £650', desc: 'Three hooks or angles so the brand can test what lands fastest.' },
-                  { name: 'Monthly creator retainer', price: 'From £1.5K', desc: 'Ongoing product-led content with a consistent creator face.' },
-                ].map((item) => (
-                  <div key={item.name} className="rounded-[18px] border border-white/10 bg-white/[0.07] p-5">
-                    <p className="text-sm font-semibold text-white/70">{item.name}</p>
-                    <p className="mt-4 text-[clamp(2rem,4vw,3.2rem)] leading-[0.88] text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>{item.price}</p>
-                    <p className="mt-4 text-sm leading-6 text-white/58">{item.desc}</p>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {ratePackages.map((item, index) => (
+                      <button
+                        key={item.name}
+                        type="button"
+                        onClick={() => setActiveRateIndex(index)}
+                        className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${activeRateIndex === index ? 'border-[#ccff00] bg-[#ccff00] text-[#1c1c1e]' : 'border-white/12 bg-white/[0.06] text-white/72 hover:border-white/28 hover:text-white'}`}
+                      >
+                        {index + 1}. {item.name.replace('Monthly creator ', '')}
+                      </button>
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+                  <div className="rounded-[22px] border border-white/12 bg-white/[0.07] p-6 transition-all duration-300">
+                    <p className="text-sm font-semibold text-white/65">{activeRate.name}</p>
+                    <p className="mt-5 text-[clamp(3rem,7vw,5.8rem)] leading-[0.82] text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.08em' }}>{activeRate.price}</p>
+                    <p className="mt-5 text-base leading-7 text-white/72">{activeRate.desc}</p>
+                    <p className="mt-4 rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm leading-6 text-white/56">{activeRate.detail}</p>
+                  </div>
+
+                  <div className="rounded-[22px] border border-white/12 bg-[#202020] p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/38">Calendar</p>
+                    <p className="mt-3 text-xl leading-tight text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>Booking calendar coming soon</p>
+                    <p className="mt-3 text-sm leading-6 text-white/58">For MVP, brands can request the creator through Otto. Later, creators can connect Calendly, Cal.com, or Google Calendar.</p>
+                    <a href={primaryContactHref} className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#ccff00] px-5 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
+                      Request this creator
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
