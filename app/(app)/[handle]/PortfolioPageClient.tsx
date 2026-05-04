@@ -238,15 +238,25 @@ function InlinePlayableVideo({ item, title, className = '' }: { item: PublicPort
 
 function IntroVideoCard({ item, creatorFirstName }: { item: PublicPortfolioVideo; creatorFirstName: string }) {
   return (
-    <div className="overflow-hidden rounded-[11px] border border-[#dfdfd7] bg-[#111111] shadow-[0_14px_34px_rgba(0,0,0,0.14)] lg:max-w-[320px]">
-      <div className="aspect-[9/16] bg-[#111111]">
-        <InlinePlayableVideo item={item} title={`${creatorFirstName} intro video`} className="h-full w-full" />
-      </div>
-      <div className="border-t border-white/10 bg-[#151515] px-4 py-3 text-white">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Intro video</p>
-        <p className="mt-1 text-lg leading-tight text-white" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-          Meet {creatorFirstName}
-        </p>
+    <div className="relative mx-auto w-full max-w-[420px] xl:max-w-[450px]">
+      <div className="absolute -inset-4 -z-10 rounded-[40px] bg-[#ccff00]/35 blur-2xl" />
+      <div className="rounded-[34px] border border-[#e1e1d9] bg-white p-3 shadow-[0_26px_80px_rgba(0,0,0,0.14)]">
+        <div className="overflow-hidden rounded-[26px] bg-[#111111]">
+          <div className="aspect-[9/16] bg-[#111111]">
+            <InlinePlayableVideo item={item} title={`${creatorFirstName} intro video`} className="h-full w-full" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-4 px-2 pb-2 pt-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">Intro video</p>
+            <p className="mt-1 text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.045em' }}>
+              Meet {creatorFirstName}
+            </p>
+          </div>
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#ccff00] text-[#1c1c1e]">
+            <Play className="h-4 w-4 fill-current" />
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -382,7 +392,7 @@ export default function PortfolioPageClient({
 
           <section className="px-1 pt-10 sm:px-6 lg:px-10 lg:pt-14">
             <div className="mx-auto max-w-6xl">
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
+              <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center xl:grid-cols-[minmax(0,1fr)_460px]">
                 <div className="max-w-4xl">
                   <div className="mb-5 flex flex-col gap-4">
                     <div className="inline-flex items-center gap-2 text-sm text-[#55554f]">
