@@ -238,10 +238,10 @@ function InlinePlayableVideo({ item, title, className = '' }: { item: PublicPort
 
 function IntroVideoCard({ item, creatorFirstName }: { item: PublicPortfolioVideo; creatorFirstName: string }) {
   return (
-    <div className="relative mx-auto w-full max-w-[420px] xl:max-w-[450px]">
+    <div className="relative mx-auto w-full max-w-[380px] xl:max-w-[400px]">
       <div className="absolute -inset-4 -z-10 rounded-[40px] bg-[#ccff00]/35 blur-2xl" />
-      <div className="rounded-[34px] border border-[#e1e1d9] bg-white p-3 shadow-[0_26px_80px_rgba(0,0,0,0.14)]">
-        <div className="overflow-hidden rounded-[26px] bg-[#111111]">
+      <div className="rounded-[30px] border border-[#e1e1d9] bg-white p-3 shadow-[0_22px_64px_rgba(0,0,0,0.13)]">
+        <div className="overflow-hidden rounded-[22px] bg-[#111111]">
           <div className="aspect-[9/16] bg-[#111111]">
             <InlinePlayableVideo item={item} title={`${creatorFirstName} intro video`} className="h-full w-full" />
           </div>
@@ -392,7 +392,7 @@ export default function PortfolioPageClient({
 
           <section className="px-1 pt-10 sm:px-6 lg:px-10 lg:pt-14">
             <div className="mx-auto max-w-6xl">
-              <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center xl:grid-cols-[minmax(0,1fr)_460px]">
+              <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-center xl:grid-cols-[minmax(0,1fr)_400px]">
                 <div className="max-w-4xl">
                   <div className="mb-5 flex flex-col gap-4">
                     <div className="inline-flex items-center gap-2 text-sm text-[#55554f]">
