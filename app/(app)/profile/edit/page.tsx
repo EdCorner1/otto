@@ -66,6 +66,7 @@ type CreatorDraftSnapshot = {
   nicheInput: string
   introVideoUrl: string
   backgroundStyle: BackgroundStyle
+  bookingUrl: string
   portfolioItems: Array<{ url: string; platform: string; caption: string; category: string }>
 }
 
@@ -138,6 +139,7 @@ function createCreatorSnapshot(input: CreatorDraftSnapshot): string {
       .slice(0, 8),
     introVideoUrl: input.introVideoUrl.trim(),
     backgroundStyle: input.backgroundStyle,
+    bookingUrl: input.bookingUrl.trim(),
     portfolioItems: input.portfolioItems,
   })
 }
@@ -196,6 +198,7 @@ export default function ProfileEditPage() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioDraft[]>([])
   const [introVideoUrl, setIntroVideoUrl] = useState('')
   const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('plain')
+  const [bookingUrl, setBookingUrl] = useState('')
   const [introVideoUploading, setIntroVideoUploading] = useState(false)
   const [introVideoUploadProgress, setIntroVideoUploadProgress] = useState(0)
   const [portfolioFilterTab, setPortfolioFilterTab] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
@@ -314,6 +317,7 @@ export default function ProfileEditPage() {
         nicheInput: profile.nicheTags.join(', '),
         introVideoUrl: profile.introVideoUrl || '',
         backgroundStyle: profile.backgroundStyle || 'plain',
+        bookingUrl: (profile as any).bookingUrl || '',
         portfolioItems: normalizePortfolioDrafts(nextPortfolioItems),
       }
 
@@ -329,6 +333,7 @@ export default function ProfileEditPage() {
       setPortfolioItems(nextPortfolioItems)
       setIntroVideoUrl(nextCreator.introVideoUrl)
       setBackgroundStyle(nextCreator.backgroundStyle)
+      setBookingUrl((profile as any).bookingUrl || '')
       setInitialCreatorSnapshot(createCreatorSnapshot(nextCreator))
 
       // If coming from dashboard "Update portfolio" link, jump to portfolio tab/step
@@ -370,9 +375,10 @@ export default function ProfileEditPage() {
       nicheInput,
       introVideoUrl,
       backgroundStyle,
+      bookingUrl,
       portfolioItems: normalizePortfolioDrafts(portfolioItems),
     }),
-    [avatarUrl, backgroundStyle, bio, followerRange, fullName, handle, incomeRange, introVideoUrl, mainPlatform, nicheInput, portfolioItems]
+    [avatarUrl, backgroundStyle, bio, bookingUrl, followerRange, fullName, handle, incomeRange, introVideoUrl, mainPlatform, nicheInput, portfolioItems]
   )
 
   const currentBrandSnapshot = useMemo(
@@ -848,6 +854,7 @@ export default function ProfileEditPage() {
         .filter(Boolean)
         .slice(0, 8),
       introVideoUrl: introVideoUrl.trim() || null,
+      bookingUrl: bookingUrl.trim() || null,
       portfolioItems: normalizePortfolioDrafts(portfolioItems),
     }
 
@@ -886,6 +893,7 @@ export default function ProfileEditPage() {
       nicheInput,
       introVideoUrl,
       backgroundStyle,
+      bookingUrl,
       portfolioItems: normalizePortfolioDrafts(portfolioItems),
     }))
   }
@@ -1205,6 +1213,22 @@ export default function ProfileEditPage() {
                       </button>
                     )
                   })}
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-[24px] border border-[#ecece7] bg-[#fafaf9] p-4">
+                <div>
+                  <p className="text-sm font-semibold text-[#1c1c1e]">Booking / Calendly link</p>
+                  <p className="mt-1 text-xs leading-5 text-[#6b6b6b]">Add a booking link so brands can schedule a call directly. Leave blank to show an inquiry form instead.</p>
+                </div>
+                <div>
+                  <input
+                    type="url"
+                    value={bookingUrl}
+                    onChange={(event) => setBookingUrl(event.target.value)}
+                    placeholder="https://calendly.com/yourname or https://cal.com/..."
+                    className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                  />
                 </div>
               </div>
 
