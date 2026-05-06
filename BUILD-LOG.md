@@ -146,3 +146,20 @@
 ### Validation
 - TypeScript: pass
 - Build: pass
+
+## 2026-05-06
+### Public brand profile pages
+- Public brand pages at `/b/[slug]` — e.g. `ottougc.com/b/ottougc`
+- Brand has `is_public` toggle (default false) — brand controls visibility
+- Shows: logo, company name, bio, industry tag, website link, active job briefs
+- Active briefs show platform tags, budget range, and Apply button
+- OttoUGC demo brand created with 1 open brief, page live at ottougc.com/b/ottougc
+
+**Test account:**
+- Email: ottobrand@ottougc.com
+- Password: OttoUGCTest123!
+
+### Validation
+- TypeScript: pass
+- Build: pass (60/60 static pages)
+- PR merged via GitHub API (deploy key SSH push)
