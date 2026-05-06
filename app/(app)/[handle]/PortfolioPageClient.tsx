@@ -504,11 +504,9 @@ export default function PortfolioPageClient({
       : `${portfolio.stats.totalVideos} portfolio video${portfolio.stats.totalVideos === 1 ? '' : 's'}`
 
   const creatorFirstName = getFirstName(portfolio.fullName)
-  const ratePackages = [
-    { name: 'Pay per video', price: '$150', desc: 'One short-form UGC video for a single product, feature, or campaign angle.', detail: 'Good for testing one idea quickly.' },
-    { name: '3 video deal', price: '$400', desc: 'Three short-form videos so the brand can test different hooks, angles, or use cases.', detail: 'Best starting point for most brands.' },
-    { name: 'Monthly retainer', price: '$1,000', desc: 'One daily post plus daily engagement support for brands that want consistent creator output.', detail: 'For ongoing content, presence, and momentum.' },
-  ]
+  const ratePackages = portfolio.rateCards && portfolio.rateCards.length > 0
+    ? portfolio.rateCards.map((pkg) => ({ name: pkg.rateName, price: pkg.ratePrice, desc: pkg.rateDesc, detail: '' }))
+    : []
 
   return (
     <>
@@ -595,6 +593,16 @@ export default function PortfolioPageClient({
                   ))}
                 </div>
               </div>
+            </section>
+          )}
+
+          {(portfolio.funFacts && portfolio.funFacts.length > 0) && (
+            <section className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {portfolio.funFacts.map((fact, i) => (
+                <div key={i} className="rounded-2xl border border-[#e8e8e4] bg-white p-4 text-center">
+                  <p className="text-sm leading-6 text-[#363535]">{fact}</p>
+                </div>
+              ))}
             </section>
           )}
 
@@ -702,44 +710,37 @@ export default function PortfolioPageClient({
             </div>
           </section>
 
-          <section className="mt-16 rounded-[28px] border border-[#e6e6df] bg-white px-6 py-8 shadow-[0_18px_54px_rgba(0,0,0,0.05)] sm:px-8 lg:px-10">
-            <div className="mb-8 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">About the creator</p>
-              <h2 className="mt-3 text-[clamp(2.3rem,5vw,4.4rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
-                5 fun things to know about me
-              </h2>
-            </div>
-
-            <div className="grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
-              <div className="overflow-hidden rounded-[22px] border border-[#e8e8e4] bg-[#111111] shadow-[0_18px_54px_rgba(0,0,0,0.12)]">
-                {portfolio.introVideo ? (
-                  <div className="aspect-[9/16]">
-                    <InlinePlayableVideo item={portfolio.introVideo} title={`${creatorFirstName} intro video`} className="h-full w-full" />
-                  </div>
-                ) : (
-                  <div className="flex aspect-[9/16] items-center justify-center bg-[#111111] text-white/50">Intro video coming soon</div>
-                )}
+          {(portfolio.introVideo || (portfolio.funFacts && portfolio.funFacts.length > 0)) && (
+            <section className="mt-16 rounded-[28px] border border-[#e6e6df] bg-white px-6 py-8 shadow-[0_18px_54px_rgba(0,0,0,0.05)] sm:px-8 lg:px-10">
+              <div className="mb-8 text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8b84]">About the creator</p>
+                <h2 className="mt-3 text-[clamp(2.3rem,5vw,4.4rem)] leading-[0.92] text-[#111111]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.065em' }}>
+                  {portfolio.funFacts ? `${portfolio.funFacts.length} ${portfolio.funFacts.length === 1 ? 'thing' : 'things'} to know about me` : 'Who I am'}
+                </h2>
               </div>
 
-              <div className="space-y-3">
-                {[
-                  ['Hook-first brain', 'I write the hook before I touch the camera — the first three seconds do most of the work.'],
-                  ['Product nerd', 'I genuinely enjoy testing AI apps, SaaS tools, and tiny workflow upgrades.'],
-                  ['Simple beats shiny', 'I prefer clean, native-feeling videos over anything that looks like a polished ad.'],
-                  ['Useful over loud', 'I like making technical products feel useful, human, and slightly less boring.'],
-                  ['Fast clarity', 'I’m at my best when I can turn a confusing product into a simple “oh, I get it” moment.'],
-                ].map(([title, body], index) => (
-                  <div key={title} className="grid gap-4 rounded-[18px] border border-[#ecece7] bg-[#fafaf7] p-5 sm:grid-cols-[44px_1fr]">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ccff00] text-sm font-bold text-[#1c1c1e]">{index + 1}</div>
-                    <div>
-                      <p className="font-semibold text-[#1c1c1e]">{title}</p>
-                      <p className="mt-1 text-sm leading-6 text-[#66665f]">{body}</p>
+              <div className="grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
+                {portfolio.introVideo ? (
+                  <div className="overflow-hidden rounded-[22px] border border-[#e8e8e4] bg-[#111111] shadow-[0_18px_54px_rgba(0,0,0,0.12)]">
+                    <div className="aspect-[9/16]">
+                      <InlinePlayableVideo item={portfolio.introVideo} title={`${creatorFirstName} intro video`} className="h-full w-full" />
                     </div>
                   </div>
-                ))}
+                ) : null}
+
+                <div className={`space-y-3 ${portfolio.introVideo ? '' : 'lg:grid-cols-1'}`}>
+                  {portfolio.funFacts ? portfolio.funFacts.slice(0, 5).map((fact, index) => (
+                    <div key={index} className="grid gap-4 rounded-[18px] border border-[#ecece7] bg-[#fafaf7] p-5 sm:grid-cols-[44px_1fr]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ccff00] text-sm font-bold text-[#1c1c1e]">{index + 1}</div>
+                      <div>
+                        <p className="text-sm leading-6 text-[#363535]">{fact}</p>
+                      </div>
+                    </div>
+                  )) : null}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           <section className="mx-auto mt-12 max-w-xl rounded-[22px] border border-[#e8e8e4] bg-white p-6 text-center shadow-[0_18px_54px_rgba(0,0,0,0.05)]">
             <BookingSection creatorId={portfolio.id} bookingUrl={portfolio.bookingUrl} />

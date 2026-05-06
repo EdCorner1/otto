@@ -67,6 +67,8 @@ type CreatorDraftSnapshot = {
   introVideoUrl: string
   backgroundStyle: BackgroundStyle
   bookingUrl: string
+  rateCards: Array<{ rateName: string; ratePrice: string; rateDesc: string }>
+  funFacts: string[]
   portfolioItems: Array<{ url: string; platform: string; caption: string; category: string }>
 }
 
@@ -140,6 +142,8 @@ function createCreatorSnapshot(input: CreatorDraftSnapshot): string {
     introVideoUrl: input.introVideoUrl.trim(),
     backgroundStyle: input.backgroundStyle,
     bookingUrl: input.bookingUrl.trim(),
+    rateCards: input.rateCards,
+    funFacts: input.funFacts,
     portfolioItems: input.portfolioItems,
   })
 }
@@ -199,6 +203,8 @@ export default function ProfileEditPage() {
   const [introVideoUrl, setIntroVideoUrl] = useState('')
   const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('plain')
   const [bookingUrl, setBookingUrl] = useState('')
+  const [rateCards, setRateCards] = useState<Array<{ rateName: string; ratePrice: string; rateDesc: string }>>([])
+  const [funFacts, setFunFacts] = useState<string[]>([])
   const [introVideoUploading, setIntroVideoUploading] = useState(false)
   const [introVideoUploadProgress, setIntroVideoUploadProgress] = useState(0)
   const [portfolioFilterTab, setPortfolioFilterTab] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
@@ -318,6 +324,8 @@ export default function ProfileEditPage() {
         introVideoUrl: profile.introVideoUrl || '',
         backgroundStyle: profile.backgroundStyle || 'plain',
         bookingUrl: (profile as any).bookingUrl || '',
+        rateCards: (profile as any).rateCards || [],
+        funFacts: (profile as any).funFacts || [],
         portfolioItems: normalizePortfolioDrafts(nextPortfolioItems),
       }
 
@@ -334,6 +342,8 @@ export default function ProfileEditPage() {
       setIntroVideoUrl(nextCreator.introVideoUrl)
       setBackgroundStyle(nextCreator.backgroundStyle)
       setBookingUrl((profile as any).bookingUrl || '')
+      setRateCards((profile as any).rateCards || [])
+      setFunFacts((profile as any).funFacts || [])
       setInitialCreatorSnapshot(createCreatorSnapshot(nextCreator))
 
       // If coming from dashboard "Update portfolio" link, jump to portfolio tab/step
@@ -376,9 +386,11 @@ export default function ProfileEditPage() {
       introVideoUrl,
       backgroundStyle,
       bookingUrl,
+      rateCards,
+      funFacts,
       portfolioItems: normalizePortfolioDrafts(portfolioItems),
     }),
-    [avatarUrl, backgroundStyle, bio, bookingUrl, followerRange, fullName, handle, incomeRange, introVideoUrl, mainPlatform, nicheInput, portfolioItems]
+    [avatarUrl, backgroundStyle, bio, bookingUrl, followerRange, fullName, handle, incomeRange, introVideoUrl, mainPlatform, nicheInput, portfolioItems, rateCards, funFacts]
   )
 
   const currentBrandSnapshot = useMemo(
@@ -855,6 +867,8 @@ export default function ProfileEditPage() {
         .slice(0, 8),
       introVideoUrl: introVideoUrl.trim() || null,
       bookingUrl: bookingUrl.trim() || null,
+      rateCards,
+      funFacts,
       portfolioItems: normalizePortfolioDrafts(portfolioItems),
     }
 
@@ -894,6 +908,8 @@ export default function ProfileEditPage() {
       introVideoUrl,
       backgroundStyle,
       bookingUrl,
+      rateCards,
+      funFacts,
       portfolioItems: normalizePortfolioDrafts(portfolioItems),
     }))
   }
@@ -1229,6 +1245,72 @@ export default function ProfileEditPage() {
                     placeholder="https://calendly.com/yourname or https://cal.com/..."
                     className="w-full rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-[24px] border border-[#ecece7] bg-[#fafaf9] p-4">
+                <div>
+                  <p className="text-sm font-semibold text-[#1c1c1e]">Rate cards</p>
+                  <p className="mt-1 text-xs leading-5 text-[#6b6b6b]">Add your service packages. Brands see these when evaluating you.</p>
+                </div>
+                <div className="space-y-2">
+                  {rateCards.map((card, i) => (
+                    <div key={i} className="flex gap-2 rounded-xl border border-[#e8e8e4] bg-white p-3">
+                      <input
+                        value={card.rateName}
+                        onChange={(e) => {
+                          const updated = [...rateCards]; updated[i] = { ...updated[i], rateName: e.target.value }; setRateCards(updated);
+                        }}
+                        placeholder="Package name"
+                        className="flex-1 rounded-lg border border-[#e8e8e4] bg-[#fafaf9] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                      />
+                      <input
+                        value={card.ratePrice}
+                        onChange={(e) => {
+                          const updated = [...rateCards]; updated[i] = { ...updated[i], ratePrice: e.target.value }; setRateCards(updated);
+                        }}
+                        placeholder="$500"
+                        className="w-24 rounded-lg border border-[#e8e8e4] bg-[#fafaf9] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                      />
+                      <button type="button" onClick={() => setRateCards(rateCards.filter((_, j) => j !== i))} className="rounded-lg px-2 py-1.5 text-xs text-[#8a3d3d] hover:bg-[#fff2f2]">✕</button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setRateCards([...rateCards, { rateName: '', ratePrice: '', rateDesc: '' }])}
+                    className="w-full rounded-xl border-2 border-dashed border-[#e4e4dd] py-2 text-sm text-[#6b6b6b] hover:border-[#ccff00] hover:text-[#1c1c1e]"
+                  >
+                    + Add package
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-[24px] border border-[#ecece7] bg-[#fafaf9] p-4">
+                <div>
+                  <p className="text-sm font-semibold text-[#1c1c1e]">Fun facts</p>
+                  <p className="mt-1 text-xs leading-5 text-[#6b6b6b]">Short facts about you — helps brands get a feel for who they're hiring.</p>
+                </div>
+                <div className="space-y-2">
+                  {funFacts.map((fact, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        value={fact}
+                        onChange={(e) => {
+                          const updated = [...funFacts]; updated[i] = e.target.value; setFunFacts(updated);
+                        }}
+                        placeholder="I've worked with 12 DTC brands in the health space"
+                        className="flex-1 rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                      />
+                      <button type="button" onClick={() => setFunFacts(funFacts.filter((_, j) => j !== i))} className="rounded-xl px-3 py-2.5 text-xs text-[#8a3d3d] hover:bg-[#fff2f2]">✕</button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setFunFacts([...funFacts, ''])}
+                    className="w-full rounded-xl border-2 border-dashed border-[#e4e4dd] py-2 text-sm text-[#6b6b6b] hover:border-[#ccff00] hover:text-[#1c1c1e]"
+                  >
+                    + Add a fun fact
+                  </button>
                 </div>
               </div>
 

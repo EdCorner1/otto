@@ -86,6 +86,8 @@ export interface PublicCreatorPortfolio {
     onTimePercentage: number | null
   }
   isOwner: boolean
+  rateCards?: Array<{ rateName: string; ratePrice: string; rateDesc: string }>
+  funFacts?: string[]
 }
 
 type CreatorTagRow = { tag: string }
@@ -220,7 +222,7 @@ export async function getPublicCreatorPortfolioByHandle(
 
   const { data: creator, error: creatorError } = await supabase
     .from('creators')
-    .select('id, user_id, display_name, bio, avatar_url, availability, creator_tags(tag), creator_socials(platform, url)')
+    .select('id, user_id, display_name, bio, avatar_url, availability, booking_url, creator_tags(tag), creator_socials(platform, url)')
     .eq('id', creatorId)
     .single()
 
@@ -298,6 +300,26 @@ export async function getPublicCreatorPortfolioByHandle(
       }, `intro-${creatorRow.id}`)
     : null
 
+  const { data: rateCardsData } = await supabase
+    .from('creator_rate_cards')
+    .select('rate_name, rate_price, rate_desc')
+    .eq('creator_id', creatorId)
+    .order('sort_order', { ascending: true })
+
+  const { data: funFactsData } = await supabase
+    .from('creator_fun_facts')
+    .select('fact')
+    .eq('creator_id', creatorId)
+    .order('sort_order', { ascending: true })
+
+  const rateCards = (rateCardsData || []).map((r: any) => ({
+    rateName: r.rate_name,
+    ratePrice: r.rate_price,
+    rateDesc: r.rate_desc,
+  }))
+
+  const funFacts = (funFactsData || []).map((f: any) => f.fact as string)
+
   const totalViews = videos.reduce((sum, video) => sum + video.viewCount, 0)
   const totalVideos = videos.length
 
@@ -332,6 +354,9 @@ export async function getPublicCreatorPortfolioByHandle(
     reviews: meta.reviews,
     featuredWork: meta.featuredWork.map((item, index) => ({ ...item, video: videos[index] || null })),
     backgroundStyle: meta.backgroundStyle === 'grid' || meta.backgroundStyle === 'dots' ? meta.backgroundStyle : 'plain',
+    bookingUrl: (creatorRow as any).booking_url || undefined,
+    rateCards,
+    funFacts,
     portfolioItems: videos,
     videos,
     stats: {

@@ -18,6 +18,16 @@ type SocialInput = {
   url: string
 }
 
+type RateCardInput = {
+  rateName: string
+  ratePrice: string
+  rateDesc: string
+}
+
+type FunFactInput = {
+  fact: string
+}
+
 type PatchPayload = {
   fullName?: string
   handle?: string
@@ -32,6 +42,8 @@ type PatchPayload = {
   bookingUrl?: string | null
   socials?: SocialInput[]
   portfolioItems?: PortfolioInput[]
+  rateCards?: RateCardInput[]
+  funFacts?: FunFactInput[]
 }
 
 function getEnv(name: string) {
@@ -142,6 +154,18 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     })
 
+    const { data: rateCards } = await admin
+      .from('creator_rate_cards')
+      .select('id, rate_name, rate_price, rate_desc, sort_order')
+      .eq('creator_id', id)
+      .order('sort_order', { ascending: true })
+
+    const { data: funFacts } = await admin
+      .from('creator_fun_facts')
+      .select('id, fact, sort_order')
+      .eq('creator_id', id)
+      .order('sort_order', { ascending: true })
+
     const publicPortfolio = meta.handle ? await getPublicCreatorPortfolioByHandle(meta.handle) : null
 
     return NextResponse.json({
@@ -159,6 +183,8 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       bookingUrl: data.booking_url || null,
       socials: data.creator_socials || [],
       portfolioItems,
+      rateCards: rateCards || [],
+      funFacts: funFacts || [],
       publicPortfolio,
     })
   } catch (error) {
@@ -319,6 +345,38 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
       const { error: insertPortfolioError } = await admin.from('portfolio_items').insert(portfolioPayload)
       if (insertPortfolioError) return NextResponse.json({ error: insertPortfolioError.message }, { status: 500 })
+    }
+
+    const rateCards = Array.isArray(body.rateCards) ? body.rateCards : []
+    if (rateCards.length > 0) {
+      await admin.from('creator_rate_cards').delete().eq('creator_id', id)
+      const { error: rateError } = await admin.from('creator_rate_cards').insert(
+        rateCards.map((card, i) => ({
+          creator_id: id,
+          rate_name: card.rateName.trim(),
+          rate_price: card.ratePrice.trim(),
+          rate_desc: card.rateDesc.trim(),
+          sort_order: i,
+        })),
+      )
+      if (rateError) return NextResponse.json({ error: rateError.message }, { status: 500 })
+    } else {
+      await admin.from('creator_rate_cards').delete().eq('creator_id', id)
+    }
+
+    const funFacts = Array.isArray(body.funFacts) ? body.funFacts : []
+    if (funFacts.length > 0) {
+      await admin.from('creator_fun_facts').delete().eq('creator_id', id)
+      const { error: factError } = await admin.from('creator_fun_facts').insert(
+        funFacts.map((f, i) => ({
+          creator_id: id,
+          fact: f.fact.trim(),
+          sort_order: i,
+        })),
+      )
+      if (factError) return NextResponse.json({ error: factError.message }, { status: 500 })
+    } else {
+      await admin.from('creator_fun_facts').delete().eq('creator_id', id)
     }
 
     return NextResponse.json({ ok: true })
