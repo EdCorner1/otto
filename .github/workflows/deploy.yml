@@ -9,8 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+      - name: Deploy via Vercel REST API
+        run: |
+          echo "Triggering Vercel deploy..."
+          curl -s -X POST "https://api.vercel.com/v1/deployments" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "gitSource": {
+                "type": "branch",
+                "ref": "main",
+                "repo": "EdCorner1/otto"
+              },
+              "project": "prj_918q78J24E76UzQR9rk39aPKDX44"
+            }' | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('url', d.get('error', {}).get('message', str(d)[:200])))"
