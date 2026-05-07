@@ -304,7 +304,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const isPublicPortfolioRoute = !!pathname && /^\/[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(pathname) && !['/dashboard', '/messages', '/notifications', '/profile', '/portfolio', '/jobs', '/live-campaigns', '/search', '/settings', '/explore', '/creators', '/brands', '/blog', '/resources', '/platform', '/login', '/signup', '/onboarding', '/ops', '/ed', '/auth', '/api'].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  const isPublicPortfolioRoute = !!pathname && /^\/[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(pathname) && !['/dashboard', '/messages', '/notifications', '/profile', '/portfolio', '/jobs', '/live-campaigns', '/search', '/settings', '/explore', '/creators', '/brands', '/blog', '/resources', '/platform', '/login', '/signup', '/onboarding', '/ops', '/ed', '/auth', '/api', '/b/'].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 
   useEffect(() => {
     if (isPublicPortfolioRoute) {
