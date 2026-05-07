@@ -2,7 +2,8 @@ name: Deploy
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+  repository_dispatch:
+    types: [deploy]
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -11,5 +12,5 @@ jobs:
       - uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: EdCorner1
-          vercel-project-id: prj_918q78J24E76UzQR9rk39aPKDX44
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
