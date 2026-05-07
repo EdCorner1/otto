@@ -48,8 +48,10 @@ export async function proxy(request: NextRequest) {
     '/blog',
     '/resources',
     '/explore',
+    '/b/',
     '/api/waitlist',
     '/api/creators/handle',
+    '/api/brands/slug',
   ]
 
   const reservedPrefixes = [
