@@ -163,3 +163,19 @@
 - TypeScript: pass
 - Build: pass (60/60 static pages)
 - PR merged via GitHub API (deploy key SSH push)
+
+## 2026-05-07
+### Production unblock: public brand page auth gate
+- Root cause identified: `proxy.ts` middleware auth gate did not classify `/b/[slug]` as public, so requests were redirected to `/login` before page render.
+- Fixed proxy public route matching by allowing `/b/` and `/api/brands/slug` as public prefixes.
+- Verified live route recovery: `https://ottougc.com/b/ottougc` now returns 200 and no longer redirects to login.
+
+### Onboarding polish: true public profile preview
+- Updated creator onboarding step 5 preview actions to use the public handle route (`/${handle}`) instead of the internal `/creators/[id]` page.
+- Updated "Open profile" CTA text to "Open public profile" and aligned preview iframe/open-in-new-tab target to the same public path.
+- This keeps onboarding completion aligned with the actual shareable portfolio surface brands see.
+
+### Validation
+- TypeScript: pass
+- Build: pass (60/60 static pages)
+

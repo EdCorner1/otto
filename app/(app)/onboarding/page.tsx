@@ -264,6 +264,9 @@ export default function OnboardingPage() {
 
   const role = draft.role
   const creatorProfileUrl = creatorId ? `/creators/${creatorId}` : ''
+  const publicCreatorPreviewPath = draft.handle.trim()
+    ? `/${draft.handle.trim().replace(/^@+/, '')}`
+    : creatorProfileUrl
 
   const persistLocalDraft = useCallback((nextDraft: OnboardingDraft, nextStep: number) => {
     if (typeof window === 'undefined') return
@@ -1145,8 +1148,8 @@ export default function OnboardingPage() {
                         <div className="rounded-[28px] border border-[#e8e8e4] bg-[#1c1c1e] p-5 text-white shadow-sm">
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">Public URL</p>
                           <p className="mt-3 break-all text-xl leading-tight" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>ottougc.com/{creatorHandle}</p>
-                          <a href={creatorProfileUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#ccff00] px-4 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
-                            Open profile
+                          <a href={publicCreatorPreviewPath} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-[#ccff00] px-4 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
+                            Open public profile
                           </a>
                         </div>
                       </div>
@@ -1155,13 +1158,13 @@ export default function OnboardingPage() {
                         <div className="flex flex-col gap-3 border-b border-[#e8e8e4] bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="text-sm font-semibold text-[#1c1c1e]">Profile preview</p>
-                            <p className="text-xs text-[#8a8a86]">{creatorProfileUrl}</p>
+                            <p className="text-xs text-[#8a8a86]">{publicCreatorPreviewPath}</p>
                           </div>
-                          <a href={creatorProfileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full border border-[#d9d9d2] px-4 py-2 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#f7f7f5]">
+                          <a href={publicCreatorPreviewPath} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full border border-[#d9d9d2] px-4 py-2 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#f7f7f5]">
                             Open in new tab
                           </a>
                         </div>
-                        <iframe title="Creator profile preview" src={creatorProfileUrl} className="h-[680px] w-full bg-white" />
+                        <iframe title="Creator profile preview" src={publicCreatorPreviewPath} className="h-[680px] w-full bg-white" />
                       </div>
                     </div>
                   ) : role === 'creator' ? (
