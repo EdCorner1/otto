@@ -241,7 +241,12 @@ export default function DashboardPage() {
             : 'Profile is live!'
       )
     } else if (onboarding === 'brand') {
-      setSuccessMessage('Your brand profile is ready. Post your first job whenever you\'re ready.')
+      const next = searchParams.get('next')
+      setSuccessMessage(
+        next === 'jobs'
+          ? 'Your brand profile is ready. Continue by posting your first brief now.'
+          : 'Your brand profile is ready. Post your first job whenever you\'re ready.'
+      )
     } else {
       setSuccessMessage('')
     }

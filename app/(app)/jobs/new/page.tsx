@@ -27,6 +27,8 @@ const AUDIENCE_OPTIONS = ['Any', 'Nano (under 10K)', 'Micro (10K–50K)', 'Mid (
 const FORMAT_OPTIONS = ['Vertical video', 'Horizontal', 'Both']
 const BUDGET_OPTIONS = ['Under $500', '$500–2K', '$2K–10K', '$10K+']
 const PAY_TYPE_OPTIONS = ['Fixed', 'Negotiable', 'Commission only']
+const MIN_TITLE_LENGTH = 8
+const MIN_DESCRIPTION_LENGTH = 120
 
 const headlineStyle: React.CSSProperties = {
   fontFamily: 'var(--font-bricolage)',
@@ -93,7 +95,11 @@ export default function NewJobPage() {
   }, [router, supabase])
 
   const canContinueStep1 = useMemo(() => {
-    return Boolean(formData.title.trim() && formData.description.trim() && formData.jobType)
+    return Boolean(
+      formData.title.trim().length >= MIN_TITLE_LENGTH &&
+      formData.description.trim().length >= MIN_DESCRIPTION_LENGTH &&
+      formData.jobType
+    )
   }, [formData.title, formData.description, formData.jobType])
 
   const canContinueStep2 = useMemo(() => {
@@ -130,6 +136,23 @@ export default function NewJobPage() {
 
   const goNext = () => {
     setError('')
+
+    if (step === 1) {
+      if (formData.title.trim().length < MIN_TITLE_LENGTH) {
+        setError(`Title should be at least ${MIN_TITLE_LENGTH} characters so creators understand the brief quickly.`)
+        return
+      }
+      if (formData.description.trim().length < MIN_DESCRIPTION_LENGTH) {
+        setError(`Description should be at least ${MIN_DESCRIPTION_LENGTH} characters with hook, angle, and CTA so strong creators can self-select.`)
+        return
+      }
+    }
+
+    if (step === 2 && formData.targetPlatforms.length === 0) {
+      setError('Pick at least one target platform so Otto can route this to the best-fit creators.')
+      return
+    }
+
     setStep((prev) => (Math.min(prev + 1, 4) as Step))
   }
 
@@ -168,7 +191,12 @@ export default function NewJobPage() {
         throw new Error(body?.error || 'Could not post brief. Please try again.')
       }
 
-      router.push(`/jobs/${body.id}/manage?posted=1${body.invitedDealId ? '&invited=1' : ''}`)
+      if (body.invitedDealId) {
+        router.push(`/deals/${body.invitedDealId}?from=invited-brief`)
+        return
+      }
+
+      router.push(`/jobs/${body.id}/manage?posted=1`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
@@ -229,6 +257,9 @@ export default function NewJobPage() {
                   placeholder="e.g. UGC ad for AI meeting notes app"
                   className="w-full rounded-xl border border-[#e8e8e4] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
                 />
+                <p className={`mt-2 text-xs ${formData.title.trim().length >= MIN_TITLE_LENGTH ? 'text-[#6a8a00]' : 'text-[#9a9a9a]'}`}>
+                  {formData.title.trim().length}/{MIN_TITLE_LENGTH}+ chars for a clear brief title
+                </p>
               </div>
 
               <div>
@@ -240,7 +271,9 @@ export default function NewJobPage() {
                   placeholder="What should the creator say, show, and avoid? Include key message, tone, CTA, and any must-have talking points."
                   className="w-full rounded-xl border border-[#e8e8e4] px-4 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#ccff00] resize-y min-h-[180px]"
                 />
-                <p className="mt-2 text-xs text-[#9a9a9a]">Tip: include hook idea, product angle, and success criteria for stronger submissions.</p>
+                <p className={`mt-2 text-xs ${formData.description.trim().length >= MIN_DESCRIPTION_LENGTH ? 'text-[#6a8a00]' : 'text-[#9a9a9a]'}`}>
+                  {formData.description.trim().length}/{MIN_DESCRIPTION_LENGTH}+ chars · include hook idea, product angle, and success criteria.
+                </p>
               </div>
 
               <div>

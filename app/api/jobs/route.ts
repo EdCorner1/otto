@@ -4,6 +4,9 @@ import { createNotification } from '@/lib/server/notifications'
 
 export const runtime = 'nodejs'
 
+const MIN_BRIEF_TITLE_LENGTH = 8
+const MIN_BRIEF_DESCRIPTION_LENGTH = 120
+
 type CreateJobPayload = {
   title?: string
   description?: string
@@ -69,6 +72,14 @@ export async function POST(request: NextRequest) {
 
     if (!title || !description || !jobType) {
       return NextResponse.json({ error: 'Missing required job basics.' }, { status: 400 })
+    }
+
+    if (title.length < MIN_BRIEF_TITLE_LENGTH) {
+      return NextResponse.json({ error: `Title must be at least ${MIN_BRIEF_TITLE_LENGTH} characters.` }, { status: 400 })
+    }
+
+    if (description.length < MIN_BRIEF_DESCRIPTION_LENGTH) {
+      return NextResponse.json({ error: `Description must be at least ${MIN_BRIEF_DESCRIPTION_LENGTH} characters so creators can assess fit.` }, { status: 400 })
     }
 
     if (!targetPlatforms.length || !audienceRequirement || !contentFormat || numberOfPosts < 1) {

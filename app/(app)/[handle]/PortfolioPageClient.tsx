@@ -333,8 +333,8 @@ function BookingSection({ creatorId, bookingUrl }: { creatorId: string; bookingU
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!fields.brandEmail || !fields.message) {
-      setError('Email and a brief message help me respond better.')
+    if (!fields.brandName.trim() || !fields.brandEmail || !fields.message.trim()) {
+      setError('Brand name, email, and a brief message help me respond better.')
       return
     }
     setSubmitting(true)

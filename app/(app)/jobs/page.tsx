@@ -73,6 +73,15 @@ function normalizePlatform(platform: string) {
   return platform
 }
 
+function platformFromMetadata(value: unknown): 'TikTok' | 'Instagram' | 'YouTube' | null {
+  const text = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  if (!text) return null
+  if (text.includes('instagram')) return 'Instagram'
+  if (text.includes('youtube')) return 'YouTube'
+  if (text.includes('tiktok')) return 'TikTok'
+  return null
+}
+
 function inferJobType(job: Pick<DisplayJob, 'job_type' | 'title'> & { deliverables?: string[] | null }) {
   if (job.job_type?.trim()) return job.job_type.trim()
 
@@ -114,6 +123,7 @@ function daysUntil(deadline?: string | null) {
 export default function JobsPage() {
   const [jobs, setJobs] = useState<DisplayJob[]>([])
   const [loading, setLoading] = useState(true)
+  const [creatorPreferredPlatform, setCreatorPreferredPlatform] = useState<'TikTok' | 'Instagram' | 'YouTube' | null>(null)
   const [search, setSearch] = useState('')
   const [platformFilter, setPlatformFilter] = useState<(typeof PLATFORM_OPTIONS)[number]>('All')
   const [budgetFilter, setBudgetFilter] = useState<(typeof BUDGET_OPTIONS)[number]>('All')
@@ -129,6 +139,9 @@ export default function JobsPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser()
+
+      const preferredPlatform = platformFromMetadata(user?.user_metadata?.main_platform)
+      setCreatorPreferredPlatform(preferredPlatform)
 
       if (!user) {
         router.push('/login')
@@ -241,11 +254,19 @@ export default function JobsPage() {
     const sorted = [...filtered].sort((a, b) => {
       if (sortBy === 'budget_desc') return b.budgetMax - a.budgetMax
       if (sortBy === 'deadline_soon') return daysUntil(a.deadline) - daysUntil(b.deadline)
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+
+      const dateCompare = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      if (dateCompare !== 0) return dateCompare
+
+      const aPreferred = creatorPreferredPlatform ? a.platforms.includes(creatorPreferredPlatform) : false
+      const bPreferred = creatorPreferredPlatform ? b.platforms.includes(creatorPreferredPlatform) : false
+      if (aPreferred !== bPreferred) return aPreferred ? -1 : 1
+
+      return b.budgetMax - a.budgetMax
     })
 
     return sorted
-  }, [jobs, search, platformFilter, budgetFilter, deadlineFilter, jobTypeFilter, sortBy])
+  }, [jobs, search, platformFilter, budgetFilter, deadlineFilter, jobTypeFilter, sortBy, creatorPreferredPlatform])
 
   if (loading) {
     return (
@@ -345,7 +366,12 @@ export default function JobsPage() {
         </section>
 
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs text-[#9a9a9a]">{filteredJobs.length} briefs matched</p>
+          <div>
+            <p className="text-xs text-[#9a9a9a]">{filteredJobs.length} briefs matched</p>
+            {creatorPreferredPlatform && (
+              <p className="mt-1 text-xs text-[#6b6b6b]">Sorted to favor {creatorPreferredPlatform} fits first.</p>
+            )}
+          </div>
         </div>
 
         {filteredJobs.length === 0 ? (

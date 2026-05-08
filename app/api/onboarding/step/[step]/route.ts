@@ -684,7 +684,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       redirectTo = role === 'brand'
         ? cleanText(body?.brandDestination) === '/jobs/new'
-          ? '/jobs/new?onboarding=brand'
+          ? '/jobs/new?onboarding=brand&next=brief'
           : '/dashboard?onboarding=brand'
         : `/dashboard?onboarding=creator&profile=${encodeURIComponent(`https://ottougc.com${profilePath}`)}&handle=${encodeURIComponent(displayHandle)}`
 

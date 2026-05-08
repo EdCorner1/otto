@@ -381,7 +381,8 @@ export default function OnboardingPage() {
   }, [persistLocalDraft, requestedRole, router, supabase])
 
   const creatorPreviewName = `${draft.firstName} ${draft.lastName}`.trim() || 'Your name'
-  const creatorHandle = draft.handle.trim().replace(/^@+/, '') || 'your-handle'
+  const normalizedHandle = draft.handle.trim().replace(/^@+/, '')
+  const creatorHandle = normalizedHandle || 'your-handle'
   const viablePortfolioCount = useMemo(
     () => draft.portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length,
     [draft.portfolioItems]
@@ -390,7 +391,7 @@ export default function OnboardingPage() {
     if (step === 1) return Boolean(role)
     if (step === 2) {
       if (role === 'brand') return Boolean(draft.firstName.trim() && draft.lastName.trim() && draft.email.trim())
-      return Boolean(draft.firstName.trim() && draft.lastName.trim() && draft.email.trim())
+      return Boolean(draft.firstName.trim() && draft.lastName.trim() && draft.email.trim() && draft.handle.trim().replace(/^@+/, ''))
     }
     if (step === 3) {
       if (role === 'brand') return Boolean(draft.companyName.trim() && draft.companyDescription.trim())
@@ -429,13 +430,26 @@ export default function OnboardingPage() {
 
     try {
       if (step === 2) {
+        const cleanFirstName = draft.firstName.trim()
+        const cleanLastName = draft.lastName.trim()
+        const cleanEmail = draft.email.trim()
+        const cleanHandle = draft.handle.trim().replace(/^@+/, '')
+
+        if (!cleanFirstName || !cleanLastName || !cleanEmail) {
+          throw new Error('Add first name, last name, and email before continuing.')
+        }
+
+        if (role === 'creator' && !cleanHandle) {
+          throw new Error('Add a profile handle before continuing.')
+        }
+
         setLoadingMessage('Saving your profile…')
         const result = await saveStep(2, {
-          firstName: draft.firstName,
-          lastName: draft.lastName,
-          email: draft.email,
+          firstName: cleanFirstName,
+          lastName: cleanLastName,
+          email: cleanEmail,
           avatarUrl: draft.avatarUrl,
-          handle: draft.handle,
+          handle: cleanHandle,
         })
         setStep(result.nextStep)
         persistLocalDraft(draft, result.nextStep)
@@ -443,6 +457,14 @@ export default function OnboardingPage() {
       }
 
       if (step === 3) {
+        if (role === 'brand') {
+          if (!draft.companyName.trim() || !draft.companyDescription.trim()) {
+            throw new Error('Add company name and what your brand does before continuing.')
+          }
+        } else if (!draft.bio.trim() || draft.nicheTags.length === 0 || !draft.mainPlatform || !draft.followerRange) {
+          throw new Error('Finish your bio, tags, platform, and follower range before continuing.')
+        }
+
         setLoadingMessage(role === 'brand' ? 'Saving your brand details…' : 'Saving your creator details…')
         const result = await saveStep(3, role === 'brand'
           ? {
@@ -456,7 +478,7 @@ export default function OnboardingPage() {
               nicheTags: draft.nicheTags,
               mainPlatform: draft.mainPlatform,
               followerRange: draft.followerRange,
-              handle: draft.handle,
+              handle: normalizedHandle,
             })
         setStep(result.nextStep)
         persistLocalDraft(draft, result.nextStep)
@@ -481,9 +503,18 @@ export default function OnboardingPage() {
       }
 
       if (step === 5) {
+        if (role === 'creator') {
+          if (!normalizedHandle) {
+            throw new Error('Add a profile handle before finishing onboarding.')
+          }
+          if (!hasMinimumViablePortfolio(draft.portfolioItems)) {
+            throw new Error(`Add at least ${MIN_PORTFOLIO_ITEMS} valid portfolio videos before finishing onboarding.`)
+          }
+        }
+
         setLoadingMessage('Finishing onboarding…')
         const result = await saveStep(5, {
-          handle: draft.handle,
+          handle: normalizedHandle,
           brandDestination: draft.brandDestination,
         })
 
@@ -813,13 +844,14 @@ export default function OnboardingPage() {
                       </div>
                       {role === 'creator' && (
                         <div className="sm:col-span-2">
-                          <label className="mb-2 block text-sm font-medium text-[#363535]">Profile handle</label>
+                          <label className="mb-2 block text-sm font-medium text-[#363535]">Profile handle <span className="text-red-500">*</span></label>
                           <input
                             value={draft.handle}
-                            onChange={(event) => updateDraft({ handle: event.target.value })}
+                            onChange={(event) => updateDraft({ handle: event.target.value.replace(/\s+/g, '') })}
                             placeholder="your-handle"
                             className="w-full rounded-2xl border border-[#e8e8e4] px-4 py-3 outline-none transition focus:border-[#ccff00]"
                           />
+                          <p className="mt-2 text-xs text-[#8a8a86]">Your public profile URL: ottougc.com/{creatorHandle}</p>
                         </div>
                       )}
                     </div>
