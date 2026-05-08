@@ -1288,7 +1288,7 @@ export default function ProfileEditPage() {
               <div className="space-y-3 rounded-[24px] border border-[#ecece7] bg-[#fafaf9] p-4">
                 <div>
                   <p className="text-sm font-semibold text-[#1c1c1e]">Fun facts</p>
-                  <p className="mt-1 text-xs leading-5 text-[#6b6b6b]">Short facts about you — helps brands get a feel for who they're hiring.</p>
+                  <p className="mt-1 text-xs leading-5 text-[#6b6b6b]">Short facts about you — helps brands get a feel for who they&apos;re hiring.</p>
                 </div>
                 <div className="space-y-2">
                   {funFacts.map((fact, i) => (

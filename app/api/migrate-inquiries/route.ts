@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // Use raw SQL via postgres (Supabase exposes pg_* functions)
     // We'll try multiple approaches
-    let created = false
+    const created = false
 
     // Approach: use the service role to bypass RLS for a direct insert attempt
     // If the table doesn't exist this will fail — but that's the signal we need
