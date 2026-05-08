@@ -1272,7 +1272,14 @@ export default function ProfileEditPage() {
                         placeholder="$500"
                         className="w-24 rounded-lg border border-[#e8e8e4] bg-[#fafaf9] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
                       />
-                      <button type="button" onClick={() => setRateCards(rateCards.filter((_, j) => j !== i))} className="rounded-lg px-2 py-1.5 text-xs text-[#8a3d3d] hover:bg-[#fff2f2]">✕</button>
+                      <button
+                        type="button"
+                        onClick={() => setRateCards(rateCards.filter((_, j) => j !== i))}
+                        aria-label="Remove package"
+                        className="rounded-lg px-2 py-1.5 text-xs text-[#8a3d3d] hover:bg-[#fff2f2]"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   ))}
                   <button
@@ -1301,7 +1308,14 @@ export default function ProfileEditPage() {
                         placeholder="I&apos;ve worked with 12 DTC brands in the health space"
                         className="flex-1 rounded-xl border border-[#e8e8e4] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
                       />
-                      <button type="button" onClick={() => setFunFacts(funFacts.filter((_, j) => j !== i))} className="rounded-xl px-3 py-2.5 text-xs text-[#8a3d3d] hover:bg-[#fff2f2]">✕</button>
+                      <button
+                        type="button"
+                        onClick={() => setFunFacts(funFacts.filter((_, j) => j !== i))}
+                        aria-label="Remove fun fact"
+                        className="rounded-xl px-3 py-2.5 text-xs text-[#8a3d3d] hover:bg-[#fff2f2]"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   ))}
                   <button

@@ -12,6 +12,7 @@ import {
   Loader2,
   Pencil,
   Play,
+  Star,
   Video,
 } from 'lucide-react'
 import type { PublicCreatorPortfolio, PublicPortfolioSocial, PublicPortfolioVideo } from '@/lib/public-creator-portfolio'
@@ -126,7 +127,11 @@ function BrandLogoMark({ label }: { label: string }) {
 function ReviewCard({ review, featured = false }: { review: NonNullable<PublicCreatorPortfolio['reviews']>[number]; featured?: boolean }) {
   return (
     <div className={`mx-3 shrink-0 rounded-[28px] border border-[#e7e7df] bg-white p-6 shadow-[0_18px_60px_rgba(0,0,0,0.06)] ${featured ? 'w-[330px] sm:w-[420px]' : 'w-[280px] opacity-70 sm:w-[340px]'}`}>
-      <div className="mb-4 tracking-[0.16em] text-[#d8a441]">★★★★★</div>
+      <div className="mb-4 flex items-center gap-1 text-[#d8a441]" aria-label="5 out of 5 stars">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Star key={index} className="h-4 w-4 fill-current" />
+        ))}
+      </div>
       <p className={`leading-7 text-[#44443f] ${featured ? 'text-base' : 'text-sm'}`}>“{review.quote}”</p>
       <div className="mt-6 border-t border-[#eeeeea] pt-4">
         <p className="text-sm font-semibold text-[#1c1c1e]">{review.reviewerName}</p>
@@ -529,7 +534,11 @@ export default function PortfolioPageClient({
                 <div className="max-w-4xl">
                   <div className="mb-5 flex flex-col gap-4">
                     <div className="inline-flex items-center gap-2 text-sm text-[#55554f]">
-                      <span className="tracking-[0.08em] text-[#2f8f55]">★★★★★</span>
+                      <span className="inline-flex items-center gap-0.5 text-[#2f8f55]" aria-label="5 out of 5 stars">
+                        {Array.from({ length: 5 }).map((_, index) => (
+                          <Star key={index} className="h-3.5 w-3.5 fill-current" />
+                        ))}
+                      </span>
                       <span>{topProofLabel}</span>
                     </div>
                     <div className="flex items-center gap-4">
