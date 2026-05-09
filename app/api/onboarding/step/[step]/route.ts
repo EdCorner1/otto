@@ -192,6 +192,45 @@ async function ensureCreatorRow(adminClient: any, user: AuthUser, displayName?: 
   return data.id as string
 }
 
+async function isHandleTakenByAnotherUser(adminClient: any, handle: string, userId: string) {
+  const normalizedHandle = cleanText(handle).replace(/^@+/, '').toLowerCase()
+  if (!normalizedHandle) return false
+
+  const tagValue = `handle:${normalizedHandle}`
+
+  const { data: tagRows } = await adminClient
+    .from('creator_tags')
+    .select('creator_id')
+    .eq('tag', tagValue)
+    .limit(5)
+
+  if (Array.isArray(tagRows) && tagRows.length > 0) {
+    const creatorIds = tagRows
+      .map((row: { creator_id?: string | null }) => row.creator_id)
+      .filter((id: string | null | undefined): id is string => Boolean(id))
+
+    if (creatorIds.length > 0) {
+      const { data: creatorRows } = await adminClient
+        .from('creators')
+        .select('id, user_id')
+        .in('id', creatorIds)
+
+      const takenByOther = (creatorRows || []).some((row: { user_id?: string | null }) => (row.user_id || '') !== userId)
+      if (takenByOther) return true
+    }
+  }
+
+  const { data: legacyRow } = await adminClient
+    .from('creators')
+    .select('user_id')
+    .ilike('handle', normalizedHandle)
+    .maybeSingle()
+
+  if (legacyRow?.user_id && legacyRow.user_id !== userId) return true
+
+  return false
+}
+
 async function ensureBrandRow(adminClient: any, user: AuthUser, companyName?: string) {
   const { data: existing } = await adminClient
     .from('brands')
@@ -475,6 +514,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
       }
 
       if (role === 'creator') {
+        if (handle) {
+          const taken = await isHandleTakenByAnotherUser(adminClient, handle, user.id)
+          if (taken) {
+            return NextResponse.json({ error: 'That handle is already taken. Try a different one.' }, { status: 409 })
+          }
+        }
+
         creatorId = await ensureCreatorRow(adminClient, user, displayName, avatarUrl)
         const { error } = await adminClient
           .from('creators')
@@ -511,6 +557,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
         const nicheTags = Array.isArray(body?.nicheTags)
           ? body.nicheTags.map((tag: unknown) => cleanText(tag)).filter(Boolean).slice(0, 10)
           : []
+
+        if (handle) {
+          const taken = await isHandleTakenByAnotherUser(adminClient, handle, user.id)
+          if (taken) {
+            return NextResponse.json({ error: 'That handle is already taken. Try a different one.' }, { status: 409 })
+          }
+        }
 
         const { error: creatorUpdateError } = await adminClient
           .from('creators')
@@ -680,6 +733,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       if (userRoleUpdateError) throw new Error(userRoleUpdateError.message)
 
       const displayHandle = cleanText(body?.handle || user.user_metadata?.handle).replace(/^@+/, '')
+      if (role === 'creator' && displayHandle) {
+        const taken = await isHandleTakenByAnotherUser(adminClient, displayHandle, user.id)
+        if (taken) {
+          return NextResponse.json({ error: 'That handle is already taken. Try a different one.' }, { status: 409 })
+        }
+      }
       const profilePath = creatorId ? `/creators/${creatorId}` : '/dashboard'
 
       redirectTo = role === 'brand'

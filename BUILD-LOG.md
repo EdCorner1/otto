@@ -179,3 +179,14 @@
 - TypeScript: pass
 - Build: pass (60/60 static pages)
 
+
+## 2026-05-09
+### Creator onboarding reliability: handle collision protection
+- Added server-side handle collision checks in onboarding step API (`/api/onboarding/step/[step]`) so creators cannot continue with a handle already claimed by another user.
+- Validation now runs at step 2, step 3, and finalization step 5 to prevent race-condition edge cases.
+- Checks cover both modern tag-based handle storage (`creator_tags` with `handle:` prefix) and legacy `creators.handle` rows.
+- API now returns clear `409` guidance: "That handle is already taken. Try a different one." instead of failing later in the public profile flow.
+
+### Validation
+- TypeScript: pass
+- Build: pass (60/60 static pages)
