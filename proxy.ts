@@ -5,6 +5,8 @@ const DEFAULT_ALLOWED_EMAILS = [
   'edcorner1@gmail.com',
   'edcorner1+creator@gmail.com',
   'edcorner1+brand@gmail.com',
+  'creator.flow.qa@ottougc.com',
+  'brand.flow.qa@ottougc.com',
 ]
 
 function getAllowedEmails() {
