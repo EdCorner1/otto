@@ -258,10 +258,11 @@ export default function OnboardingPage() {
   const [error, setError] = useState('')
   const [handleStatus, setHandleStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
 
+  const requestedRoleRaw = useMemo(() => (searchParams.get('role') || searchParams.get('type') || '').trim().toLowerCase(), [searchParams])
+  const hasExplicitRoleParam = Boolean(requestedRoleRaw)
   const requestedRole = useMemo<Role>(() => {
-    const raw = (searchParams.get('role') || searchParams.get('type') || '').trim().toLowerCase()
-    return raw === 'brand' ? 'brand' : 'creator'
-  }, [searchParams])
+    return requestedRoleRaw === 'brand' ? 'brand' : 'creator'
+  }, [requestedRoleRaw])
 
   const role = draft.role
   const creatorProfileUrl = creatorId ? `/creators/${creatorId}` : ''
@@ -358,17 +359,36 @@ export default function OnboardingPage() {
           return
         }
 
-        const serverDraft = mergeDraft(blankDraft(), result.profile)
+        let nextResult = result
+
+        // If onboarding was opened with an explicit role query, skip the role picker screen.
+        if (hasExplicitRoleParam && result.currentStep === 1) {
+          const seedResponse = await fetch('/api/onboarding/step/1', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ role: requestedRole }),
+          })
+
+          const seeded = (await seedResponse.json()) as ProgressResponse
+          if (seedResponse.ok && !seeded.error) {
+            nextResult = seeded
+          }
+        }
+
+        const serverDraft = mergeDraft(blankDraft(), nextResult.profile)
         const localDraftWithRequestedRole = mergeDraft(blankDraft(), {
           ...(parsedLocalDraft || {}),
           role: parsedLocalDraft?.role || requestedRole,
         })
         const merged = mergeDraft(serverDraft, localDraftWithRequestedRole)
-        const resumedStep = Math.min(TOTAL_STEPS, Math.max(result.nextStep || 1, localStep || 1))
+        const resumedStep = Math.min(TOTAL_STEPS, Math.max(nextResult.nextStep || 1, localStep || 1))
 
         setDraft(merged)
-        setCreatorId(result.creatorId)
-        setBrandId(result.brandId)
+        setCreatorId(nextResult.creatorId)
+        setBrandId(nextResult.brandId)
         setStep(resumedStep)
         persistLocalDraft(merged, resumedStep)
       } catch (err) {
@@ -379,7 +399,7 @@ export default function OnboardingPage() {
     }
 
     void boot()
-  }, [persistLocalDraft, requestedRole, router, supabase])
+  }, [hasExplicitRoleParam, persistLocalDraft, requestedRole, router, supabase])
 
   const creatorPreviewName = `${draft.firstName} ${draft.lastName}`.trim() || 'Your name'
   const normalizedHandle = draft.handle.trim().replace(/^@+/, '').toLowerCase()
