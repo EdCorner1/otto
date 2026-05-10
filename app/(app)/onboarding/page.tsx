@@ -217,8 +217,8 @@ function PreviewPortfolioCard({ item }: { item: PortfolioItem }) {
   const isDirectVideo = isDirectVideoUrl(item.url)
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#e8e8e4] bg-white shadow-sm">
-      <div className="relative aspect-[9/16] bg-[#111111]">
+    <div className="overflow-hidden rounded-xl border border-[#e8e8e4] bg-white shadow-sm">
+      <div className="relative aspect-[4/5] bg-[#111111]">
         {isDirectVideo ? (
           <video src={item.url} controls className="h-full w-full object-cover" />
         ) : thumbnail ? (
@@ -227,9 +227,6 @@ function PreviewPortfolioCard({ item }: { item: PortfolioItem }) {
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-white/70">Video sample</div>
         )}
-        <div className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">
-          {item.platform || 'video'}
-        </div>
       </div>
       <div className="p-3">
         <p className="line-clamp-2 text-sm font-medium text-[#363535]">{item.caption || 'Portfolio sample'}</p>
