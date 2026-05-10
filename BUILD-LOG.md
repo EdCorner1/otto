@@ -190,3 +190,14 @@
 ### Validation
 - TypeScript: pass
 - Build: pass (60/60 static pages)
+
+## 2026-05-10
+### Creator onboarding UX reliability: live handle availability feedback
+- Added debounced live handle availability checks to onboarding step 2 (creator mode) using `GET /api/creators/handle/[handle]`.
+- Continue button now requires a valid available handle (prevents avoidable step failures later).
+- Added inline status states under handle field: checking, available, taken/invalid.
+- Paired with server-side uniqueness enforcement already shipped to provide both proactive UX and backend safety.
+
+### Validation
+- TypeScript: pass
+- Build: pass (60/60 static pages)

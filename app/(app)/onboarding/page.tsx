@@ -256,6 +256,7 @@ export default function OnboardingPage() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [portfolioUploading, setPortfolioUploading] = useState(false)
   const [error, setError] = useState('')
+  const [handleStatus, setHandleStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
 
   const requestedRole = useMemo<Role>(() => {
     const raw = (searchParams.get('role') || searchParams.get('type') || '').trim().toLowerCase()
@@ -381,8 +382,49 @@ export default function OnboardingPage() {
   }, [persistLocalDraft, requestedRole, router, supabase])
 
   const creatorPreviewName = `${draft.firstName} ${draft.lastName}`.trim() || 'Your name'
-  const normalizedHandle = draft.handle.trim().replace(/^@+/, '')
+  const normalizedHandle = draft.handle.trim().replace(/^@+/, '').toLowerCase()
   const creatorHandle = normalizedHandle || 'your-handle'
+
+  useEffect(() => {
+    if (role !== 'creator') {
+      setHandleStatus('idle')
+      return
+    }
+
+    const handle = normalizedHandle
+    if (!handle) {
+      setHandleStatus('idle')
+      return
+    }
+
+    if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(handle)) {
+      setHandleStatus('taken')
+      return
+    }
+
+    setHandleStatus('checking')
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/creators/handle/${encodeURIComponent(handle)}`, { cache: 'no-store' })
+        if (response.status === 404) {
+          setHandleStatus('available')
+          return
+        }
+
+        if (!response.ok) {
+          setHandleStatus('idle')
+          return
+        }
+
+        const payload = (await response.json()) as { userId?: string }
+        setHandleStatus(payload?.userId && payload.userId === userId ? 'available' : 'taken')
+      } catch {
+        setHandleStatus('idle')
+      }
+    }, 350)
+
+    return () => window.clearTimeout(timer)
+  }, [normalizedHandle, role, userId])
   const viablePortfolioCount = useMemo(
     () => draft.portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length,
     [draft.portfolioItems]
@@ -391,7 +433,13 @@ export default function OnboardingPage() {
     if (step === 1) return Boolean(role)
     if (step === 2) {
       if (role === 'brand') return Boolean(draft.firstName.trim() && draft.lastName.trim() && draft.email.trim())
-      return Boolean(draft.firstName.trim() && draft.lastName.trim() && draft.email.trim() && draft.handle.trim().replace(/^@+/, ''))
+      return Boolean(
+        draft.firstName.trim() &&
+        draft.lastName.trim() &&
+        draft.email.trim() &&
+        draft.handle.trim().replace(/^@+/, '') &&
+        handleStatus === 'available'
+      )
     }
     if (step === 3) {
       if (role === 'brand') return Boolean(draft.companyName.trim() && draft.companyDescription.trim())
@@ -402,7 +450,7 @@ export default function OnboardingPage() {
       return hasMinimumViablePortfolio(draft.portfolioItems)
     }
     return true
-  }, [draft, role, step])
+  }, [draft, role, step, handleStatus])
 
   const handleRoleContinue = async () => {
     setSubmitting(true)
@@ -852,6 +900,17 @@ export default function OnboardingPage() {
                             className="w-full rounded-2xl border border-[#e8e8e4] px-4 py-3 outline-none transition focus:border-[#ccff00]"
                           />
                           <p className="mt-2 text-xs text-[#8a8a86]">Your public profile URL: ottougc.com/{creatorHandle}</p>
+                          {normalizedHandle ? (
+                            <p className={`mt-1 text-xs ${handleStatus === 'available' ? 'text-[#3f6a00]' : handleStatus === 'taken' ? 'text-[#b42318]' : 'text-[#8a8a86]'}`}>
+                              {handleStatus === 'checking'
+                                ? 'Checking handle availability...'
+                                : handleStatus === 'available'
+                                  ? 'Handle is available.'
+                                  : handleStatus === 'taken'
+                                    ? 'Handle is taken or invalid. Try another one.'
+                                    : ''}
+                            </p>
+                          ) : null}
                         </div>
                       )}
                     </div>
