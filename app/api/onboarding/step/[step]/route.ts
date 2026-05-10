@@ -290,11 +290,21 @@ async function getCurrentRows(adminClient: any, userId: string) {
 }
 
 async function getCreatorSnapshot(adminClient: any, creatorId: string) {
-  const [tagsQuery, portfolioQuery] = await Promise.all([
+  const [tagsQuery, portfolioQuery, rateCardsQuery, funFactsQuery] = await Promise.all([
     adminClient.from('creator_tags').select('tag').eq('creator_id', creatorId),
     adminClient
       .from('portfolio_items')
       .select('url, platform, caption, thumbnail_url, sort_order, created_at')
+      .eq('creator_id', creatorId)
+      .order('sort_order', { ascending: true }),
+    adminClient
+      .from('creator_rate_cards')
+      .select('rate_name, rate_price, rate_desc, sort_order')
+      .eq('creator_id', creatorId)
+      .order('sort_order', { ascending: true }),
+    adminClient
+      .from('creator_fun_facts')
+      .select('fact, sort_order')
       .eq('creator_id', creatorId)
       .order('sort_order', { ascending: true }),
   ])
@@ -318,6 +328,19 @@ async function getCreatorSnapshot(adminClient: any, creatorId: string) {
     .map((tag) => tag.replace('niche:', '').trim())
     .filter(Boolean)
 
+  const rateCards = ((rateCardsQuery.data || []) as Array<{ rate_name?: string | null; rate_price?: string | null; rate_desc?: string | null }>)
+    .map((row) => ({
+      rateName: cleanText(row.rate_name || ''),
+      ratePrice: cleanText(row.rate_price || ''),
+      rateDesc: cleanText(row.rate_desc || ''),
+    }))
+    .slice(0, 3)
+
+  const funFacts = ((funFactsQuery.data || []) as Array<{ fact?: string | null }>)
+    .map((row) => cleanText(row.fact || ''))
+    .filter(Boolean)
+    .slice(0, 3)
+
   return {
     handle: readSingle('handle:'),
     mainPlatform: readSingle('main_platform:'),
@@ -329,6 +352,8 @@ async function getCreatorSnapshot(adminClient: any, creatorId: string) {
       caption: item.caption || '',
       thumbnailUrl: item.thumbnail_url,
     })),
+    rateCards,
+    funFacts,
   }
 }
 
@@ -656,6 +681,27 @@ export async function POST(request: NextRequest, context: RouteContext) {
               .slice(0, 6)
           : []
 
+        const rateCards = Array.isArray(body?.rateCards)
+          ? body.rateCards
+              .map((item: unknown) => {
+                const row = item as { rateName?: string; ratePrice?: string; rateDesc?: string }
+                return {
+                  rateName: cleanText(row?.rateName),
+                  ratePrice: cleanText(row?.ratePrice),
+                  rateDesc: cleanText(row?.rateDesc),
+                }
+              })
+              .filter((item: { rateName: string; ratePrice: string; rateDesc: string }) => item.rateName || item.ratePrice || item.rateDesc)
+              .slice(0, 3)
+          : []
+
+        const funFacts = Array.isArray(body?.funFacts)
+          ? body.funFacts
+              .map((fact: unknown) => cleanText(String(fact || '')))
+              .filter(Boolean)
+              .slice(0, 3)
+          : []
+
         const validPortfolioCount = portfolioItems.filter((item: { url: string }) => isRealPortfolioVideoUrl(item.url)).length
         if (validPortfolioCount < MIN_PORTFOLIO_VIDEOS) {
           return NextResponse.json(
@@ -685,8 +731,36 @@ export async function POST(request: NextRequest, context: RouteContext) {
           if (error) throw new Error(error.message)
         }
 
+        await adminClient.from('creator_rate_cards').delete().eq('creator_id', creatorId)
+        if (rateCards.length > 0) {
+          const { error: rateCardsError } = await adminClient.from('creator_rate_cards').insert(
+            rateCards.map((item: { rateName: string; ratePrice: string; rateDesc: string }, index: number) => ({
+              creator_id: creatorId,
+              rate_name: item.rateName,
+              rate_price: item.ratePrice,
+              rate_desc: item.rateDesc,
+              sort_order: index,
+            }))
+          )
+          if (rateCardsError) throw new Error(rateCardsError.message)
+        }
+
+        await adminClient.from('creator_fun_facts').delete().eq('creator_id', creatorId)
+        if (funFacts.length > 0) {
+          const { error: funFactsError } = await adminClient.from('creator_fun_facts').insert(
+            funFacts.map((fact: string, index: number) => ({
+              creator_id: creatorId,
+              fact,
+              sort_order: index,
+            }))
+          )
+          if (funFactsError) throw new Error(funFactsError.message)
+        }
+
         await updateAuthMetadata(adminClient, user, {
           portfolio_items: portfolioItems,
+          rateCards,
+          funFacts,
         })
       } else {
         brandId = await ensureBrandRow(adminClient, user)

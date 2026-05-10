@@ -46,6 +46,12 @@ type PortfolioItem = {
   thumbnailUrl?: string | null
 }
 
+type RateCardItem = {
+  rateName: string
+  ratePrice: string
+  rateDesc: string
+}
+
 type OnboardingDraft = {
   role: Role
   firstName: string
@@ -58,6 +64,8 @@ type OnboardingDraft = {
   mainPlatform: string
   followerRange: string
   portfolioItems: PortfolioItem[]
+  rateCards: RateCardItem[]
+  funFacts: string[]
   companyName: string
   companyDescription: string
   industry: string
@@ -156,6 +164,11 @@ function blankDraft(): OnboardingDraft {
     mainPlatform: 'TikTok',
     followerRange: '',
     portfolioItems: [],
+    rateCards: [
+      { rateName: '', ratePrice: '', rateDesc: '' },
+      { rateName: '', ratePrice: '', rateDesc: '' },
+    ],
+    funFacts: ['', ''],
     companyName: '',
     companyDescription: '',
     industry: '',
@@ -185,6 +198,18 @@ function mergeDraft(base: OnboardingDraft, incoming?: Partial<OnboardingDraft> |
           .filter((item) => item.url)
           .slice(0, MAX_PORTFOLIO_ITEMS)
       : base.portfolioItems,
+    rateCards: Array.isArray(incoming.rateCards)
+      ? incoming.rateCards
+          .map((item) => ({
+            rateName: String(item?.rateName || '').trim(),
+            ratePrice: String(item?.ratePrice || '').trim(),
+            rateDesc: String(item?.rateDesc || '').trim(),
+          }))
+          .slice(0, 3)
+      : base.rateCards,
+    funFacts: Array.isArray(incoming.funFacts)
+      ? incoming.funFacts.map((fact) => String(fact || '').trim()).slice(0, 3)
+      : base.funFacts,
     brandDestination: incoming.brandDestination === '/jobs/new' ? '/jobs/new' : base.brandDestination,
   }
 }
@@ -561,6 +586,8 @@ export default function OnboardingPage() {
                 platform: item.platform,
                 caption: item.caption,
               })),
+              rateCards: draft.rateCards,
+              funFacts: draft.funFacts,
             })
         setStep(result.nextStep)
         persistLocalDraft(draft, result.nextStep)
@@ -1169,6 +1196,63 @@ export default function OnboardingPage() {
                       <p className="mt-2">Add at least {MIN_PORTFOLIO_ITEMS} valid portfolio videos to continue. Upload your best product demos, UGC examples, or client work so brands can actually get a proper read on your style.</p>
                     </div>
                   )}
+
+                  <div className="mt-8 grid gap-6 lg:grid-cols-2">
+                    <div className="space-y-3 rounded-[24px] border border-[#e8e8e4] bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Rate cards</p>
+                      {draft.rateCards.map((card, idx) => (
+                        <div key={`rate-${idx}`} className="grid gap-2">
+                          <input
+                            value={card.rateName}
+                            onChange={(event) => {
+                              const next = [...draft.rateCards]
+                              next[idx] = { ...card, rateName: event.target.value }
+                              updateDraft({ rateCards: next })
+                            }}
+                            placeholder={`Offer ${idx + 1} title (e.g. 1 video package)`}
+                            className="w-full rounded-xl border border-[#e8e8e4] px-3 py-2.5 text-sm outline-none transition focus:border-[#ccff00]"
+                          />
+                          <input
+                            value={card.ratePrice}
+                            onChange={(event) => {
+                              const next = [...draft.rateCards]
+                              next[idx] = { ...card, ratePrice: event.target.value }
+                              updateDraft({ rateCards: next })
+                            }}
+                            placeholder="Price (e.g. £350)"
+                            className="w-full rounded-xl border border-[#e8e8e4] px-3 py-2.5 text-sm outline-none transition focus:border-[#ccff00]"
+                          />
+                          <input
+                            value={card.rateDesc}
+                            onChange={(event) => {
+                              const next = [...draft.rateCards]
+                              next[idx] = { ...card, rateDesc: event.target.value }
+                              updateDraft({ rateCards: next })
+                            }}
+                            placeholder="What is included"
+                            className="w-full rounded-xl border border-[#e8e8e4] px-3 py-2.5 text-sm outline-none transition focus:border-[#ccff00]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3 rounded-[24px] border border-[#e8e8e4] bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Fun facts</p>
+                      {draft.funFacts.map((fact, idx) => (
+                        <input
+                          key={`fact-${idx}`}
+                          value={fact}
+                          onChange={(event) => {
+                            const next = [...draft.funFacts]
+                            next[idx] = event.target.value
+                            updateDraft({ funFacts: next })
+                          }}
+                          placeholder={`Fun fact ${idx + 1}`}
+                          className="w-full rounded-xl border border-[#e8e8e4] px-3 py-2.5 text-sm outline-none transition focus:border-[#ccff00]"
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1238,7 +1322,7 @@ export default function OnboardingPage() {
                       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
                         <div className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-sm">
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Ready to publish</p>
-                          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                             <div className="rounded-2xl bg-[#fbfbf8] p-4">
                               <p className="text-2xl font-semibold text-[#1c1c1e]">{viablePortfolioCount}</p>
                               <p className="mt-1 text-sm text-[#6b6b6b]">portfolio video{viablePortfolioCount === 1 ? '' : 's'}</p>
@@ -1250,6 +1334,14 @@ export default function OnboardingPage() {
                             <div className="rounded-2xl bg-[#fbfbf8] p-4">
                               <p className="text-base font-semibold text-[#1c1c1e]">{draft.mainPlatform || 'Platform set'}</p>
                               <p className="mt-1 text-sm text-[#6b6b6b]">main channel</p>
+                            </div>
+                            <div className="rounded-2xl bg-[#fbfbf8] p-4">
+                              <p className="text-2xl font-semibold text-[#1c1c1e]">{draft.rateCards.filter((r) => r.rateName || r.ratePrice || r.rateDesc).length}</p>
+                              <p className="mt-1 text-sm text-[#6b6b6b]">rate card{draft.rateCards.filter((r) => r.rateName || r.ratePrice || r.rateDesc).length === 1 ? '' : 's'}</p>
+                            </div>
+                            <div className="rounded-2xl bg-[#fbfbf8] p-4">
+                              <p className="text-2xl font-semibold text-[#1c1c1e]">{draft.funFacts.filter(Boolean).length}</p>
+                              <p className="mt-1 text-sm text-[#6b6b6b]">fun fact{draft.funFacts.filter(Boolean).length === 1 ? '' : 's'}</p>
                             </div>
                           </div>
                         </div>

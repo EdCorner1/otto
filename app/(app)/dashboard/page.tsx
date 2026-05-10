@@ -440,7 +440,7 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 pb-8 dashboard-compact">
-      <div className="mb-8 overflow-hidden rounded-[28px] border border-[#ecece7] bg-[linear-gradient(135deg,#ffffff_0%,#fbfbf5_48%,#f4ffd7_100%)] p-5 shadow-sm md:p-7">
+      <div className="mb-8 overflow-hidden rounded-[28px] border border-[#ecece7] bg-white p-5 shadow-sm md:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="section-label mb-3">{role === 'brand' ? 'Brand workspace' : 'Creator workspace'}</p>
@@ -521,89 +521,7 @@ export default function DashboardPage() {
 
       {role === 'creator' && creator && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <section className="overflow-hidden rounded-[30px] border border-[#e6e6de] bg-white shadow-[0_18px_55px_rgba(28,28,30,0.08)] lg:col-span-2">
-            <div className="border-b border-[#eeeeea] bg-[radial-gradient(circle_at_top_left,rgba(204,255,0,0.22),transparent_34%),linear-gradient(135deg,#ffffff_0%,#fbfbf6_60%,#f3f3ec_100%)] p-5 md:p-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#e6efbf] bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#69733f]">
-                  <WandSparkles className="h-3.5 w-3.5" />
-                  Hook lab
-                </div>
-                <h2 className="text-[26px] leading-tight text-[#1c1c1e] md:text-[30px]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.8px' }}>
-                  Shape the first line before you film
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5f5f5b]">
-                  Pick a natural opener, tighten the angle, then move. This should feel like a scratchpad, not another content machine.
-                </p>
-              </div>
 
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={rollHookIdea} disabled={rollingHook} className="btn-primary inline-flex items-center gap-2">
-                  <RefreshCw className={`h-4 w-4 ${rollingHook ? 'animate-spin' : ''}`} />
-                  {rollingHook ? 'Loading…' : 'New hook'}
-                </button>
-                <button type="button" onClick={saveCurrentHookToNotes} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4]">
-                  <Bookmark className="h-4 w-4" />
-                  Save
-                </button>
-                <button type="button" onClick={copyHook} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4]">
-                  <Copy className="h-4 w-4" />
-                  Copy
-                </button>
-              </div>
-            </div>
-
-            </div>
-            <div className="p-5 md:p-6">
-              <div className={`rounded-[24px] border border-[#e6efbf] bg-[#fbffdf] p-4 transition-all duration-300 md:p-5 ${rollingHook ? 'opacity-60 scale-[0.995]' : 'opacity-100 scale-100'}`}>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#78834a]">Hook starter</p>
-              <p className="mt-2 text-lg font-semibold text-[#1c1c1e]">
-                {currentHookIdea?.hookStarter || 'Load a hook to start shaping your opener.'}
-              </p>
-
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <div className="md:col-span-2 flex items-center justify-between gap-2 text-[11px] text-[#7d7d78]">
-                  <span className="uppercase tracking-[0.12em]">{hookSource === 'db' ? 'Live hook database' : 'Fallback hook bank'}</span>
-                  {currentHookIdea?.sourceUrl ? (
-                    <a href={currentHookIdea.sourceUrl} target="_blank" rel="noreferrer" className="underline decoration-dotted underline-offset-2 hover:text-[#4b5d00]">
-                      Source
-                    </a>
-                  ) : null}
-                </div>
-                <div className="rounded-xl border border-[#e3eac2] bg-white/75 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">Script angle</p>
-                  <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.scriptAngle || '—'}</p>
-                </div>
-                <div className="rounded-xl border border-[#e3eac2] bg-white/75 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">CTA beat</p>
-                  <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.ctaBeat || '—'}</p>
-                </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-[#8a8a86]">Keep it simple: pick the line that sounds most natural, then film before you overwork it.</p>
-              <p className="text-xs font-medium text-[#4b5d00] min-h-[18px]">{hookFeedbackMessage}</p>
-            </div>
-
-            {savedHookNotes.length > 0 && (
-              <div className="mt-4 rounded-2xl border border-[#efefea] bg-[#fcfcfb] p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Recent notes</p>
-                  <span className="text-[11px] text-[#9a9a9a]">Stored on this device</span>
-                </div>
-                <div className="space-y-2">
-                  {savedHookNotes.slice(0, 3).map((note) => (
-                    <div key={note.id} className="rounded-xl border border-[#ecece8] bg-white p-3">
-                      <p className="whitespace-pre-wrap text-sm text-[#363535] line-clamp-3">{note.text}</p>
-                      <p className="mt-2 text-[11px] text-[#9a9a9a]">Saved {formatDate(note.createdAt)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            </div>
-            </div>
-          </section>
 
           <section className="card shadow-sm">
             <div className="flex items-end justify-between mb-4">
