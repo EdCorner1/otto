@@ -724,7 +724,7 @@ export default function OnboardingPage() {
           {
             url: result.videoUrl,
             platform: result.platform || detectPortfolioPlatform(result.videoUrl, draft.mainPlatform),
-            caption: result.title || file.name.replace(/\.[^.]+$/, ''),
+            caption: '',
             thumbnailUrl: result.thumbnailUrl || null,
           },
         ],
@@ -1148,9 +1148,10 @@ export default function OnboardingPage() {
                               nextItems[index] = { ...item, caption: event.target.value }
                               updateDraft({ portfolioItems: nextItems })
                             }}
-                            placeholder="Add a short caption"
+                            placeholder="Write a one-line description for this video"
                             className="w-full rounded-2xl border border-[#e8e8e4] px-3 py-2.5 text-sm outline-none transition focus:border-[#ccff00]"
                           />
+                          <p className="-mt-1 text-xs text-[#8a8a86]">Tip: add what the video is about in plain language.</p>
                           <button
                             type="button"
                             onClick={() => void removePortfolioItem(index)}
