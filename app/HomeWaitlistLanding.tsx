@@ -33,14 +33,14 @@ const accentScript = Caveat({
 })
 
 const FEATURED_INTRO_VIDEOS = [
-  { id: 'v1', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/Fit2YLf3rS0/hqdefault.jpg' },
-  { id: 'v2', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/i8oyR0lMFzE/hqdefault.jpg' },
-  { id: 'v3', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/_tvedFUQmSM/hqdefault.jpg' },
-  { id: 'v4', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/9w-zDHGobWI/hqdefault.jpg' },
-  { id: 'v5', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/ECrA05A1gHc/hqdefault.jpg' },
-  { id: 'v6', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/NsLKQTh-Bqo/hqdefault.jpg' },
-  { id: 'v7', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/F-X4SLhorvw/hqdefault.jpg' },
-  { id: 'v8', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/pEMbqEKXG3Y/hqdefault.jpg' },
+  { id: 'v1', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/Fit2YLf3rS0/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=Fit2YLf3rS0' },
+  { id: 'v2', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/i8oyR0lMFzE/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=i8oyR0lMFzE' },
+  { id: 'v3', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/_tvedFUQmSM/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=_tvedFUQmSM' },
+  { id: 'v4', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/9w-zDHGobWI/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=9w-zDHGobWI' },
+  { id: 'v5', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/ECrA05A1gHc/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=ECrA05A1gHc' },
+  { id: 'v6', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/NsLKQTh-Bqo/hqdefault.jpg', url: 'https://www.youtube.com/shorts/NsLKQTh-Bqo' },
+  { id: 'v7', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/F-X4SLhorvw/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=F-X4SLhorvw' },
+  { id: 'v8', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/pEMbqEKXG3Y/hqdefault.jpg', url: 'https://www.youtube.com/shorts/pEMbqEKXG3Y' },
 ] as const
 
 const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
@@ -453,19 +453,26 @@ export default function HomeWaitlistLanding() {
           <div className="overflow-hidden py-2">
             <div className="video-ticker-track flex gap-5">
               {[...FEATURED_INTRO_VIDEOS, ...FEATURED_INTRO_VIDEOS].map((video, index) => (
-                <article key={`${video.id}-${index}`} className="w-[250px] shrink-0 overflow-hidden rounded-2xl border border-[#ecece8] bg-white shadow-[0_14px_32px_rgba(28,28,30,0.08)]">
+                <a
+                  key={`${video.id}-${index}`}
+                  href={video.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group block w-[250px] shrink-0 overflow-hidden rounded-2xl border border-[#ecece8] bg-white shadow-[0_14px_32px_rgba(28,28,30,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(28,28,30,0.12)]"
+                  aria-label="Play video"
+                >
                   <div className="relative aspect-[9/16]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={video.thumbnail} alt={`${video.title} thumbnail`} className="h-full w-full object-cover" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
                     <span className="absolute inset-0 flex items-center justify-center">
-                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[#1c1c1e] shadow-md">
+                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[#1c1c1e] shadow-md transition group-hover:scale-105">
                         <Play className="h-4 w-4 fill-current" />
                       </span>
                     </span>
                   </div>
                   <div className="p-1" />
-                </article>
+                </a>
               ))}
             </div>
           </div>
