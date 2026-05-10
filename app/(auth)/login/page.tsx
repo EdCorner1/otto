@@ -48,10 +48,27 @@ export default function LoginPage() {
     if (error) {
       setError(error.message)
       setLoading(false)
-    } else {
-      router.push(redirectTo)
-      router.refresh()
+      return
     }
+
+    // Ensure auth state is persisted before navigation to protected routes.
+    let hasSession = false
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        hasSession = true
+        break
+      }
+      await new Promise((resolve) => setTimeout(resolve, 150))
+    }
+
+    if (!hasSession) {
+      setError('Signed in, but your session is still syncing. Please try again.')
+      setLoading(false)
+      return
+    }
+
+    window.location.assign(redirectTo)
   }
 
   const handleGoogleLogin = async () => {
