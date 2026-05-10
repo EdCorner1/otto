@@ -156,11 +156,10 @@ export async function POST(request: NextRequest) {
       url: item.url,
       caption: item.caption?.trim() || null,
       sort_order: index,
-      category: item.category || null,
     }))
 
     const { error: portfolioError } = await adminClient.from('portfolio_items').insert(portfolioPayload)
-    if (portfolioError) throw new Error(`Portfolio save failed: ${portfolioError.message}`)
+    if (portfolioError) throw new Error('Portfolio save failed. Please try again.')
 
     const { error: userError } = await adminClient.from('users').update({ role: 'creator' }).eq('id', user.id)
     if (userError) throw new Error(`User role update failed: ${userError.message}`)
@@ -176,7 +175,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, creatorId })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Could not finish creator onboarding.'
+    console.error('creator_onboarding_failed', error)
+    const message = error instanceof Error && error.message.includes('failed')
+      ? error.message
+      : 'Could not finish creator onboarding. Please try again.'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
