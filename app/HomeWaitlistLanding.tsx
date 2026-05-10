@@ -2,8 +2,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { Caveat } from 'next/font/google'
 import { useEffect, useMemo, useState } from 'react'
-import { BadgeCheck, Clock3, Hammer, Loader2, MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { BadgeCheck, ChevronRight, Clock3, DollarSign, Hammer, Loader2, MessageSquare, Play, ShieldAlert, Target, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
 
 type Role = 'creator' | 'brand'
 type Vote = 'up' | 'down' | null
@@ -25,6 +26,22 @@ const AVATARS = [
   'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=96&q=80',
   'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=96&q=80',
 ]
+
+const accentScript = Caveat({
+  subsets: ['latin'],
+  weight: ['700'],
+})
+
+const FEATURED_INTRO_VIDEOS = [
+  { id: 'v1', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/Fit2YLf3rS0/hqdefault.jpg' },
+  { id: 'v2', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/i8oyR0lMFzE/hqdefault.jpg' },
+  { id: 'v3', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/_tvedFUQmSM/hqdefault.jpg' },
+  { id: 'v4', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/9w-zDHGobWI/hqdefault.jpg' },
+  { id: 'v5', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/ECrA05A1gHc/hqdefault.jpg' },
+  { id: 'v6', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/NsLKQTh-Bqo/hqdefault.jpg' },
+  { id: 'v7', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/F-X4SLhorvw/hqdefault.jpg' },
+  { id: 'v8', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/pEMbqEKXG3Y/hqdefault.jpg' },
+] as const
 
 const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
   creator: {
@@ -170,17 +187,12 @@ export default function HomeWaitlistLanding() {
   const [error, setError] = useState<string | null>(null)
   const [votes, setVotes] = useState<Record<string, Vote>>({})
   const [visibleCards, setVisibleCards] = useState<Record<string, boolean>>({})
-  const [selectedRoadmapStatus, setSelectedRoadmapStatus] = useState<RoadmapCard['status'] | 'All'>('All')
   const [idea, setIdea] = useState('')
   const [ideaSubmitted, setIdeaSubmitted] = useState(false)
   const [ideaSubmitting, setIdeaSubmitting] = useState(false)
   const [ideaError, setIdeaError] = useState<string | null>(null)
 
   const content = useMemo(() => COPY[role], [role])
-  const filteredRoadmapCards = useMemo(() => {
-    if (selectedRoadmapStatus === 'All') return ROADMAP_CARDS
-    return ROADMAP_CARDS.filter((card) => card.status === selectedRoadmapStatus)
-  }, [selectedRoadmapStatus])
 
   useEffect(() => {
     const observers: IntersectionObserver[] = []
@@ -327,7 +339,7 @@ export default function HomeWaitlistLanding() {
       </header>
 
       <main>
-        <section className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 pt-28 pb-12 md:px-10">
+        <section className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 pt-28 pb-20 md:px-10">
           <div className="w-full max-w-4xl text-center">
             <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
               <div className="flex -space-x-2.5">
@@ -427,159 +439,214 @@ export default function HomeWaitlistLanding() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-8 md:px-10">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Roadmap</p>
-            <h2 className="mt-3 text-[clamp(2rem,4vw,3.4rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-              What should we build next?
+        <section className="mx-auto max-w-6xl px-6 pb-12 md:px-10">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-[clamp(1.3rem,2vw,1.9rem)] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
+              {role === 'creator' ? 'Your content could be here next' : "Here's some of our favourite creators"}
             </h2>
-            <p className="mt-3 text-sm leading-6 text-[#6b6b6b] md:text-base">
-              Vote on ideas or suggest one.
+            <a href="#waitlist-form" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1c1c1e] hover:text-[#4b4b46]">
+              Get access
+              <ChevronRight className="h-4 w-4" />
+            </a>
+          </div>
+
+          <div className="overflow-hidden py-2">
+            <div className="video-ticker-track flex gap-5">
+              {[...FEATURED_INTRO_VIDEOS, ...FEATURED_INTRO_VIDEOS].map((video, index) => (
+                <article key={`${video.id}-${index}`} className="w-[250px] shrink-0 overflow-hidden rounded-2xl border border-[#ecece8] bg-white shadow-[0_14px_32px_rgba(28,28,30,0.08)]">
+                  <div className="relative aspect-[9/16]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={video.thumbnail} alt={`${video.title} thumbnail`} className="h-full w-full object-cover" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[#1c1c1e] shadow-md">
+                        <Play className="h-4 w-4 fill-current" />
+                      </span>
+                    </span>
+                  </div>
+                  <div className="p-1" />
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {role === 'creator' && (
+        <>
+        <section className="mx-auto max-w-6xl px-6 pb-20 md:px-10">
+          <div className="mx-auto max-w-4xl text-center">
+            <h2 className="mt-2 text-[clamp(2.2rem,5vw,4.2rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
+              Creating content that{' '}
+              <span className={`${accentScript.className} inline-block text-[#ccff00] text-[1.08em] align-baseline`}>gets</span>{' '}
+              <span className={`${accentScript.className} inline-block text-[#ccff00] text-[1.08em] align-baseline`}>clicks</span>{' '}
+              <span className={`${accentScript.className} inline-block text-[#ccff00] text-[1.08em] align-baseline`}>isn&apos;t that</span>{' '}
+              easy
+            </h2>
+            <p className="mt-4 text-sm leading-6 text-[#6b6b6b] md:text-xl md:leading-8">
+              Most creators and brand teams don&apos;t struggle because they&apos;re not trying hard enough. They struggle because the process is messy.
             </p>
           </div>
 
-          <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-2">
-            {(['All', 'Under consideration', 'Building now', 'Shipped this week'] as const).map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setSelectedRoadmapStatus(status)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                  selectedRoadmapStatus === status
-                    ? 'border-[#dff3b3] bg-[#efffd3] text-[#355400]'
-                    : 'border-[#e8e8e4] bg-white text-[#5f5f58] hover:border-[#d9d9d2]'
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
-
-          <div className="mx-auto mt-6 max-w-3xl space-y-4">
-            {filteredRoadmapCards.map((card) => {
-              const vote = votes[card.id] ?? null
-              const status = statusConfig(card.status)
-              const StatusIcon = status.icon
-
-              return (
-                <article
-                  key={card.id}
-                  id={`roadmap-card-${card.id}`}
-                  className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 text-left shadow-[0_10px_30px_rgba(28,28,30,0.05)] transition-all duration-700 ease-out sm:p-6"
-                  style={{
-                    opacity: visibleCards[card.id] ? 1 : 0,
-                    transform: visibleCards[card.id] ? 'translateY(0px) scale(1)' : 'translateY(24px) scale(0.985)',
-                    transitionDelay: visibleCards[card.id] ? '0ms' : '0ms',
-                  }}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${status.className}`}>
-                      <StatusIcon className="h-3.5 w-3.5" />
-                      {card.status}
-                    </span>
-                    <span className="inline-flex rounded-full border border-[#ecece7] bg-[#fafaf8] px-3 py-1 text-xs font-medium text-[#6b6b6b]">
-                      {card.tag}
-                    </span>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            <article className="rounded-[28px] border border-[#ecece8] bg-white p-4 shadow-[0_10px_30px_rgba(28,28,30,0.05)]">
+              <div className="relative h-64 overflow-hidden rounded-2xl border border-[#efefe9] bg-gradient-to-br from-[#f6f6f2] to-[#fff9fc] p-4">
+                <div className="flex h-full flex-col justify-between rounded-xl border border-[#e7e7e0] bg-white p-4">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff4f8] text-[#8a2a4a]">
+                    <DollarSign className="h-5 w-5" />
                   </div>
-
-                  <h3 className="mt-4 text-xl font-semibold leading-tight text-[#1c1c1e]">{card.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#5f5f58] sm:text-[15px]">{card.body}</p>
-
-                  <div className="mt-5 flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setVote(card.id, 'up')}
-                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${vote === 'up' ? 'border-[#dff3b3] bg-[#efffd3] text-[#355400]' : 'border-[#e8e8e4] bg-[#fcfcfa] text-[#4f4f49] hover:border-[#d9d9d2]'}`}
-                    >
-                      <ThumbsUp className="h-4 w-4" />
-                      <span>{getVoteCount(card, 'up')}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVote(card.id, 'down')}
-                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${vote === 'down' ? 'border-[#f2d6d6] bg-[#fff3f3] text-[#8a2a2a]' : 'border-[#e8e8e4] bg-[#fcfcfa] text-[#4f4f49] hover:border-[#d9d9d2]'}`}
-                    >
-                      <ThumbsDown className="h-4 w-4" />
-                      <span>{getVoteCount(card, 'down')}</span>
-                    </button>
+                  <div className="space-y-2">
+                    <div className="h-3 w-2/3 rounded-full bg-[#ecece7]" />
+                    <div className="h-3 w-1/2 rounded-full bg-[#ecece7]" />
+                    <div className="inline-flex rounded-full border border-[#ffd8e5] bg-[#fff4f8] px-3 py-1 text-xs font-semibold text-[#8a2a4a]">Back-and-forth pricing</div>
                   </div>
-                </article>
-              )
-            })}
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-6 pb-10 pt-2 md:px-10">
-          <div className="grid gap-4 md:grid-cols-3">
-            <article className="rounded-[24px] border border-[#e8e8e4] bg-white p-5 shadow-[0_8px_24px_rgba(28,28,30,0.04)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Step 1</p>
-              <h3 className="mt-3 text-lg font-semibold text-[#1c1c1e]">Create your profile</h3>
-              <p className="mt-2 text-sm leading-6 text-[#5f5f58]">Show your best tech UGC so brands can qualify you quickly.</p>
-            </article>
-            <article className="rounded-[24px] border border-[#e8e8e4] bg-white p-5 shadow-[0_8px_24px_rgba(28,28,30,0.04)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Step 2</p>
-              <h3 className="mt-3 text-lg font-semibold text-[#1c1c1e]">Get matched faster</h3>
-              <p className="mt-2 text-sm leading-6 text-[#5f5f58]">Brands can discover creators by niche, content style, and proof of work.</p>
-            </article>
-            <article className="rounded-[24px] border border-[#e8e8e4] bg-white p-5 shadow-[0_8px_24px_rgba(28,28,30,0.04)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Step 3</p>
-              <h3 className="mt-3 text-lg font-semibold text-[#1c1c1e]">Run campaigns in one place</h3>
-              <p className="mt-2 text-sm leading-6 text-[#5f5f58]">From brief to deliverables, keep communication and approvals clean.</p>
-            </article>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-6 pb-10 md:px-10">
-          <div className="rounded-[28px] border border-[#e8e8e4] bg-white p-6 shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">For creators & brands</p>
-            <h3 className="mt-3 text-[clamp(1.6rem,3vw,2.4rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
-              Built for real campaigns — not messy DMs.
-            </h3>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-[#ecece7] bg-[#fafaf8] p-4">
-                <p className="text-sm font-semibold text-[#1c1c1e]">Creators</p>
-                <p className="mt-1 text-sm text-[#5f5f58]">Track deliverables, protect your process, and build credibility with every campaign.</p>
+                </div>
               </div>
-              <div className="rounded-2xl border border-[#ecece7] bg-[#fafaf8] p-4">
-                <p className="text-sm font-semibold text-[#1c1c1e]">Brands</p>
-                <p className="mt-1 text-sm text-[#5f5f58]">Find better-fit creators and manage campaign execution without scattered tools.</p>
+              <h3 className="mt-5 text-3xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
+UGC specifically for Tech, AI and Apps
+              </h3>
+            </article>
+
+            <article className="rounded-[28px] border border-[#ecece8] bg-white p-4 shadow-[0_10px_30px_rgba(28,28,30,0.05)]">
+              <div className="relative h-64 overflow-hidden rounded-2xl border border-[#efefe9] bg-gradient-to-br from-[#f6f6f2] to-[#fff9fc] p-4">
+                <div className="flex h-full flex-col justify-between rounded-xl border border-[#e7e7e0] bg-white p-4">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#eef8ff] text-[#2d5f87]">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex -space-x-2">
+                      <span className="h-8 w-8 rounded-full border-2 border-white bg-[#dfeef9]" />
+                      <span className="h-8 w-8 rounded-full border-2 border-white bg-[#f9e5ef]" />
+                      <span className="h-8 w-8 rounded-full border-2 border-white bg-[#e8f4de]" />
+                    </div>
+                    <div className="inline-flex rounded-full border border-[#d8e8f4] bg-[#f3f9ff] px-3 py-1 text-xs font-semibold text-[#2d5f87]">Niche mismatch</div>
+                  </div>
+                </div>
+              </div>
+              <h3 className="mt-5 text-3xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
+Creator and brand matching, no need to pitch
+              </h3>
+            </article>
+
+            <article className="rounded-[28px] border border-[#ecece8] bg-white p-4 shadow-[0_10px_30px_rgba(28,28,30,0.05)]">
+              <div className="relative h-64 overflow-hidden rounded-2xl border border-[#efefe9] bg-gradient-to-br from-[#f6f6f2] to-[#fff9fc] p-4">
+                <div className="flex h-full flex-col justify-between rounded-xl border border-[#e7e7e0] bg-white p-4">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff4f8] text-[#8a2a4a]">
+                    <ShieldAlert className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-9 rounded-xl border border-[#ecece7] bg-[#fafaf8]" />
+                    <div className="h-9 rounded-xl border border-[#ecece7] bg-[#fafaf8]" />
+                    <div className="inline-flex rounded-full border border-[#ffd8e5] bg-[#fff4f8] px-3 py-1 text-xs font-semibold text-[#8a2a4a]">Weak creative direction</div>
+                  </div>
+                </div>
+              </div>
+              <h3 className="mt-5 text-3xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
+Get viral scripts in your dashboard so you never run out of ideas
+              </h3>
+            </article>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-6 pb-14 md:px-10">
+          <div className="grid items-center gap-8 rounded-[30px] border border-[#ecece8] bg-white p-6 shadow-[0_10px_30px_rgba(28,28,30,0.05)] lg:grid-cols-[1.15fr_1fr] lg:p-8">
+            <div>
+              <h2 className="text-[clamp(2rem,4vw,3.2rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
+                Show off your best work
+              </h2>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-[#6b6b6b] md:text-base">
+                Every creator profile includes a clean public portfolio page you can share with brands right away.
+              </p>
+              <a href="#waitlist-form" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#ccff00] px-5 py-3 text-sm font-semibold text-[#1c1c1e] transition hover:bg-[#d8ff47]">
+                Get access
+                <ChevronRight className="h-4 w-4" />
+              </a>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-[#ecece8] bg-[#f9f9f6] p-2 shadow-sm">
+              <div className="relative h-56 overflow-hidden rounded-xl border border-[#ecece8]">
+                <Image src="/images/creator-portfolio-live.png" alt="Live creator portfolio preview" fill sizes="(min-width: 1024px) 520px, 100vw" className="object-cover object-top" />
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-20 pt-4 md:px-10">
-          <div className="mx-auto max-w-3xl rounded-[28px] border border-[#e8e8e4] bg-white p-5 text-left shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-6">
-            <h3 className="text-2xl font-semibold tracking-tight text-[#1c1c1e]">What do you want to see?</h3>
-            <p className="mt-3 text-sm leading-6 text-[#6b6b6b]">
-              Add a feature idea, creator pain point, or workflow problem.
+        <section className="mx-auto max-w-6xl px-6 pb-14 md:px-10">
+          <div className="rounded-[30px] border border-[#ecece8] bg-white p-6 shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-8">
+            <h2 className="text-[clamp(2rem,4vw,3.2rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
+              3 ways to get paid
+            </h2>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-[#6b6b6b] md:text-base">
+              Simple earning models creators can use with brands depending on campaign goals.
             </p>
 
-            <form onSubmit={handleIdeaSubmit} className="mt-5 space-y-3">
-              <textarea
-                value={idea}
-                onChange={(e) => setIdea(e.target.value)}
-                placeholder="Share an idea"
-                className="min-h-[150px] w-full rounded-3xl border border-[#e8e8e4] bg-[#f8f8f5] px-5 py-4 text-sm text-[#1c1c1e] outline-none transition focus:border-[#ccff00]"
-              />
-              <button
-                type="submit"
-                disabled={ideaSubmitting}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-bold text-[#1c1c1e] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                style={{ background: '#ccff00' }}
-              >
-                {ideaSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
-                {ideaSubmitting ? 'Sending...' : 'Share idea'}
-              </button>
-            </form>
+            <div className="mt-7 grid gap-4 md:grid-cols-3">
+              <article className="rounded-2xl border border-[#ecece8] bg-[#fcfcfa] p-5">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#f5fbe7] text-[#4d6d10]">
+                  <Play className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
+                  Pay per video
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-[#5f5f58]">One clear rate for each approved video deliverable.</p>
+              </article>
 
-            {ideaError && <p className="mt-3 text-sm text-[#d14343]">{ideaError}</p>}
-            {!ideaError && ideaSubmitted && (
-              <p className="mt-3 text-sm text-[#5f5f5b]">Thanks. Added to the list.</p>
-            )}
+              <article className="rounded-2xl border border-[#ecece8] bg-[#fcfcfa] p-5">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#eef7ff] text-[#2d5f87]">
+                  <Users className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
+                  Monthly retainer
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-[#5f5f58]">Steady monthly content output for brands that want consistency.</p>
+              </article>
+
+              <article className="rounded-2xl border border-[#ecece8] bg-[#fcfcfa] p-5">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff4f8] text-[#8a2a4a]">
+                  <Target className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
+                  Pay per video + performance bonuses
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-[#5f5f58]">Base video fee with upside tied to agreed view milestones.</p>
+              </article>
+            </div>
           </div>
         </section>
+
+        <section className="mx-auto max-w-6xl px-6 pb-24 md:px-10">
+          <div className="rounded-[34px] border border-[#d7f28f] bg-[#ccff00] px-6 py-10 text-center shadow-[0_18px_45px_rgba(204,255,0,0.35)] sm:px-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#3f5200]">Creator access</p>
+            <h2 className="mt-3 text-[clamp(2.2rem,5vw,4rem)] leading-[0.92] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
+              Stop waiting. Start getting paid for content that brands actually want.
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-[#3f5200] md:text-base">
+              If you&apos;re serious about turning your content into real income, join the waitlist and get in early.
+            </p>
+            <a href="#waitlist-form" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#1c1c1e] px-8 py-4 text-base font-semibold text-white transition hover:bg-black">
+              I want this
+              <ChevronRight className="h-5 w-5" />
+            </a>
+          </div>
+        </section>
+        </>
+        )}
       </main>
+
+      <style jsx global>{`
+        .video-ticker-track {
+          width: max-content;
+          animation: videoTicker 42s linear infinite;
+        }
+
+        .video-ticker-track:hover {
+          animation-play-state: paused;
+        }
+
+        @keyframes videoTicker {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   )
 }

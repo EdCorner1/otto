@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Camera, Globe, Link2, Music4, Play } from 'lucide-react'
+import { Camera, Globe, Link2, Music4, Play, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 type Role = 'brand' | 'creator' | null
@@ -286,6 +286,15 @@ export default function ExplorePage() {
     setPage(1)
   }
 
+  const hasActiveFilters =
+    Boolean(search.trim()) ||
+    platform !== 'all' ||
+    followerRange !== 'all' ||
+    niche !== 'all' ||
+    contentType !== 'all' ||
+    incomeLevel !== 'all' ||
+    sort !== 'newest'
+
   return (
     <div className="min-h-screen bg-[#fafaf9] text-[#1c1c1e]">
       <div className="mx-auto max-w-[1280px] px-4 md:px-8">
@@ -311,13 +320,25 @@ export default function ExplorePage() {
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div className="xl:col-span-2">
               <label className="mb-1.5 block text-xs font-medium text-[#7a7a75]">Search</label>
-              <input
-                type="text"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Name or @handle"
-                className="w-full rounded-xl border border-[#e8e8e4] bg-[#fafaf9] px-3.5 py-2.5 text-sm text-[#1c1c1e] placeholder:text-[#999992] focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Name or @handle"
+                  className="w-full rounded-xl border border-[#e8e8e4] bg-[#fafaf9] px-3.5 py-2.5 pr-10 text-sm text-[#1c1c1e] placeholder:text-[#999992] focus:outline-none focus:ring-2 focus:ring-[#ccff00]"
+                />
+                {search.trim() && (
+                  <button
+                    type="button"
+                    aria-label="Clear search"
+                    onClick={() => setSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#8a8a86] transition hover:bg-[#efefe9] hover:text-[#2f2f2b]"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div>
@@ -384,11 +405,22 @@ export default function ExplorePage() {
           </div>
         </section>
 
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-[#74746f]">
             {loading ? 'Loading creators…' : `${total} creator${total === 1 ? '' : 's'} found`}
           </p>
-          <p className="text-xs text-[#9a9a93]">12 per page</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-[#9a9a93]">12 per page</p>
+            {hasActiveFilters && (
+              <button
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#e8e8e4] bg-white px-3 py-1.5 text-xs font-medium text-[#5d5d58] transition hover:border-[#d8d8d1] hover:text-[#1c1c1e]"
+              >
+                <X className="h-3.5 w-3.5" />
+                Clear all
+              </button>
+            )}
+          </div>
         </div>
 
         {loading ? (
