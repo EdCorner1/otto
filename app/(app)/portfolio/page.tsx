@@ -458,8 +458,42 @@ export default function InternalPortfolioPage() {
           throw new Error('No creator profile found yet. Complete onboarding first.')
         }
 
+        let effectiveCreatorRow = creatorRow
+
+        // Fallback to owner API when nested RLS relation returns empty items in client query.
+        if ((creatorRow.portfolio_items || []).length === 0) {
+          const { data: sessionData } = await supabase.auth.getSession()
+          const accessToken = sessionData.session?.access_token
+
+          if (accessToken) {
+            const ownerResponse = await fetch(`/api/creators/${creatorRow.id}`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              cache: 'no-store',
+            })
+
+            if (ownerResponse.ok) {
+              const ownerPayload = await ownerResponse.json() as {
+                portfolioItems?: Array<{
+                  id: string
+                  url: string
+                  platform: string | null
+                  caption: string | null
+                  thumbnail_url: string | null
+                  created_at: string
+                  sort_order: number | null
+                }>
+              }
+
+              effectiveCreatorRow = {
+                ...creatorRow,
+                portfolio_items: ownerPayload.portfolioItems || [],
+              }
+            }
+          }
+        }
+
         if (!cancelled) {
-          setPortfolio(buildPortfolioFromCreator(creatorRow))
+          setPortfolio(buildPortfolioFromCreator(effectiveCreatorRow))
           setError('')
         }
       } catch (err) {
