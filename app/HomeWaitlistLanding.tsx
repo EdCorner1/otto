@@ -170,12 +170,17 @@ export default function HomeWaitlistLanding() {
   const [error, setError] = useState<string | null>(null)
   const [votes, setVotes] = useState<Record<string, Vote>>({})
   const [visibleCards, setVisibleCards] = useState<Record<string, boolean>>({})
+  const [selectedRoadmapStatus, setSelectedRoadmapStatus] = useState<RoadmapCard['status'] | 'All'>('All')
   const [idea, setIdea] = useState('')
   const [ideaSubmitted, setIdeaSubmitted] = useState(false)
   const [ideaSubmitting, setIdeaSubmitting] = useState(false)
   const [ideaError, setIdeaError] = useState<string | null>(null)
 
   const content = useMemo(() => COPY[role], [role])
+  const filteredRoadmapCards = useMemo(() => {
+    if (selectedRoadmapStatus === 'All') return ROADMAP_CARDS
+    return ROADMAP_CARDS.filter((card) => card.status === selectedRoadmapStatus)
+  }, [selectedRoadmapStatus])
 
   useEffect(() => {
     const observers: IntersectionObserver[] = []
@@ -433,8 +438,25 @@ export default function HomeWaitlistLanding() {
             </p>
           </div>
 
-          <div className="mx-auto mt-10 max-w-3xl space-y-4">
-            {ROADMAP_CARDS.map((card) => {
+          <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-2">
+            {(['All', 'Under consideration', 'Building now', 'Shipped this week'] as const).map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setSelectedRoadmapStatus(status)}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                  selectedRoadmapStatus === status
+                    ? 'border-[#dff3b3] bg-[#efffd3] text-[#355400]'
+                    : 'border-[#e8e8e4] bg-white text-[#5f5f58] hover:border-[#d9d9d2]'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+
+          <div className="mx-auto mt-6 max-w-3xl space-y-4">
+            {filteredRoadmapCards.map((card) => {
               const vote = votes[card.id] ?? null
               const status = statusConfig(card.status)
               const StatusIcon = status.icon
@@ -487,7 +509,46 @@ export default function HomeWaitlistLanding() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-20 pt-8 md:px-10">
+        <section className="mx-auto max-w-6xl px-6 pb-10 pt-2 md:px-10">
+          <div className="grid gap-4 md:grid-cols-3">
+            <article className="rounded-[24px] border border-[#e8e8e4] bg-white p-5 shadow-[0_8px_24px_rgba(28,28,30,0.04)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Step 1</p>
+              <h3 className="mt-3 text-lg font-semibold text-[#1c1c1e]">Create your profile</h3>
+              <p className="mt-2 text-sm leading-6 text-[#5f5f58]">Show your best tech UGC so brands can qualify you quickly.</p>
+            </article>
+            <article className="rounded-[24px] border border-[#e8e8e4] bg-white p-5 shadow-[0_8px_24px_rgba(28,28,30,0.04)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Step 2</p>
+              <h3 className="mt-3 text-lg font-semibold text-[#1c1c1e]">Get matched faster</h3>
+              <p className="mt-2 text-sm leading-6 text-[#5f5f58]">Brands can discover creators by niche, content style, and proof of work.</p>
+            </article>
+            <article className="rounded-[24px] border border-[#e8e8e4] bg-white p-5 shadow-[0_8px_24px_rgba(28,28,30,0.04)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Step 3</p>
+              <h3 className="mt-3 text-lg font-semibold text-[#1c1c1e]">Run campaigns in one place</h3>
+              <p className="mt-2 text-sm leading-6 text-[#5f5f58]">From brief to deliverables, keep communication and approvals clean.</p>
+            </article>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-6 pb-10 md:px-10">
+          <div className="rounded-[28px] border border-[#e8e8e4] bg-white p-6 shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">For creators & brands</p>
+            <h3 className="mt-3 text-[clamp(1.6rem,3vw,2.4rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.04em' }}>
+              Built for real campaigns — not messy DMs.
+            </h3>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-[#ecece7] bg-[#fafaf8] p-4">
+                <p className="text-sm font-semibold text-[#1c1c1e]">Creators</p>
+                <p className="mt-1 text-sm text-[#5f5f58]">Track deliverables, protect your process, and build credibility with every campaign.</p>
+              </div>
+              <div className="rounded-2xl border border-[#ecece7] bg-[#fafaf8] p-4">
+                <p className="text-sm font-semibold text-[#1c1c1e]">Brands</p>
+                <p className="mt-1 text-sm text-[#5f5f58]">Find better-fit creators and manage campaign execution without scattered tools.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-6 pb-20 pt-4 md:px-10">
           <div className="mx-auto max-w-3xl rounded-[28px] border border-[#e8e8e4] bg-white p-5 text-left shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-6">
             <h3 className="text-2xl font-semibold tracking-tight text-[#1c1c1e]">What do you want to see?</h3>
             <p className="mt-3 text-sm leading-6 text-[#6b6b6b]">
