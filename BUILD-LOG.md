@@ -201,3 +201,21 @@
 ### Validation
 - TypeScript: pass
 - Build: pass (60/60 static pages)
+
+## 2026-05-11
+### Creator onboarding + dashboard cleanup + persistence hardening
+- Fixed onboarding local draft storage collision between brand and creator flows by scoping localStorage keys by role (`creator`/`brand`) while keeping legacy key fallback support.
+- Fixed onboarding profile hydration so Rate Cards and Fun Facts are restored from DB snapshots (not dropped on resume when metadata arrays are empty).
+- Applied dashboard visual cleanup pass to align with homepage tone: replaced heavier card treatment with a cleaner, minimal surface style while preserving current IA and modules.
+
+### QA outcomes (today)
+- Creator flow: **partial pass with one high-severity blocker still present**.
+  - Verified step-4 creator portfolio state with 3 valid videos + Rate Cards + Fun Facts renders correctly in onboarding.
+  - High-severity blocker observed when moving from creator step 4 → step 5: error shown (`Complete step 2 before moving on.`) even with completed prior data.
+- Brand flow: **partial pass**.
+  - Core onboarding steps were exercised via API path and accepted.
+  - End-to-end UI campaign/applicant/message/start-flow still needs another browser pass after the creator step-transition blocker is resolved.
+
+### Validation
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)

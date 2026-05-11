@@ -30,8 +30,8 @@ import {
 } from '@/lib/portfolio-media'
 
 const TOTAL_STEPS = 5
-const ONBOARDING_STORAGE_KEY = 'otto:onboarding:current-step'
-const ONBOARDING_DRAFT_STORAGE_KEY = 'otto:onboarding:draft'
+const LEGACY_ONBOARDING_STORAGE_KEY = 'otto:onboarding:current-step'
+const LEGACY_ONBOARDING_DRAFT_STORAGE_KEY = 'otto:onboarding:draft'
 const MAX_PORTFOLIO_ITEMS = MAX_PORTFOLIO_VIDEOS
 const MIN_PORTFOLIO_ITEMS = MIN_PORTFOLIO_VIDEOS
 const MAX_BIO_LENGTH = 280
@@ -294,19 +294,24 @@ export default function OnboardingPage() {
 
   const persistLocalDraft = useCallback((nextDraft: OnboardingDraft, nextStep: number) => {
     if (typeof window === 'undefined') return
-    window.localStorage.setItem(ONBOARDING_DRAFT_STORAGE_KEY, JSON.stringify(nextDraft))
-    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, String(nextStep))
-  }, [])
+
+    const storageKey = `otto:onboarding:draft:${requestedRole}`
+    const stepKey = `otto:onboarding:current-step:${requestedRole}`
+
+    window.localStorage.setItem(storageKey, JSON.stringify(nextDraft))
+    window.localStorage.setItem(stepKey, String(nextStep))
+  }, [requestedRole])
 
   const updateDraft = useCallback((patch: Partial<OnboardingDraft>) => {
     setDraft((prev) => {
       const next = mergeDraft(prev, patch)
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(ONBOARDING_DRAFT_STORAGE_KEY, JSON.stringify(next))
+        const storageKey = `otto:onboarding:draft:${requestedRole}`
+        window.localStorage.setItem(storageKey, JSON.stringify(next))
       }
       return next
     })
-  }, [])
+  }, [requestedRole])
 
   const saveStep = useCallback(async (targetStep: number, payload: Record<string, unknown> = {}) => {
     const { data: sessionData } = await supabase.auth.getSession()
@@ -352,8 +357,21 @@ export default function OnboardingPage() {
 
         setUserId(user.id)
 
-        const localDraft = typeof window !== 'undefined' ? window.localStorage.getItem(ONBOARDING_DRAFT_STORAGE_KEY) : null
-        const localStep = typeof window !== 'undefined' ? Number(window.localStorage.getItem(ONBOARDING_STORAGE_KEY) || '1') : 1
+        const storageKey = `otto:onboarding:draft:${requestedRole}`
+        const stepKey = `otto:onboarding:current-step:${requestedRole}`
+
+        const scopedLocalDraft = typeof window !== 'undefined' ? window.localStorage.getItem(storageKey) : null
+        const scopedLocalStep = typeof window !== 'undefined' ? Number(window.localStorage.getItem(stepKey) || '1') : 1
+
+        const legacyLocalDraft = typeof window !== 'undefined' && !hasExplicitRoleParam && !scopedLocalDraft
+          ? window.localStorage.getItem(LEGACY_ONBOARDING_DRAFT_STORAGE_KEY)
+          : null
+        const legacyLocalStep = typeof window !== 'undefined' && !hasExplicitRoleParam && !scopedLocalDraft
+          ? Number(window.localStorage.getItem(LEGACY_ONBOARDING_STORAGE_KEY) || '1')
+          : 1
+
+        const localDraft = scopedLocalDraft || legacyLocalDraft
+        const localStep = scopedLocalDraft ? scopedLocalStep : legacyLocalStep
         const parsedLocalDraft = localDraft ? JSON.parse(localDraft) as Partial<OnboardingDraft> : null
 
         const { data: sessionData } = await supabase.auth.getSession()
@@ -611,8 +629,12 @@ export default function OnboardingPage() {
         })
 
         if (typeof window !== 'undefined') {
-          window.localStorage.removeItem(ONBOARDING_STORAGE_KEY)
-          window.localStorage.removeItem(ONBOARDING_DRAFT_STORAGE_KEY)
+          const storageKey = `otto:onboarding:draft:${requestedRole}`
+          const stepKey = `otto:onboarding:current-step:${requestedRole}`
+          window.localStorage.removeItem(stepKey)
+          window.localStorage.removeItem(storageKey)
+          window.localStorage.removeItem(LEGACY_ONBOARDING_STORAGE_KEY)
+          window.localStorage.removeItem(LEGACY_ONBOARDING_DRAFT_STORAGE_KEY)
         }
 
         router.push(result.redirectTo || '/dashboard')

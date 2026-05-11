@@ -128,6 +128,7 @@ const HOOK_ROULETTE_IDEAS: HookRouletteIdea[] = FALLBACK_HOOK_ROULETTE_ITEMS.map
 }))
 
 const HOOK_NOTES_STORAGE_KEY = 'otto-hook-roulette-notes'
+const DASHBOARD_SURFACE_CLASS = 'rounded-2xl border border-[#ecece7] bg-white shadow-[0_12px_28px_rgba(0,0,0,0.04)]'
 
 const STATUS_STYLES: Record<string, string> = {
   open: 'bg-[#ccff00]/25 text-[#1c1c1e] border-[#d6ee76]',
@@ -440,7 +441,7 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 pb-8 dashboard-compact">
-      <div className="mb-8 overflow-hidden rounded-[28px] border border-[#ecece7] bg-white p-5 shadow-sm md:p-7">
+      <div className="mb-8 overflow-hidden rounded-2xl border border-[#ecece7] bg-white p-5 shadow-[0_12px_28px_rgba(0,0,0,0.04)] md:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="section-label mb-3">{role === 'brand' ? 'Brand workspace' : 'Creator workspace'}</p>
@@ -523,7 +524,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
 
-          <section className="card shadow-sm">
+          <section className={DASHBOARD_SURFACE_CLASS}>
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">Active deals</p>
@@ -553,7 +554,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className="card shadow-sm">
+          <section className={DASHBOARD_SURFACE_CLASS}>
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">Earnings</p>
@@ -572,7 +573,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className="card shadow-sm">
+          <section className={DASHBOARD_SURFACE_CLASS}>
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">Applications sent</p>
@@ -602,7 +603,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className="card shadow-sm">
+          <section className={DASHBOARD_SURFACE_CLASS}>
             <p className="section-label mb-1">Activity feed</p>
             <div className="space-y-3">
               {(creator.activity || []).length === 0 ? (
@@ -619,7 +620,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className="card shadow-sm lg:col-span-2">
+          <section className={`${DASHBOARD_SURFACE_CLASS} lg:col-span-2`}>
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">New opportunities</p>
@@ -649,7 +650,7 @@ export default function DashboardPage() {
 
       {role === 'brand' && brand && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <section className="card shadow-sm">
+          <section className={DASHBOARD_SURFACE_CLASS}>
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">Active briefs</p>
@@ -679,7 +680,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className="card shadow-sm">
+          <section className={DASHBOARD_SURFACE_CLASS}>
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">Campaign spend</p>
@@ -692,7 +693,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className="card shadow-sm lg:col-span-2">
+          <section className={`${DASHBOARD_SURFACE_CLASS} lg:col-span-2`}>
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">Applications to review</p>
@@ -729,7 +730,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className="card shadow-sm lg:col-span-2">
+          <section className={`${DASHBOARD_SURFACE_CLASS} lg:col-span-2`}>
             <p className="section-label mb-1">Activity feed</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {(brand.activity || []).length === 0 ? (
