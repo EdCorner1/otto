@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { Play, Sparkles, Wand2 } from 'lucide-react'
+import { Compass, Play, Wand2 } from 'lucide-react'
 
 type HookItem = {
   id: string
@@ -21,7 +21,7 @@ const MOCK_HOOKS: HookItem[] = [
   {
     id: 'ig-2',
     category: 'Productivity',
-    hook: 'This 10-second system fixed my content consistency instantly.',
+    hook: 'This 10-second system fixed my content consistency.',
     url: 'https://www.instagram.com/reel/C8xP8b4I2Zd/',
   },
   {
@@ -103,20 +103,20 @@ export default function HooksLandingPage() {
       <main className="mx-auto max-w-6xl px-6 py-12">
         <section className="mb-10 max-w-3xl">
           <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#dff3b3] bg-[#efffd3] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#355400]">
-            <Sparkles className="h-3.5 w-3.5" />
-            Viral Hook Assistant
+            <Compass className="h-3.5 w-3.5" />
+            Hook Finder
           </p>
           <h1 className="text-[clamp(2rem,5vw,3.5rem)] leading-[0.95] text-[#1c1c1c]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
-            Find proven hooks. Watch real viral videos. Write your next script faster.
+            Find proven hooks. Study real examples. Draft your next script with confidence.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[#6b6b6b]">
-            Tell Hooksy what content you make, who it is for, and your style. It pulls 3 relevant viral examples and helps you write the next part of your script.
+            Tell Hooksy what you make, who it is for, and your voice. It surfaces three relevant examples and gives you a clean bridge into your next line.
           </p>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
           <div className="rounded-3xl border border-[#e8e8e4] bg-white p-5 shadow-[0_10px_30px_rgba(28,28,30,0.05)]">
-            <h2 className="mb-4 text-xl font-semibold text-[#1c1c1c]">Prompt the assistant</h2>
+            <h2 className="mb-4 text-xl font-semibold text-[#1c1c1c]">Describe your content</h2>
             <div className="space-y-3">
               <label className="block text-sm font-medium text-[#5f5f58]">
                 Type of content
@@ -155,7 +155,7 @@ export default function HooksLandingPage() {
               className="mt-4 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#ccff00] px-5 text-sm font-bold text-[#1c1c1c] transition hover:opacity-90"
             >
               <Wand2 className="h-4 w-4" />
-              Pull 3 viral examples
+Find 3 examples
             </button>
 
             {results.length > 0 && (
@@ -180,7 +180,7 @@ export default function HooksLandingPage() {
           </div>
 
           <div className="rounded-3xl border border-[#e8e8e4] bg-white p-5 shadow-[0_10px_30px_rgba(28,28,30,0.05)]">
-            <h2 className="mb-4 text-xl font-semibold text-[#1c1c1c]">Live video + script continuation</h2>
+            <h2 className="mb-4 text-xl font-semibold text-[#1c1c1c]">Source video + script continuation</h2>
 
             {!selected && (
               <div className="rounded-2xl border border-dashed border-[#d9d9d3] bg-[#fafaf8] p-6 text-sm text-[#6b6b6b]">
@@ -194,8 +194,8 @@ export default function HooksLandingPage() {
                   <div className="overflow-hidden rounded-2xl border border-[#e8e8e4] bg-black">
                     <iframe
                       src={selectedEmbedUrl}
-                      title="Viral source video"
-                      className="h-[360px] w-full"
+                      title="Source video"
+                      className="aspect-[9/16] w-full min-h-[420px]"
                       allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                     />
                   </div>
