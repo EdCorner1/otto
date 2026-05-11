@@ -262,13 +262,20 @@ async function ensureBrandRow(adminClient: any, user: AuthUser, companyName?: st
   return data.id as string
 }
 
-async function updateAuthMetadata(adminClient: any, user: AuthUser, patch: Record<string, unknown>) {
+async function getFreshAuthUser(adminClient: any, userId: string): Promise<AuthUser | null> {
+  const { data, error } = await adminClient.auth.admin.getUserById(userId)
+  if (error) throw new Error(error.message)
+  return (data?.user as AuthUser | null) || null
+}
+
+async function updateAuthMetadata(adminClient: any, userId: string, patch: Record<string, unknown>) {
+  const latestUser = await getFreshAuthUser(adminClient, userId)
   const nextMetadata = {
-    ...(user.user_metadata || {}),
+    ...(latestUser?.user_metadata || {}),
     ...patch,
   }
 
-  const { error } = await adminClient.auth.admin.updateUserById(user.id, {
+  const { error } = await adminClient.auth.admin.updateUserById(userId, {
     user_metadata: nextMetadata,
   })
 
@@ -564,7 +571,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       nextStep = Math.max(currentStep, 3)
 
-      await updateAuthMetadata(adminClient, user, {
+      await updateAuthMetadata(adminClient, user.id, {
         role,
         first_name: firstName,
         last_name: lastName,
@@ -630,7 +637,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
           if (error) throw new Error(error.message)
         }
 
-        await updateAuthMetadata(adminClient, user, {
+        await updateAuthMetadata(adminClient, user.id, {
           bio,
           main_platform: mainPlatform,
           follower_range: followerRange,
@@ -657,7 +664,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
         if (error) throw new Error(error.message)
 
-        await updateAuthMetadata(adminClient, user, {
+        await updateAuthMetadata(adminClient, user.id, {
           company_name: companyName,
           company_description: companyDescription,
           industry,
@@ -763,7 +770,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
           if (funFactsError) throw new Error(funFactsError.message)
         }
 
-        await updateAuthMetadata(adminClient, user, {
+        await updateAuthMetadata(adminClient, user.id, {
           portfolio_items: portfolioItems,
           rateCards,
           funFacts,
@@ -772,7 +779,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         brandId = await ensureBrandRow(adminClient, user)
         const destination = cleanText(body?.brandDestination) === '/jobs/new' ? '/jobs/new' : '/dashboard'
 
-        await updateAuthMetadata(adminClient, user, {
+        await updateAuthMetadata(adminClient, user.id, {
           brand_destination: destination,
         })
       }
@@ -829,7 +836,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       nextStep = TOTAL_STEPS
 
-      await updateAuthMetadata(adminClient, user, {
+      await updateAuthMetadata(adminClient, user.id, {
         role,
         onboarding_complete: true,
         onboarding_step: TOTAL_STEPS,
@@ -846,7 +853,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       })
     }
 
-    await updateAuthMetadata(adminClient, user, {
+    await updateAuthMetadata(adminClient, user.id, {
       role,
       onboarding_complete: false,
       onboarding_step: nextStep,

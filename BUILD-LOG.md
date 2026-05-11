@@ -219,3 +219,12 @@
 ### Validation
 - TypeScript: pass (`pnpm exec tsc --noEmit`)
 - Build: pass (`pnpm run build`)
+
+### Onboarding progression root-cause hardening
+- Fixed a server-side metadata race in `/api/onboarding/step/[step]` that could overwrite newer onboarding step state with stale auth metadata during multi-step saves.
+- `updateAuthMetadata` now fetches a fresh auth user snapshot before merging patch fields, then writes the merged result.
+- This removes a patch-on-patch drift source that could cause false step-gate failures (e.g., creator step 4 → 5 reporting earlier-step incomplete).
+
+### Validation
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)
