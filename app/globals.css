@@ -221,6 +221,14 @@ h2, .headline-lg {
   .dashboard-compact .rounded-xl {
     border-radius: 0.8rem;
   }
+
+  .dashboard-compact .card {
+    padding: 1.25rem;
+  }
+
+  .dashboard-compact .section-label {
+    letter-spacing: 0.1em;
+  }
 }
 
 /* ─── Responsive utilities ──────────────────────────────── */
