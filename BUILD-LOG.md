@@ -228,3 +228,17 @@
 ### Validation
 - TypeScript: pass (`pnpm exec tsc --noEmit`)
 - Build: pass (`pnpm run build`)
+
+## 2026-05-12
+### Onboarding progression reliability: server-side inferred step floor
+- Added inferred progress-step logic in `/api/onboarding/step/[step]` based on persisted DB state so stale metadata cannot incorrectly downgrade progression checks.
+- GET and POST onboarding progression now use `max(metadataStep, inferredStep)` while onboarding is incomplete.
+- Creator inferred progression advances from persisted handle/profile signals and reaches step 5 once 3+ valid portfolio videos exist.
+- Brand inferred progression advances from persisted company/profile signals.
+
+### Why this change
+- Prevents false gate errors like “complete earlier step first” when DB truth is ahead of auth metadata during resume/multi-step flows.
+
+### Validation
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)

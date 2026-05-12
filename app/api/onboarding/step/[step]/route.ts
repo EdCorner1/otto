@@ -296,6 +296,55 @@ async function getCurrentRows(adminClient: any, userId: string) {
   }
 }
 
+async function inferProgressStep(adminClient: any, role: Role, rows: Awaited<ReturnType<typeof getCurrentRows>>) {
+  if (role === 'creator') {
+    if (!rows.creator?.id) return 1
+
+    let inferredStep = 2
+
+    const [tagsQuery, portfolioQuery] = await Promise.all([
+      adminClient
+        .from('creator_tags')
+        .select('tag')
+        .eq('creator_id', rows.creator.id),
+      adminClient
+        .from('portfolio_items')
+        .select('url')
+        .eq('creator_id', rows.creator.id),
+    ])
+
+    const tags = (tagsQuery.data || []) as Array<{ tag?: string | null }>
+    const hasHandle = tags.some((entry) => (entry.tag || '').startsWith('handle:'))
+    const hasStepThreeSignal =
+      Boolean(cleanText(rows.creator.bio)) ||
+      tags.some((entry) => {
+        const tag = entry.tag || ''
+        return tag.startsWith('main_platform:') || tag.startsWith('followers:') || tag.startsWith('niche:')
+      })
+
+    if (hasHandle) inferredStep = 3
+    if (hasStepThreeSignal) inferredStep = Math.max(inferredStep, 4)
+
+    const validPortfolioCount = ((portfolioQuery.data || []) as Array<{ url?: string | null }>)
+      .filter((item) => isRealPortfolioVideoUrl(cleanText(item?.url || '')))
+      .length
+
+    if (validPortfolioCount >= MIN_PORTFOLIO_VIDEOS) inferredStep = 5
+
+    return inferredStep
+  }
+
+  if (!rows.brand?.id) return 1
+
+  let inferredStep = 2
+  if (cleanText(rows.brand.company_name || '')) inferredStep = 3
+  if (cleanText(rows.brand.bio || '') || cleanText(rows.brand.industry || '') || cleanText(rows.brand.website || '')) {
+    inferredStep = 4
+  }
+
+  return inferredStep
+}
+
 async function getCreatorSnapshot(adminClient: any, creatorId: string) {
   const [tagsQuery, portfolioQuery, rateCardsQuery, funFactsQuery] = await Promise.all([
     adminClient.from('creator_tags').select('tag').eq('creator_id', creatorId),
@@ -408,8 +457,9 @@ export async function GET(request: NextRequest) {
 
     const metadataStep = getMetadataStep(user)
     const onboardingComplete = getMetadataOnboardingComplete(user)
+    const inferredStep = await inferProgressStep(adminClient, role, rows)
 
-    const serverStep = onboardingComplete ? TOTAL_STEPS : metadataStep
+    const serverStep = onboardingComplete ? TOTAL_STEPS : Math.max(metadataStep, inferredStep)
 
     const metadata = user.user_metadata || {}
     const fullName = cleanText(metadata.display_name || metadata.full_name || metadata.name || fallbackDisplayName(user))
@@ -483,7 +533,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const metadataStep = getMetadataStep(user)
     const onboardingComplete = getMetadataOnboardingComplete(user)
-    const currentStep = onboardingComplete ? TOTAL_STEPS : metadataStep
+    const inferredStep = await inferProgressStep(adminClient, role, rowsBefore)
+    const currentStep = onboardingComplete ? TOTAL_STEPS : Math.max(metadataStep, inferredStep)
 
     if (onboardingComplete) {
       return buildProgressResponse({
