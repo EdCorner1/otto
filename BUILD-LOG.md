@@ -281,3 +281,37 @@
 ### Validation (this run)
 - TypeScript: pass (`pnpm exec tsc --noEmit`)
 - Build: pass (`pnpm run build`)
+
+## 2026-05-12 (subagent fix + sanity + styling)
+### Creator onboarding step-2 regression: root cause + fix
+- Root cause: onboarding step-2 handle availability checks were race-prone. Older async responses could overwrite newer input state and flip `handleStatus` away from `available`, leaving `canGoNext` false even when the current handle was valid/available.
+- Fix: added a monotonic request sequence guard for handle checks in `app/(app)/onboarding/page.tsx` so only the latest request is allowed to update UI state.
+- Result: creator step 2 now advances reliably when first name, last name, email, and an available handle are valid.
+
+### Additional progression blocker uncovered/fixed during sanity
+- While running full creator sanity, step 4 → step 5 failed with DB enum error: `invalid input value for enum portfolio_type: "link"` for valid YouTube URLs.
+- Root cause: `inferPortfolioType` treated external video URLs (YouTube/Cloudflare) as `link` instead of `video`.
+- Fix: updated `inferPortfolioType` in `lib/portfolio-media.ts` to classify all real portfolio video URLs as `video`.
+- Result: creator step 4 now progresses to step 5 and finish handoff succeeds.
+
+### Browser sanity outcomes
+- Creator step 2 progression: **pass** (valid available handle enables Next and moves to next step).
+- Creator full path: **pass**
+  - onboarding step 2 → 5
+  - preview step renders public profile iframe + public URL
+  - finish routes to dashboard with onboarding success context
+  - dashboard → portfolio/public profile/edit touchpoints render correctly
+- Brand onboarding quick pass: **pass (regression check)**
+  - brand gating logic remained intact in onboarding surface checks
+  - no regressions introduced in shared step navigation/validation after fixes
+
+### Styling pass (minimal homepage-aligned tone, no IA/function changes)
+- Applied deferred low-risk visual polish across high-traffic surfaces:
+  - `app/(app)/dashboard/page.tsx`: softened surface shadows, normalized card background/border contrast, reduced visual heaviness in KPI and list cards.
+  - `app/(app)/onboarding/page.tsx`: aligned card/hero shadow strength and selected-state glow to cleaner minimal tone.
+  - `app/(app)/profile/edit/page.tsx`: reduced highlight glow intensity and aligned panel treatment with subtle inset/surface style.
+- Scope intentionally limited to visual treatment only (no routing, IA, or product logic changes).
+
+### Validation
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)

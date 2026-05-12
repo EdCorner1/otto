@@ -103,7 +103,7 @@ export function inferPortfolioThumbnail(videoUrl: string, _platformHint?: string
 // Infer content type from URL or extension
 export function inferPortfolioType(url: string, _platformHint?: string | null): 'video' | 'link' {
   if (!url) return 'link'
-  if (isDirectVideoUrl(url) || DIRECT_VIDEO_FILE_PATTERN.test(url)) return 'video'
+  if (isRealPortfolioVideoUrl(url) || DIRECT_VIDEO_FILE_PATTERN.test(url)) return 'video'
   return 'link'
 }
 

@@ -1138,7 +1138,7 @@ export default function ProfileEditPage() {
           {step === 0 && (
             <div className="space-y-4">
               <h2 className="font-display text-2xl text-[#1c1c1e]" style={{ letterSpacing: '-0.03em' }}>Basic info</h2>
-              <div className="rounded-2xl border border-[#e8e8e4] bg-[#fcfcfa] p-4">
+              <div className="rounded-2xl border border-[#e8e8e4] bg-[#fcfcfa] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
                 <div className="flex items-center gap-4 flex-wrap">
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -1178,7 +1178,7 @@ export default function ProfileEditPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[#e8e8e4] bg-[#fcfcfa] p-4">
+              <div className="rounded-2xl border border-[#e8e8e4] bg-[#fcfcfa] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <label className="block text-sm font-semibold text-[#1c1c1e]">Intro video</label>
@@ -1221,7 +1221,7 @@ export default function ProfileEditPage() {
                         key={option.id}
                         type="button"
                         onClick={() => setBackgroundStyle(option.id)}
-                        className={`rounded-2xl border p-3 text-left transition ${active ? 'border-[#ccff00] bg-white shadow-[0_12px_30px_rgba(204,255,0,0.18)]' : 'border-[#e4e4dd] bg-white hover:border-[#ccff00]'}`}
+                        className={`rounded-2xl border p-3 text-left transition ${active ? 'border-[#ccff00] bg-white shadow-[0_8px_20px_rgba(204,255,0,0.12)]' : 'border-[#e4e4dd] bg-white hover:border-[#ccff00]'}`}
                       >
                         <div className={`h-20 rounded-xl border border-[#e8e8e4] ${option.previewClass}`} style={option.previewStyle} />
                         <p className="mt-3 text-sm font-semibold text-[#1c1c1e]">{option.label}</p>
@@ -1400,7 +1400,7 @@ export default function ProfileEditPage() {
               </div>
 
               {videoUploading && (
-                <div className="rounded-2xl border border-[#e8e8e4] bg-[#fcfcfa] p-4">
+                <div className="rounded-2xl border border-[#e8e8e4] bg-[#fcfcfa] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
                   <div className="mb-2 flex items-center justify-between text-sm font-medium text-[#1c1c1e]">
                     <span>Uploading video</span>
                     <span>{videoUploadProgress}%</span>

@@ -115,7 +115,7 @@ const NICHE_OPTIONS = [
 function Header() {
   return (
     <header className="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50">
-      <div className="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-[#e8e8e4] bg-white/85 px-5 py-3.5 shadow-lg shadow-black/[0.06] backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-[#e8e8e4] bg-white/85 px-5 py-3.5 shadow-[0_8px_22px_rgba(17,17,17,0.05)] backdrop-blur-md">
         <Link href="/dashboard" className="flex items-center gap-2">
           <span className="text-lg font-extrabold tracking-tight" style={{ fontFamily: 'var(--font-bricolage)' }}>Otto</span>
           <span className="h-2 w-2 rounded-full bg-[#ccff00]" />
@@ -218,7 +218,7 @@ function ProgressBar({ step }: { step: number }) {
   const pct = Math.round((step / TOTAL_STEPS) * 100)
 
   return (
-    <div className="mb-8 rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-sm">
+    <div className="mb-8 rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-[0_6px_18px_rgba(17,17,17,0.04)]">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9a9a9a]">Step {step} of {TOTAL_STEPS}</p>
@@ -266,6 +266,7 @@ export default function OnboardingPage() {
   const supabase = useMemo(() => createClient(), [])
   const avatarInputRef = useRef<HTMLInputElement | null>(null)
   const portfolioInputRef = useRef<HTMLInputElement | null>(null)
+  const handleCheckSeqRef = useRef(0)
 
   const [booting, setBooting] = useState(true)
   const [userId, setUserId] = useState('')
@@ -477,10 +478,15 @@ export default function OnboardingPage() {
       return
     }
 
+    const requestSeq = ++handleCheckSeqRef.current
     setHandleStatus('checking')
+
     const timer = window.setTimeout(async () => {
       try {
         const response = await fetch(`/api/creators/handle/${encodeURIComponent(handle)}`, { cache: 'no-store' })
+
+        if (requestSeq !== handleCheckSeqRef.current) return
+
         if (response.status === 404) {
           setHandleStatus('available')
           return
@@ -494,11 +500,14 @@ export default function OnboardingPage() {
         const payload = (await response.json()) as { userId?: string }
         setHandleStatus(payload?.userId && payload.userId === userId ? 'available' : 'taken')
       } catch {
+        if (requestSeq !== handleCheckSeqRef.current) return
         setHandleStatus('idle')
       }
     }, 350)
 
-    return () => window.clearTimeout(timer)
+    return () => {
+      window.clearTimeout(timer)
+    }
   }, [normalizedHandle, role, userId])
   const viablePortfolioCount = useMemo(
     () => draft.portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length,
@@ -860,7 +869,7 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            <div className="rounded-[30px] border border-[#e8e8e4] bg-white p-6 shadow-sm sm:p-8">
+            <div className="rounded-[30px] border border-[#e8e8e4] bg-white p-6 shadow-[0_8px_22px_rgba(17,17,17,0.04)] sm:p-8">
               {step === 1 && (
                 <div className="space-y-8">
                   <div>
@@ -877,7 +886,7 @@ export default function OnboardingPage() {
                     <button
                       type="button"
                       onClick={() => updateDraft({ role: 'creator' })}
-                      className={`rounded-[28px] border p-6 text-left transition-all ${role === 'creator' ? 'border-[#ccff00] bg-[#f7ffd4] shadow-[0_20px_50px_rgba(204,255,0,0.18)]' : 'border-[#e8e8e4] bg-white hover:border-[#c8c8c2] hover:-translate-y-0.5'}`}
+                      className={`rounded-[28px] border p-6 text-left transition-all ${role === 'creator' ? 'border-[#dbe97f] bg-[#f8fcd9] shadow-[0_8px_20px_rgba(204,255,0,0.14)]' : 'border-[#e8e8e4] bg-white hover:border-[#c8c8c2] hover:-translate-y-0.5'}`}
                     >
                       <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1c1c1e] text-white">
                         <Users className="h-5 w-5" />
@@ -894,7 +903,7 @@ export default function OnboardingPage() {
                     <button
                       type="button"
                       onClick={() => updateDraft({ role: 'brand' })}
-                      className={`rounded-[28px] border p-6 text-left transition-all ${role === 'brand' ? 'border-[#ccff00] bg-[#f7ffd4] shadow-[0_20px_50px_rgba(204,255,0,0.18)]' : 'border-[#e8e8e4] bg-white hover:border-[#c8c8c2] hover:-translate-y-0.5'}`}
+                      className={`rounded-[28px] border p-6 text-left transition-all ${role === 'brand' ? 'border-[#dbe97f] bg-[#f8fcd9] shadow-[0_8px_20px_rgba(204,255,0,0.14)]' : 'border-[#e8e8e4] bg-white hover:border-[#c8c8c2] hover:-translate-y-0.5'}`}
                     >
                       <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1c1c1e] text-white">
                         <BriefcaseBusiness className="h-5 w-5" />
@@ -1372,7 +1381,7 @@ export default function OnboardingPage() {
                   {role === 'creator' && creatorId ? (
                     <div className="space-y-5">
                       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-                        <div className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-sm">
+                        <div className="rounded-[28px] border border-[#e8e8e4] bg-white p-5 shadow-[0_6px_18px_rgba(17,17,17,0.04)]">
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Ready to publish</p>
                           <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                             <div className="rounded-2xl bg-[#fbfbf8] p-4">
@@ -1407,7 +1416,7 @@ export default function OnboardingPage() {
                         </div>
                       </div>
 
-                      <div className="overflow-hidden rounded-[28px] border border-[#e8e8e4] bg-[#f5f5f2] shadow-sm">
+                      <div className="overflow-hidden rounded-[28px] border border-[#e8e8e4] bg-[#f7f7f3] shadow-[0_6px_18px_rgba(17,17,17,0.04)]">
                         <div className="flex flex-col gap-3 border-b border-[#e8e8e4] bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="text-sm font-semibold text-[#1c1c1e]">Profile preview</p>

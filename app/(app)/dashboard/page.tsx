@@ -128,7 +128,7 @@ const HOOK_ROULETTE_IDEAS: HookRouletteIdea[] = FALLBACK_HOOK_ROULETTE_ITEMS.map
 }))
 
 const HOOK_NOTES_STORAGE_KEY = 'otto-hook-roulette-notes'
-const DASHBOARD_SURFACE_CLASS = 'rounded-2xl border border-[#ecece7] bg-white shadow-[0_12px_28px_rgba(0,0,0,0.04)]'
+const DASHBOARD_SURFACE_CLASS = 'rounded-2xl border border-[#ecece7] bg-white shadow-[0_6px_18px_rgba(17,17,17,0.04)]'
 
 const STATUS_STYLES: Record<string, string> = {
   open: 'bg-[#ccff00]/25 text-[#1c1c1e] border-[#d6ee76]',
@@ -441,7 +441,7 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 pb-8 dashboard-compact">
-      <div className="mb-8 overflow-hidden rounded-2xl border border-[#ecece7] bg-white p-5 shadow-[0_12px_28px_rgba(0,0,0,0.04)] md:p-7">
+      <div className="mb-8 overflow-hidden rounded-2xl border border-[#ecece7] bg-white p-5 shadow-[0_8px_24px_rgba(17,17,17,0.04)] md:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="section-label mb-3">{role === 'brand' ? 'Brand workspace' : 'Creator workspace'}</p>
@@ -456,22 +456,22 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[520px]">
             {role === 'creator' && creator ? (
               <>
-                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                <div className="rounded-2xl border border-[#edede7] bg-[#fcfcfa] p-3">
                   <BriefcaseBusiness className="mb-2 h-4 w-4 text-[#6b6b6b]" />
                   <p className="text-[11px] text-[#77736d]">Active deals</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.activeDeals.count}</p>
                 </div>
-                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                <div className="rounded-2xl border border-[#edede7] bg-[#fcfcfa] p-3">
                   <Send className="mb-2 h-4 w-4 text-[#6b6b6b]" />
                   <p className="text-[11px] text-[#77736d]">Applications</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.applications.count}</p>
                 </div>
-                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                <div className="rounded-2xl border border-[#edede7] bg-[#fcfcfa] p-3">
                   <Sparkles className="mb-2 h-4 w-4 text-[#6b6b6b]" />
                   <p className="text-[11px] text-[#77736d]">Open matches</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.opportunities.count}</p>
                 </div>
-                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                <div className="rounded-2xl border border-[#edede7] bg-[#fcfcfa] p-3">
                   <Banknote className="mb-2 h-4 w-4 text-[#6b6b6b]" />
                   <p className="text-[11px] text-[#77736d]">Pending</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(creator.earnings.pending)}</p>
@@ -479,17 +479,17 @@ export default function DashboardPage() {
               </>
             ) : role === 'brand' && brand ? (
               <>
-                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                <div className="rounded-2xl border border-[#edede7] bg-[#fcfcfa] p-3">
                   <ClipboardList className="mb-2 h-4 w-4 text-[#6b6b6b]" />
                   <p className="text-[11px] text-[#77736d]">Active briefs</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{brand.activeBriefs.count}</p>
                 </div>
-                <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                <div className="rounded-2xl border border-[#edede7] bg-[#fcfcfa] p-3">
                   <Send className="mb-2 h-4 w-4 text-[#6b6b6b]" />
                   <p className="text-[11px] text-[#77736d]">To review</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{brand.applicationsToReview.count}</p>
                 </div>
-                <div className="col-span-2 rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
+                <div className="col-span-2 rounded-2xl border border-[#edede7] bg-[#fcfcfa] p-3">
                   <Banknote className="mb-2 h-4 w-4 text-[#6b6b6b]" />
                   <p className="text-[11px] text-[#77736d]">Campaign spend</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(brand.spend.total)}</p>
@@ -501,7 +501,7 @@ export default function DashboardPage() {
       </div>
 
       {successMessage && (
-        <div className="mb-5 rounded-xl border border-[#d7ec8a] bg-[#f7ffd4] p-4 text-sm font-medium text-[#1c1c1e]">
+        <div className="mb-5 rounded-xl border border-[#dbe6b0] bg-[#f8fcd9] p-4 text-sm font-medium text-[#1c1c1e]">
           {successMessage}
         </div>
       )}
@@ -540,7 +540,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-[#6b6b6b]">No active deals yet.</p>
               ) : (
                 creator.activeDeals.items.map((deal) => (
-                  <div key={deal.id} className="rounded-xl border border-[#efefea] bg-[#fafaf9] p-3">
+                  <div key={deal.id} className="rounded-xl border border-[#ecece6] bg-[#fcfcfa] p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-sm text-[#1c1c1e]">{deal.title}</p>
@@ -562,11 +562,11 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-xl bg-[#fafaf9] border border-[#efefea] p-3">
+              <div className="rounded-xl bg-[#fcfcfa] border border-[#ecece6] p-3">
                 <p className="text-[11px] text-[#6b6b6b]">This month</p>
                 <p className="text-sm font-semibold text-[#1c1c1e] mt-1">{formatMoney(creator.earnings.thisMonth)}</p>
               </div>
-              <div className="rounded-xl bg-[#fafaf9] border border-[#efefea] p-3 col-span-2">
+              <div className="rounded-xl bg-[#fcfcfa] border border-[#ecece6] p-3 col-span-2">
                 <p className="text-[11px] text-[#6b6b6b]">Pending payment</p>
                 <p className="text-sm font-semibold text-[#1c1c1e] mt-1">{formatMoney(creator.earnings.pending)}</p>
               </div>
@@ -589,7 +589,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-[#6b6b6b]">No applications sent yet.</p>
               ) : (
                 creator.applications.items.map((application) => (
-                  <div key={application.id} className="rounded-xl border border-[#efefea] bg-[#fafaf9] p-3">
+                  <div key={application.id} className="rounded-xl border border-[#ecece6] bg-[#fcfcfa] p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-sm text-[#1c1c1e]">{application.jobTitle}</p>
@@ -610,7 +610,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-[#6b6b6b]">No recent activity.</p>
               ) : (
                 creator.activity.map((item) => (
-                  <Link key={item.id} href={item.href} className="block rounded-xl border border-[#efefea] bg-[#fafaf9] p-3 hover:border-[#e2e2dc] transition-colors">
+                  <Link key={item.id} href={item.href} className="block rounded-xl border border-[#ecece6] bg-[#fcfcfa] p-3 hover:border-[#e2e2dc] transition-colors">
                     <p className="text-sm font-semibold text-[#1c1c1e]">{item.title}</p>
                     <p className="text-xs text-[#6b6b6b] mt-1 line-clamp-2">{item.description}</p>
                     <p className="text-[11px] text-[#a0a09c] mt-1.5">{formatDate(item.created_at)}</p>
@@ -636,7 +636,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-[#6b6b6b]">No opportunities right now.</p>
               ) : (
                 creator.opportunities.items.map((job) => (
-                  <Link key={job.id} href={`/jobs/${job.id}`} className="rounded-xl border border-[#efefea] bg-[#fafaf9] p-3 hover:border-[#e2e2dc] transition-colors">
+                  <Link key={job.id} href={`/jobs/${job.id}`} className="rounded-xl border border-[#ecece6] bg-[#fcfcfa] p-3 hover:border-[#e2e2dc] transition-colors">
                     <p className="font-semibold text-sm text-[#1c1c1e]">{job.title}</p>
                     <p className="text-xs text-[#6b6b6b] mt-1">{job.brandName}</p>
                     <p className="text-xs text-[#6b6b6b] mt-1">{job.budgetRange || 'Budget TBD'} · {job.timeline || 'Flexible timeline'}</p>
@@ -666,7 +666,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-[#6b6b6b]">No active briefs yet.</p>
               ) : (
                 brand.activeBriefs.items.map((brief) => (
-                  <div key={brief.id} className="rounded-xl border border-[#efefea] bg-[#fafaf9] p-3">
+                  <div key={brief.id} className="rounded-xl border border-[#ecece6] bg-[#fcfcfa] p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-sm text-[#1c1c1e]">{brief.title}</p>
@@ -687,7 +687,7 @@ export default function DashboardPage() {
                 <p className="text-2xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(brand.spend.total)}</p>
               </div>
             </div>
-            <div className="rounded-xl bg-[#fafaf9] border border-[#efefea] p-3">
+            <div className="rounded-xl bg-[#fcfcfa] border border-[#ecece6] p-3">
               <p className="text-[11px] text-[#6b6b6b]">This month</p>
               <p className="text-sm font-semibold text-[#1c1c1e] mt-1">{formatMoney(brand.spend.thisMonth)}</p>
             </div>
@@ -705,7 +705,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-[#6b6b6b]">No pending applications right now.</p>
               ) : (
                 brand.applicationsToReview.items.map((application) => (
-                  <div key={application.id} className="rounded-xl border border-[#efefea] bg-[#fafaf9] p-3">
+                  <div key={application.id} className="rounded-xl border border-[#ecece6] bg-[#fcfcfa] p-3">
                     <div className="flex items-start gap-3">
                       {application.creatorAvatar ? (
                         <img src={application.creatorAvatar} alt={application.creatorName} className="w-10 h-10 rounded-full object-cover border border-[#ecece7]" />
@@ -737,7 +737,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-[#6b6b6b]">No recent activity.</p>
               ) : (
                 brand.activity.map((item) => (
-                  <Link key={item.id} href={item.href} className="block rounded-xl border border-[#efefea] bg-[#fafaf9] p-3 hover:border-[#e2e2dc] transition-colors">
+                  <Link key={item.id} href={item.href} className="block rounded-xl border border-[#ecece6] bg-[#fcfcfa] p-3 hover:border-[#e2e2dc] transition-colors">
                     <p className="text-sm font-semibold text-[#1c1c1e]">{item.title}</p>
                     <p className="text-xs text-[#6b6b6b] mt-1 line-clamp-2">{item.description}</p>
                     <p className="text-[11px] text-[#a0a09c] mt-1.5">{formatDate(item.created_at)}</p>
