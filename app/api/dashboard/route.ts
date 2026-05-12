@@ -131,8 +131,13 @@ async function getAuthContext(request: NextRequest) {
       .maybeSingle(),
   ])
 
-  let role = normalizeRole(user.user_metadata?.role) || normalizeRole(userRow?.role)
-  if (!role) role = brandRow?.id ? 'brand' : 'creator'
+  // Treat DB role as authoritative; metadata can be stale during role switches/testing.
+  let role = normalizeRole(userRow?.role) || normalizeRole(user.user_metadata?.role)
+  if (!role) {
+    if (brandRow?.id && !creatorRow?.id) role = 'brand'
+    else if (creatorRow?.id && !brandRow?.id) role = 'creator'
+    else role = 'creator'
+  }
 
   return {
     admin,
