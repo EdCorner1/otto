@@ -524,16 +524,52 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-2 xl:grid-cols-3">
+            <section className={DASHBOARD_SURFACE_CLASS}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="section-label mb-1">Active deals</p>
+                  <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.activeDeals.count}</p>
+                </div>
+                <Link href="/deals" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
+                  View all
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </div>
+            </section>
+
+            <section className={DASHBOARD_SURFACE_CLASS}>
+              <p className="section-label mb-1">Earnings</p>
+              <p className="text-2xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(creator.earnings.total)}</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-[#efefea] bg-[#fafaf9] p-3">
+                  <p className="text-[11px] text-[#6b6b6b]">This month</p>
+                  <p className="mt-1 text-sm font-semibold text-[#1c1c1e]">{formatMoney(creator.earnings.thisMonth)}</p>
+                </div>
+                <div className="rounded-xl border border-[#efefea] bg-[#fafaf9] p-3">
+                  <p className="text-[11px] text-[#6b6b6b]">Pending</p>
+                  <p className="mt-1 text-sm font-semibold text-[#1c1c1e]">{formatMoney(creator.earnings.pending)}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className={DASHBOARD_SURFACE_CLASS}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="section-label mb-1">Applications sent</p>
+                  <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.applications.count}</p>
+                </div>
+                <Link href="/jobs" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
+                  Find work
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </div>
+            </section>
+          </div>
+
           <section className={DASHBOARD_SURFACE_CLASS}>
             <div className="flex items-end justify-between mb-4">
-              <div>
-                <p className="section-label mb-1">Active deals</p>
-                <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.activeDeals.count}</p>
-              </div>
-              <Link href="/deals" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
-                View all
-                <ExternalLink className="h-3 w-3" />
-              </Link>
+              <p className="section-label">Active deals</p>
             </div>
             <div className="space-y-3">
               {creator.activeDeals.items.length === 0 ? (
@@ -556,33 +592,7 @@ export default function DashboardPage() {
 
           <section className={DASHBOARD_SURFACE_CLASS}>
             <div className="flex items-end justify-between mb-4">
-              <div>
-                <p className="section-label mb-1">Earnings</p>
-                <p className="text-2xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(creator.earnings.total)}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-xl bg-[#fafaf9] border border-[#efefea] p-3">
-                <p className="text-[11px] text-[#6b6b6b]">This month</p>
-                <p className="text-sm font-semibold text-[#1c1c1e] mt-1">{formatMoney(creator.earnings.thisMonth)}</p>
-              </div>
-              <div className="rounded-xl bg-[#fafaf9] border border-[#efefea] p-3 col-span-2">
-                <p className="text-[11px] text-[#6b6b6b]">Pending payment</p>
-                <p className="text-sm font-semibold text-[#1c1c1e] mt-1">{formatMoney(creator.earnings.pending)}</p>
-              </div>
-            </div>
-          </section>
-
-          <section className={DASHBOARD_SURFACE_CLASS}>
-            <div className="flex items-end justify-between mb-4">
-              <div>
-                <p className="section-label mb-1">Applications sent</p>
-                <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.applications.count}</p>
-              </div>
-              <Link href="/jobs" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
-                Find work
-                <ExternalLink className="h-3 w-3" />
-              </Link>
+              <p className="section-label">Applications</p>
             </div>
             <div className="space-y-3">
               {creator.applications.items.length === 0 ? (
