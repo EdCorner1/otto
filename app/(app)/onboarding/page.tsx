@@ -1134,7 +1134,7 @@ export default function OnboardingPage() {
 
                   <div className="grid gap-3 rounded-[24px] border border-[#e8e8e4] bg-[#fcfcfa] p-4 sm:grid-cols-3">
                     {[
-                      { icon: CheckCircle2, title: 'Clear opening', body: 'Hook in the first 2 seconds so brands instantly get the concept.' },
+                      { icon: CheckCircle2, title: 'Clear opening', body: 'Hook in the first 2 seconds so brands quickly understand the concept.' },
                       { icon: Timer, title: 'Tight pacing', body: 'Keep edits clean and fast so the product story lands quickly.' },
                       { icon: ShieldCheck, title: 'Proof of fit', body: 'Show range across product types and styles, not one repeated format.' },
                     ].map((item) => {

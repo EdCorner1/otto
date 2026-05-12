@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import VideoThumbnail from '@/components/VideoThumbnail'
-import { ArrowRight, Calendar, Clapperboard, ExternalLink, MapPin, PoundSterling, Search } from 'lucide-react'
+import { ArrowRight, Calendar, Clapperboard, ExternalLink, MapPin, Play, PoundSterling, Search } from 'lucide-react'
 import { buildYouTubeEmbedUrl, detectPortfolioPlatform, inferPortfolioThumbnail, isDirectVideoUrl } from '@/lib/portfolio-media'
 
 type Social = { id: string; creator_id: string; platform: string; url: string }
@@ -139,7 +139,9 @@ function PortfolioCard({ item }: { item: PortfolioItem }) {
           </>
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1c1c1e] text-white">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm text-xl">▶</div>
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
+              <Play className="h-5 w-5" fill="currentColor" />
+            </div>
             <p className="text-xs uppercase tracking-[0.18em] text-white/65">Portfolio clip</p>
           </div>
         )}
