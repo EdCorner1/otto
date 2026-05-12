@@ -811,7 +811,6 @@ export default function ProfileEditPage() {
       }
 
       setPortfolioItems((prev) => [
-        ...prev,
         {
           id: `new-upload-${Date.now()}-${Math.random().toString(16).slice(2)}`,
           url: preparedUpload.videoUrl || '',
@@ -820,6 +819,7 @@ export default function ProfileEditPage() {
           category: inferPortfolioCategory({ caption: preparedUpload.title || 'Untitled video', platform: preparedUpload.platform || 'Cloudflare' }),
           thumbnailUrl: preparedUpload.thumbnailUrl || null,
         },
+        ...prev,
       ].slice(0, MAX_PORTFOLIO_ITEMS))
       setVideoUploadProgress(100)
       setStatusMessage('Video uploaded. Save changes to publish it to your profile.')

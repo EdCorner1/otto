@@ -297,10 +297,14 @@ export default function OnboardingPage() {
 
     const storageKey = `otto:onboarding:draft:${requestedRole}`
     const stepKey = `otto:onboarding:current-step:${requestedRole}`
+    const ownerKey = `otto:onboarding:owner:${requestedRole}`
 
     window.localStorage.setItem(storageKey, JSON.stringify(nextDraft))
     window.localStorage.setItem(stepKey, String(nextStep))
-  }, [requestedRole])
+    if (userId) {
+      window.localStorage.setItem(ownerKey, userId)
+    }
+  }, [requestedRole, userId])
 
   const updateDraft = useCallback((patch: Partial<OnboardingDraft>) => {
     setDraft((prev) => {
@@ -359,9 +363,13 @@ export default function OnboardingPage() {
 
         const storageKey = `otto:onboarding:draft:${requestedRole}`
         const stepKey = `otto:onboarding:current-step:${requestedRole}`
+        const ownerKey = `otto:onboarding:owner:${requestedRole}`
 
-        const scopedLocalDraft = typeof window !== 'undefined' ? window.localStorage.getItem(storageKey) : null
-        const scopedLocalStep = typeof window !== 'undefined' ? Number(window.localStorage.getItem(stepKey) || '1') : 1
+        const scopedLocalOwner = typeof window !== 'undefined' ? window.localStorage.getItem(ownerKey) : null
+        const canUseScopedDraft = !scopedLocalOwner || scopedLocalOwner === user.id
+
+        const scopedLocalDraft = typeof window !== 'undefined' && canUseScopedDraft ? window.localStorage.getItem(storageKey) : null
+        const scopedLocalStep = typeof window !== 'undefined' && canUseScopedDraft ? Number(window.localStorage.getItem(stepKey) || '1') : 1
 
         const legacyLocalDraft = typeof window !== 'undefined' && !hasExplicitRoleParam && !scopedLocalDraft
           ? window.localStorage.getItem(LEGACY_ONBOARDING_DRAFT_STORAGE_KEY)
@@ -370,8 +378,8 @@ export default function OnboardingPage() {
           ? Number(window.localStorage.getItem(LEGACY_ONBOARDING_STORAGE_KEY) || '1')
           : 1
 
-        const localDraft = scopedLocalDraft || legacyLocalDraft
-        const localStep = scopedLocalDraft ? scopedLocalStep : legacyLocalStep
+        const localDraft = canUseScopedDraft ? (scopedLocalDraft || legacyLocalDraft) : legacyLocalDraft
+        const localStep = canUseScopedDraft ? (scopedLocalDraft ? scopedLocalStep : legacyLocalStep) : legacyLocalStep
         const parsedLocalDraft = localDraft ? JSON.parse(localDraft) as Partial<OnboardingDraft> : null
 
         const { data: sessionData } = await supabase.auth.getSession()
@@ -423,8 +431,15 @@ export default function OnboardingPage() {
           ...(parsedLocalDraft || {}),
           role: parsedLocalDraft?.role || requestedRole,
         })
-        const merged = mergeDraft(serverDraft, localDraftWithRequestedRole)
-        const resumedStep = Math.min(TOTAL_STEPS, Math.max(nextResult.nextStep || 1, localStep || 1))
+
+        const serverStep = nextResult.nextStep || 1
+        const localResumeStep = localStep || 1
+        const shouldPreferServerDraft = serverStep > localResumeStep
+
+        const merged = shouldPreferServerDraft
+          ? serverDraft
+          : mergeDraft(serverDraft, localDraftWithRequestedRole)
+        const resumedStep = Math.min(TOTAL_STEPS, Math.max(serverStep, localResumeStep))
 
         setDraft(merged)
         setCreatorId(nextResult.creatorId)
@@ -531,6 +546,9 @@ export default function OnboardingPage() {
   }
 
   const handleNext = async () => {
+    const roleStorageKey = `otto:onboarding:draft:${requestedRole}`
+    const roleStepKey = `otto:onboarding:current-step:${requestedRole}`
+    const roleOwnerKey = `otto:onboarding:owner:${requestedRole}`
     if (!canGoNext) return
 
     setSubmitting(true)
@@ -629,10 +647,9 @@ export default function OnboardingPage() {
         })
 
         if (typeof window !== 'undefined') {
-          const storageKey = `otto:onboarding:draft:${requestedRole}`
-          const stepKey = `otto:onboarding:current-step:${requestedRole}`
-          window.localStorage.removeItem(stepKey)
-          window.localStorage.removeItem(storageKey)
+          window.localStorage.removeItem(roleStepKey)
+          window.localStorage.removeItem(roleStorageKey)
+          window.localStorage.removeItem(roleOwnerKey)
           window.localStorage.removeItem(LEGACY_ONBOARDING_STORAGE_KEY)
           window.localStorage.removeItem(LEGACY_ONBOARDING_DRAFT_STORAGE_KEY)
         }
@@ -704,6 +721,8 @@ export default function OnboardingPage() {
   }
 
   const uploadPortfolioVideo = async (event: ChangeEvent<HTMLInputElement>) => {
+    const roleStorageKey = `otto:onboarding:draft:${requestedRole}`
+    const roleOwnerKey = `otto:onboarding:owner:${requestedRole}`
     const file = event.target.files?.[0]
     event.target.value = ''
 
@@ -754,6 +773,8 @@ export default function OnboardingPage() {
         throw new Error(result.error || 'Could not prepare video upload.')
       }
 
+      const uploadedVideoUrl = result.videoUrl
+
       const cloudflareUpload = await fetch(result.uploadUrl, {
         method: 'POST',
         body: (() => {
@@ -767,16 +788,25 @@ export default function OnboardingPage() {
         throw new Error('Cloudflare could not accept the video upload. Try a shorter MP4 or MOV file.')
       }
 
-      updateDraft({
-        portfolioItems: [
-          ...draft.portfolioItems,
-          {
-            url: result.videoUrl,
-            platform: result.platform || detectPortfolioPlatform(result.videoUrl, draft.mainPlatform),
-            caption: '',
-            thumbnailUrl: result.thumbnailUrl || null,
-          },
-        ],
+      setDraft((prev) => {
+        const next = mergeDraft(prev, {
+          portfolioItems: [
+            {
+              url: uploadedVideoUrl,
+              platform: result.platform || detectPortfolioPlatform(uploadedVideoUrl, prev.mainPlatform),
+              caption: '',
+              thumbnailUrl: result.thumbnailUrl || null,
+            },
+            ...prev.portfolioItems,
+          ],
+        })
+
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(roleStorageKey, JSON.stringify(next))
+          if (userId) window.localStorage.setItem(roleOwnerKey, userId)
+        }
+
+        return next
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not upload video.')

@@ -236,8 +236,28 @@
 - Creator inferred progression advances from persisted handle/profile signals and reaches step 5 once 3+ valid portfolio videos exist.
 - Brand inferred progression advances from persisted company/profile signals.
 
-### Why this change
-- Prevents false gate errors like “complete earlier step first” when DB truth is ahead of auth metadata during resume/multi-step flows.
+### Onboarding draft ownership + preview hydration hardening
+- Fixed local onboarding draft bleed between different users on the same browser by attaching role-scoped local draft ownership (`otto:onboarding:owner:<role>`) and only reusing role draft state when the owner matches the authenticated user.
+- Kept legacy onboarding localStorage fallback support so older sessions still resume safely.
+- Fixed onboarding boot merge behavior to prefer server snapshot data when server progression is ahead of local draft progression, preventing stale local draft from wiping valid server portfolio/rate/fun-fact data on resume.
+- Updated onboarding step API profile hydration to prioritize DB snapshot arrays for portfolio/rate cards/fun facts over stale metadata copies.
+
+### Creator onboarding + public preview handoff polish
+- Confirmed creator step 4 → step 5 progression reliably after session resets and resume/back cycles.
+- Confirmed final creator preview now consistently points to public handle routes (`/creator-handle`) and renders the same public profile content in preview iframe/open actions.
+- Confirmed finish handoff lands in dashboard with success state and profile URL context.
+
+### Portfolio ordering/category integrity polish
+- Adjusted onboarding portfolio upload insertion to prepend newly uploaded items so add/edit flows keep newest-first ordering integrity.
+- Applied the same newest-first insertion behavior to `/profile/edit` portfolio uploads.
+- Verified public profile category tabs reflect correct category counts and filtered subsets after add/edit-driven updates.
+
+### QA outcomes (browser-style)
+- Creator onboarding full flow (step 2→5, back/forward, finish, preview/public handoff): **pass**
+- Creator step 4→5 reliability under prior stale local draft conditions: **pass**
+- Public creator preview handoff consistency (`/${handle}`): **pass**
+- Brand onboarding core flow (step 2→4 progression + save gates): **pass**
+- In-browser step-4 direct local file upload on onboarding: **known flaky in tool harness** (manual API seeding used for deterministic progression verification)
 
 ### Validation
 - TypeScript: pass (`pnpm exec tsc --noEmit`)

@@ -478,15 +478,9 @@ export async function GET(request: NextRequest) {
       nicheTags: Array.isArray(metadata.niche_tags) ? metadata.niche_tags : creatorSnapshot?.nicheTags || [],
       mainPlatform: cleanText(metadata.main_platform || creatorSnapshot?.mainPlatform || ''),
       followerRange: cleanText(metadata.follower_range || creatorSnapshot?.followerRange || ''),
-      portfolioItems: Array.isArray(metadata.portfolio_items) && metadata.portfolio_items.length > 0
-        ? metadata.portfolio_items
-        : creatorSnapshot?.portfolioItems || [],
-      rateCards: Array.isArray(metadata.rateCards) && metadata.rateCards.length > 0
-        ? metadata.rateCards
-        : creatorSnapshot?.rateCards || [],
-      funFacts: Array.isArray(metadata.funFacts) && metadata.funFacts.length > 0
-        ? metadata.funFacts
-        : creatorSnapshot?.funFacts || [],
+      portfolioItems: creatorSnapshot?.portfolioItems || (Array.isArray(metadata.portfolio_items) ? metadata.portfolio_items : []),
+      rateCards: creatorSnapshot?.rateCards || (Array.isArray(metadata.rateCards) ? metadata.rateCards : []),
+      funFacts: creatorSnapshot?.funFacts || (Array.isArray(metadata.funFacts) ? metadata.funFacts : []),
       companyName: cleanText(rows.brand?.company_name || metadata.company_name),
       companyDescription: cleanText(rows.brand?.bio || metadata.company_description),
       industry: cleanText(rows.brand?.industry || metadata.industry),
