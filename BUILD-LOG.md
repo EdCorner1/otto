@@ -262,3 +262,22 @@
 ### Validation
 - TypeScript: pass (`pnpm exec tsc --noEmit`)
 - Build: pass (`pnpm run build`)
+
+## 2026-05-12 (subagent sanity gate)
+### Production sanity pass (creator + brand) — regression gate
+- Ran focused browser sanity against current `main` for onboarding handoff surfaces before styling changes.
+- **Creator flow result: fail (high severity regression).**
+  - Repro: `/onboarding?role=creator` step 2 with first name, last name, email, and valid available handle populated.
+  - Observed: "Next" CTA remains disabled (`Handle is available.` is shown but progression is blocked).
+  - Impact: blocks creator onboarding progression before public profile handoff + dashboard path.
+  - Severity: **High** (core creator activation path blocked).
+- **Brand flow result: blocked from clean pass due creator-path regression gate.**
+  - Brand path checks were partially exercised but full clean sanity signoff is deferred until creator step-2 progression is resolved.
+
+### Styling pass decision
+- Skipped focused styling pass this run because sanity gate is not green.
+- No IA/functionality changes were applied after detecting the regression.
+
+### Validation (this run)
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)
