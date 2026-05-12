@@ -128,7 +128,6 @@ const HOOK_ROULETTE_IDEAS: HookRouletteIdea[] = FALLBACK_HOOK_ROULETTE_ITEMS.map
 }))
 
 const HOOK_NOTES_STORAGE_KEY = 'otto-hook-roulette-notes'
-const DASHBOARD_SURFACE_CLASS = 'rounded-2xl border border-[#ecece7] bg-white shadow-[0_12px_28px_rgba(0,0,0,0.04)]'
 
 const STATUS_STYLES: Record<string, string> = {
   open: 'bg-[#ccff00]/25 text-[#1c1c1e] border-[#d6ee76]',
@@ -441,7 +440,7 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 pb-8 dashboard-compact">
-      <div className="mb-8 overflow-hidden rounded-2xl border border-[#ecece7] bg-white p-5 shadow-[0_12px_28px_rgba(0,0,0,0.04)] md:p-7">
+      <div className="mb-8 overflow-hidden rounded-[28px] border border-[#ecece7] bg-[linear-gradient(135deg,#ffffff_0%,#fbfbf5_48%,#f4ffd7_100%)] p-5 shadow-sm md:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="section-label mb-3">{role === 'brand' ? 'Brand workspace' : 'Creator workspace'}</p>
@@ -522,54 +521,100 @@ export default function DashboardPage() {
 
       {role === 'creator' && creator && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-2 xl:grid-cols-3">
-            <section className={DASHBOARD_SURFACE_CLASS}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="section-label mb-1">Active deals</p>
-                  <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.activeDeals.count}</p>
+          <section className="overflow-hidden rounded-[30px] border border-[#e6e6de] bg-white shadow-[0_18px_55px_rgba(28,28,30,0.08)] lg:col-span-2">
+            <div className="border-b border-[#eeeeea] bg-[radial-gradient(circle_at_top_left,rgba(204,255,0,0.22),transparent_34%),linear-gradient(135deg,#ffffff_0%,#fbfbf6_60%,#f3f3ec_100%)] p-5 md:p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#e6efbf] bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#69733f]">
+                  <WandSparkles className="h-3.5 w-3.5" />
+                  Hook lab
                 </div>
-                <Link href="/deals" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
-                  View all
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
+                <h2 className="text-[26px] leading-tight text-[#1c1c1e] md:text-[30px]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.8px' }}>
+                  Shape the first line before you film
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5f5f5b]">
+                  Pick a natural opener, tighten the angle, then move. This should feel like a scratchpad, not another content machine.
+                </p>
               </div>
-            </section>
 
-            <section className={DASHBOARD_SURFACE_CLASS}>
-              <p className="section-label mb-1">Earnings</p>
-              <p className="text-2xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(creator.earnings.total)}</p>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-[#efefea] bg-[#fafaf9] p-3">
-                  <p className="text-[11px] text-[#6b6b6b]">This month</p>
-                  <p className="mt-1 text-sm font-semibold text-[#1c1c1e]">{formatMoney(creator.earnings.thisMonth)}</p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={rollHookIdea} disabled={rollingHook} className="btn-primary inline-flex items-center gap-2">
+                  <RefreshCw className={`h-4 w-4 ${rollingHook ? 'animate-spin' : ''}`} />
+                  {rollingHook ? 'Loading…' : 'New hook'}
+                </button>
+                <button type="button" onClick={saveCurrentHookToNotes} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4]">
+                  <Bookmark className="h-4 w-4" />
+                  Save
+                </button>
+                <button type="button" onClick={copyHook} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4]">
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            </div>
+            <div className="p-5 md:p-6">
+              <div className={`rounded-[24px] border border-[#e6efbf] bg-[#fbffdf] p-4 transition-all duration-300 md:p-5 ${rollingHook ? 'opacity-60 scale-[0.995]' : 'opacity-100 scale-100'}`}>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#78834a]">Hook starter</p>
+              <p className="mt-2 text-lg font-semibold text-[#1c1c1e]">
+                {currentHookIdea?.hookStarter || 'Load a hook to start shaping your opener.'}
+              </p>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="md:col-span-2 flex items-center justify-between gap-2 text-[11px] text-[#7d7d78]">
+                  <span className="uppercase tracking-[0.12em]">{hookSource === 'db' ? 'Live hook database' : 'Fallback hook bank'}</span>
+                  {currentHookIdea?.sourceUrl ? (
+                    <a href={currentHookIdea.sourceUrl} target="_blank" rel="noreferrer" className="underline decoration-dotted underline-offset-2 hover:text-[#4b5d00]">
+                      Source
+                    </a>
+                  ) : null}
                 </div>
-                <div className="rounded-xl border border-[#efefea] bg-[#fafaf9] p-3">
-                  <p className="text-[11px] text-[#6b6b6b]">Pending</p>
-                  <p className="mt-1 text-sm font-semibold text-[#1c1c1e]">{formatMoney(creator.earnings.pending)}</p>
+                <div className="rounded-xl border border-[#e3eac2] bg-white/75 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">Script angle</p>
+                  <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.scriptAngle || '—'}</p>
+                </div>
+                <div className="rounded-xl border border-[#e3eac2] bg-white/75 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">CTA beat</p>
+                  <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.ctaBeat || '—'}</p>
                 </div>
               </div>
-            </section>
 
-            <section className={DASHBOARD_SURFACE_CLASS}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="section-label mb-1">Applications sent</p>
-                  <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.applications.count}</p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+              <p className="text-xs text-[#8a8a86]">Keep it simple: pick the line that sounds most natural, then film before you overwork it.</p>
+              <p className="text-xs font-medium text-[#4b5d00] min-h-[18px]">{hookFeedbackMessage}</p>
+            </div>
+
+            {savedHookNotes.length > 0 && (
+              <div className="mt-4 rounded-2xl border border-[#efefea] bg-[#fcfcfb] p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8a8a86]">Recent notes</p>
+                  <span className="text-[11px] text-[#9a9a9a]">Stored on this device</span>
                 </div>
-                <Link href="/jobs" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
-                  Find work
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
+                <div className="space-y-2">
+                  {savedHookNotes.slice(0, 3).map((note) => (
+                    <div key={note.id} className="rounded-xl border border-[#ecece8] bg-white p-3">
+                      <p className="whitespace-pre-wrap text-sm text-[#363535] line-clamp-3">{note.text}</p>
+                      <p className="mt-2 text-[11px] text-[#9a9a9a]">Saved {formatDate(note.createdAt)}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </section>
-          </div>
+            )}
+            </div>
+            </div>
+          </section>
 
-          <section className={DASHBOARD_SURFACE_CLASS}>
+          <section className="card shadow-sm">
             <div className="flex items-end justify-between mb-4">
-              <p className="section-label">Active deals</p>
+              <div>
+                <p className="section-label mb-1">Active deals</p>
+                <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.activeDeals.count}</p>
+              </div>
+              <Link href="/deals" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
+                View all
+                <ExternalLink className="h-3 w-3" />
+              </Link>
             </div>
             <div className="space-y-3">
               {creator.activeDeals.items.length === 0 ? (
@@ -590,9 +635,35 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className={DASHBOARD_SURFACE_CLASS}>
+          <section className="card shadow-sm">
             <div className="flex items-end justify-between mb-4">
-              <p className="section-label">Applications</p>
+              <div>
+                <p className="section-label mb-1">Earnings</p>
+                <p className="text-2xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{formatMoney(creator.earnings.total)}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-[#fafaf9] border border-[#efefea] p-3">
+                <p className="text-[11px] text-[#6b6b6b]">This month</p>
+                <p className="text-sm font-semibold text-[#1c1c1e] mt-1">{formatMoney(creator.earnings.thisMonth)}</p>
+              </div>
+              <div className="rounded-xl bg-[#fafaf9] border border-[#efefea] p-3 col-span-2">
+                <p className="text-[11px] text-[#6b6b6b]">Pending payment</p>
+                <p className="text-sm font-semibold text-[#1c1c1e] mt-1">{formatMoney(creator.earnings.pending)}</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="card shadow-sm">
+            <div className="flex items-end justify-between mb-4">
+              <div>
+                <p className="section-label mb-1">Applications sent</p>
+                <p className="text-3xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.applications.count}</p>
+              </div>
+              <Link href="/jobs" className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b6b6b] hover:text-[#1c1c1e]">
+                Find work
+                <ExternalLink className="h-3 w-3" />
+              </Link>
             </div>
             <div className="space-y-3">
               {creator.applications.items.length === 0 ? (
@@ -613,7 +684,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className={DASHBOARD_SURFACE_CLASS}>
+          <section className="card shadow-sm">
             <p className="section-label mb-1">Activity feed</p>
             <div className="space-y-3">
               {(creator.activity || []).length === 0 ? (
@@ -630,7 +701,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className={`${DASHBOARD_SURFACE_CLASS} lg:col-span-2`}>
+          <section className="card shadow-sm lg:col-span-2">
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">New opportunities</p>
@@ -660,7 +731,7 @@ export default function DashboardPage() {
 
       {role === 'brand' && brand && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <section className={DASHBOARD_SURFACE_CLASS}>
+          <section className="card shadow-sm">
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">Active briefs</p>
@@ -690,7 +761,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className={DASHBOARD_SURFACE_CLASS}>
+          <section className="card shadow-sm">
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">Campaign spend</p>
@@ -703,7 +774,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className={`${DASHBOARD_SURFACE_CLASS} lg:col-span-2`}>
+          <section className="card shadow-sm lg:col-span-2">
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="section-label mb-1">Applications to review</p>
@@ -740,7 +811,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className={`${DASHBOARD_SURFACE_CLASS} lg:col-span-2`}>
+          <section className="card shadow-sm lg:col-span-2">
             <p className="section-label mb-1">Activity feed</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {(brand.activity || []).length === 0 ? (
