@@ -467,7 +467,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
                   <Sparkles className="mb-2 h-4 w-4 text-[#6b6b6b]" />
-                  <p className="text-[11px] text-[#77736d]">Open matches</p>
+                  <p className="text-[11px] text-[#77736d]">Suggested jobs</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.opportunities.count}</p>
                 </div>
                 <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
@@ -485,7 +485,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
                   <Send className="mb-2 h-4 w-4 text-[#6b6b6b]" />
-                  <p className="text-[11px] text-[#77736d]">To review</p>
+                  <p className="text-[11px] text-[#77736d]">Awaiting review</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{brand.applicationsToReview.count}</p>
                 </div>
                 <div className="col-span-2 rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
@@ -527,20 +527,20 @@ export default function DashboardPage() {
               <div>
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#e6efbf] bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#69733f]">
                   <WandSparkles className="h-3.5 w-3.5" />
-                  Hook lab
+                  Hook builder
                 </div>
                 <h2 className="text-[26px] leading-tight text-[#1c1c1e] md:text-[30px]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.8px' }}>
-                  Shape the first line before you film
+                  Start with a line that sounds like you
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5f5f5b]">
-                  Pick a natural opener, tighten the angle, then move. This should feel like a scratchpad, not another content machine.
+                  Use one strong opener, lock in your angle, and film before you overthink it.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={rollHookIdea} disabled={rollingHook} className="btn-primary inline-flex items-center gap-2">
                   <RefreshCw className={`h-4 w-4 ${rollingHook ? 'animate-spin' : ''}`} />
-                  {rollingHook ? 'Loading…' : 'New hook'}
+                  {rollingHook ? 'Loading…' : 'Try another'}
                 </button>
                 <button type="button" onClick={saveCurrentHookToNotes} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4]">
                   <Bookmark className="h-4 w-4" />
@@ -556,14 +556,14 @@ export default function DashboardPage() {
             </div>
             <div className="p-5 md:p-6">
               <div className={`rounded-[24px] border border-[#e6efbf] bg-[#fbffdf] p-4 transition-all duration-300 md:p-5 ${rollingHook ? 'opacity-60 scale-[0.995]' : 'opacity-100 scale-100'}`}>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#78834a]">Hook starter</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#78834a]">Opening line</p>
               <p className="mt-2 text-lg font-semibold text-[#1c1c1e]">
                 {currentHookIdea?.hookStarter || 'Load a hook to start shaping your opener.'}
               </p>
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <div className="md:col-span-2 flex items-center justify-between gap-2 text-[11px] text-[#7d7d78]">
-                  <span className="uppercase tracking-[0.12em]">{hookSource === 'db' ? 'Live hook database' : 'Fallback hook bank'}</span>
+                  <span className="uppercase tracking-[0.12em]">{hookSource === 'db' ? 'Live hook feed' : 'Built-in ideas'}</span>
                   {currentHookIdea?.sourceUrl ? (
                     <a href={currentHookIdea.sourceUrl} target="_blank" rel="noreferrer" className="underline decoration-dotted underline-offset-2 hover:text-[#4b5d00]">
                       Source
@@ -571,17 +571,17 @@ export default function DashboardPage() {
                   ) : null}
                 </div>
                 <div className="rounded-xl border border-[#e3eac2] bg-white/75 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">Script angle</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">Angle</p>
                   <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.scriptAngle || '—'}</p>
                 </div>
                 <div className="rounded-xl border border-[#e3eac2] bg-white/75 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">CTA beat</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7d7d78]">Closing beat</p>
                   <p className="mt-2 text-sm text-[#363535]">{currentHookIdea?.ctaBeat || '—'}</p>
                 </div>
               </div>
 
               <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-[#8a8a86]">Keep it simple: pick the line that sounds most natural, then film before you overwork it.</p>
+              <p className="text-xs text-[#8a8a86]">Pick the line that feels natural, then film while it still feels fresh.</p>
               <p className="text-xs font-medium text-[#4b5d00] min-h-[18px]">{hookFeedbackMessage}</p>
             </div>
 
