@@ -315,3 +315,14 @@
 ### Validation
 - TypeScript: pass (`pnpm exec tsc --noEmit`)
 - Build: pass (`pnpm run build`)
+
+## 2026-05-13
+### Homepage roadmap/feed + feedback layer (MVP order item #4)
+- Added a dedicated homepage roadmap section that renders current roadmap cards as a clean product feed with status chips (`Shipped this week`, `Building now`, `Under consideration`), category tags, and lightweight card entrance motion.
+- Wired thumbs up / thumbs down reactions on each roadmap card with immediate on-page count updates so visitors can signal demand quickly.
+- Added a “What do you want to see?” feedback capture module with product-facing prompt copy and CTA, connected to existing `POST /api/feedback/ideas` storage flow.
+- Kept the roadmap/feed implementation intentionally lightweight and curated (no public comment thread), aligned with Stage 1 homepage direction.
+
+### Validation
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)

@@ -478,6 +478,117 @@ export default function HomeWaitlistLanding() {
           </div>
         </section>
 
+        <section className="mx-auto max-w-6xl px-6 pb-16 md:px-10">
+          <div className="mb-6 flex items-end justify-between gap-3 flex-wrap">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a8a86]">Product roadmap</p>
+              <h2 className="mt-2 text-[clamp(2rem,4.8vw,3.6rem)] leading-[0.94] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.045em' }}>
+                What we&apos;re building next
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6b6b6b] md:text-base">
+                We&apos;re shipping the essentials first: stronger onboarding, cleaner creator portfolios, and smoother brand workflows.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {ROADMAP_CARDS.map((card, index) => {
+              const status = statusConfig(card.status)
+              const StatusIcon = status.icon
+              const vote = votes[card.id] ?? null
+              const isVisible = visibleCards[card.id]
+
+              return (
+                <article
+                  key={card.id}
+                  id={`roadmap-card-${card.id}`}
+                  className={`rounded-[24px] border border-[#e8e8e4] bg-white p-5 shadow-[0_10px_28px_rgba(28,28,30,0.05)] transition duration-500 ${
+                    isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+                  }`}
+                  style={{ transitionDelay: `${index * 35}ms` }}
+                >
+                  <div className="mb-4 flex items-center justify-between gap-2">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${status.className}`}>
+                      <StatusIcon className="h-3.5 w-3.5" />
+                      {card.status}
+                    </span>
+                    <span className="rounded-full bg-[#f4f4ef] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b6b6b]">
+                      {card.tag}
+                    </span>
+                  </div>
+
+                  <h3 className="text-2xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
+                    {card.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-[#5f5f58]">{card.body}</p>
+
+                  <div className="mt-5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setVote(card.id, 'up')}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition ${vote === 'up' ? 'border-[#ccff00] bg-[#f4ffcf] text-[#355400]' : 'border-[#e4e4dd] bg-[#fafaf8] text-[#5f5f58] hover:border-[#ccff00]'}`}
+                    >
+                      <ThumbsUp className="h-3.5 w-3.5" />
+                      {getVoteCount(card, 'up')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVote(card.id, 'down')}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition ${vote === 'down' ? 'border-[#ffd8d8] bg-[#fff3f3] text-[#8d3838]' : 'border-[#e4e4dd] bg-[#fafaf8] text-[#5f5f58] hover:border-[#ffd8d8]'}`}
+                    >
+                      <ThumbsDown className="h-3.5 w-3.5" />
+                      {getVoteCount(card, 'down')}
+                    </button>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+
+          <div className="mt-8 rounded-[26px] border border-[#e8e8e4] bg-white p-6 shadow-[0_10px_30px_rgba(28,28,30,0.05)] sm:p-7">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f4ffcf] text-[#3f6a00]">
+                <MessageSquare className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a8a86]">What do you want to see?</p>
+                <h3 className="mt-1 text-[clamp(1.5rem,3.2vw,2.2rem)] leading-[0.95] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
+                  Share your product idea
+                </h3>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6b6b]">Tell us what would make Otto more useful for your workflow.</p>
+              </div>
+            </div>
+
+            {ideaSubmitted ? (
+              <div className="mt-5 rounded-2xl border border-[#d6efaa] bg-[#f4ffdf] px-4 py-3 text-sm font-medium text-[#355400]">
+                Thanks — your idea has been added.
+              </div>
+            ) : (
+              <form onSubmit={handleIdeaSubmit} className="mt-5 space-y-3">
+                <textarea
+                  value={idea}
+                  onChange={(e) => setIdea(e.target.value)}
+                  rows={4}
+                  placeholder="Example: a faster way to shortlist creators by niche, budget, and style"
+                  className="w-full rounded-2xl border border-[#e8e8e4] bg-[#fafaf8] px-4 py-3 text-sm text-[#1c1c1e] outline-none transition focus:border-[#ccff00]"
+                />
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <p className="text-xs text-[#8a8a86]">Keep it specific — what problem should Otto solve next?</p>
+                  <button
+                    type="submit"
+                    disabled={ideaSubmitting || idea.trim().length < 6}
+                    className="inline-flex items-center gap-2 rounded-full bg-[#1c1c1e] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50"
+                  >
+                    {ideaSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {ideaSubmitting ? 'Sending…' : 'Submit idea'}
+                  </button>
+                </div>
+                {ideaError && <p className="text-sm text-[#d14343]">{ideaError}</p>}
+              </form>
+            )}
+          </div>
+        </section>
+
         {role === 'creator' && (
         <>
         <section className="mx-auto max-w-6xl px-6 pb-20 md:px-10">
