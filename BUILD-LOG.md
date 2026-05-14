@@ -326,3 +326,20 @@
 ### Validation
 - TypeScript: pass (`pnpm exec tsc --noEmit`)
 - Build: pass (`pnpm run build`)
+
+## 2026-05-14
+### Creator onboarding: public preview and category flow alignment
+- Fixed creator onboarding preview route generation to always use normalized public handle paths (`/${handle}`), ensuring iframe preview and open-in-new-tab behavior consistently reflect the actual public creator profile URL.
+- Updated creator onboarding finish redirect payload to point dashboard success context at the public handle URL instead of legacy `/creators/[id]` path.
+- Added category support directly into onboarding portfolio state (load, edit, save) and surfaced category selection controls in step 4 so creators can classify videos before finishing onboarding.
+- Added category tabs + counts in onboarding step 4 to match roadmap direction for category-based portfolio scanning and keep onboarding/edit/public views in sync.
+
+### Portfolio API/data consistency hardening
+- Extended onboarding step API snapshot + save logic to include `portfolio_items.category` and persist normalized category values server-side.
+- Updated creator profile PATCH API to persist portfolio categories and fallback category inference consistently.
+- Fixed creator PATCH booking URL behavior so clearing a booking link now persists as `null` instead of being silently ignored.
+- Hardened creator fun-facts PATCH handling to accept current string-array payload shape from profile edit without runtime issues.
+
+### Validation
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)

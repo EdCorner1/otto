@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getPublicCreatorPortfolioByHandle } from '@/lib/public-creator-portfolio'
+import { inferPortfolioCategory, normalizePortfolioCategory } from '@/lib/portfolio-media'
 
 export const runtime = 'nodejs'
 
@@ -231,10 +232,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           .map((item) => {
             const url = String(item.url || '').trim()
             const requestedPlatform = normalizeTag(String(item.platform || ''))
+            const platform = detectPortfolioPlatform(url, requestedPlatform)
+            const caption = (item.caption || '').trim()
             return {
               url,
-              platform: detectPortfolioPlatform(url, requestedPlatform),
-              caption: (item.caption || '').trim(),
+              platform,
+              caption,
+              category: normalizePortfolioCategory(item.category || inferPortfolioCategory({ caption, platform })),
             }
           })
           .filter((item) => item.url && item.platform)
@@ -293,7 +297,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       if (deleteTagsError) return NextResponse.json({ error: deleteTagsError.message }, { status: 500 })
     }
 
-    if (bookingUrl) {
+    {
       const { error: bookingError } = await admin.from('creators').update({ booking_url: bookingUrl }).eq('id', id)
       if (bookingError) return NextResponse.json({ error: bookingError.message }, { status: 500 })
     }
@@ -335,6 +339,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         creator_id: id,
         url: item.url,
         platform: item.platform,
+        category: item.category || inferPortfolioCategory({ caption: item.caption, platform: item.platform }),
         caption: item.caption || null,
         type: inferType(item.url),
         thumbnail_url: inferThumbnail(item.url, item.platform),
@@ -362,15 +367,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       await admin.from('creator_rate_cards').delete().eq('creator_id', id)
     }
 
-    const funFacts = Array.isArray(body.funFacts) ? body.funFacts : []
+    const funFacts = Array.isArray(body.funFacts) ? (body.funFacts as unknown[]) : []
     if (funFacts.length > 0) {
       await admin.from('creator_fun_facts').delete().eq('creator_id', id)
       const { error: factError } = await admin.from('creator_fun_facts').insert(
-        funFacts.map((f, i) => ({
-          creator_id: id,
-          fact: f.fact.trim(),
-          sort_order: i,
-        })),
+        funFacts
+          .map((f, i) => ({
+            creator_id: id,
+            fact: typeof f === 'string' ? f.trim() : String((f as FunFactInput)?.fact || '').trim(),
+            sort_order: i,
+          }))
+          .filter((row) => row.fact.length > 0),
       )
       if (factError) return NextResponse.json({ error: factError.message }, { status: 500 })
     } else {

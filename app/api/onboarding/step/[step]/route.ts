@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import {
   detectPortfolioPlatform,
+  inferPortfolioCategory,
   inferPortfolioThumbnail,
   inferPortfolioType,
   isRealPortfolioVideoUrl,
   MIN_PORTFOLIO_VIDEOS,
+  normalizePortfolioCategory,
 } from '@/lib/portfolio-media'
 
 export const runtime = 'nodejs'
@@ -350,7 +352,7 @@ async function getCreatorSnapshot(adminClient: any, creatorId: string) {
     adminClient.from('creator_tags').select('tag').eq('creator_id', creatorId),
     adminClient
       .from('portfolio_items')
-      .select('url, platform, caption, thumbnail_url, sort_order, created_at')
+      .select('url, platform, caption, category, thumbnail_url, sort_order, created_at')
       .eq('creator_id', creatorId)
       .order('sort_order', { ascending: true }),
     adminClient
@@ -370,6 +372,7 @@ async function getCreatorSnapshot(adminClient: any, creatorId: string) {
     url: string
     platform: string | null
     caption: string | null
+    category: string | null
     thumbnail_url: string | null
     sort_order: number | null
     created_at: string
@@ -406,6 +409,7 @@ async function getCreatorSnapshot(adminClient: any, creatorId: string) {
       url: item.url,
       platform: item.platform || '',
       caption: item.caption || '',
+      category: normalizePortfolioCategory(item.category),
       thumbnailUrl: item.thumbnail_url,
     })),
     rateCards,
@@ -729,11 +733,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
         const portfolioItems = Array.isArray(body?.portfolioItems)
           ? body.portfolioItems
               .map((item: unknown) => {
-                const row = item as { url?: string; platform?: string; caption?: string }
+                const row = item as { url?: string; platform?: string; caption?: string; category?: string }
                 const url = cleanText(row?.url)
                 const platform = detectPortfolioPlatform(url, row?.platform || body?.mainPlatform)
                 const caption = cleanOptional(row?.caption)
-                return { url, platform, caption }
+                const category = normalizePortfolioCategory(row?.category)
+                return { url, platform, caption, category }
               })
               .filter((item: { url: string }) => Boolean(item.url))
               .slice(0, 6)
@@ -775,10 +780,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
         if (deleteError) throw new Error(deleteError.message)
 
         if (portfolioItems.length > 0) {
-          const payload = portfolioItems.map((item: { url: string; platform: string; caption: string | null }, index: number) => ({
+          const payload = portfolioItems.map((item: { url: string; platform: string; caption: string | null; category: string }, index: number) => ({
             creator_id: creatorId,
             url: item.url,
             platform: item.platform,
+            category: item.category || inferPortfolioCategory({ caption: item.caption, platform: item.platform }),
             caption: item.caption,
             type: inferPortfolioType(item.url),
             thumbnail_url: inferPortfolioThumbnail(item.url, item.platform),
@@ -871,13 +877,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
           return NextResponse.json({ error: 'That handle is already taken. Try a different one.' }, { status: 409 })
         }
       }
-      const profilePath = creatorId ? `/creators/${creatorId}` : '/dashboard'
+      const publicProfilePath = displayHandle ? `/${displayHandle}` : '/dashboard'
 
       redirectTo = role === 'brand'
         ? cleanText(body?.brandDestination) === '/jobs/new'
           ? '/jobs/new?onboarding=brand&next=brief'
           : '/dashboard?onboarding=brand'
-        : `/dashboard?onboarding=creator&profile=${encodeURIComponent(`https://ottougc.com${profilePath}`)}&handle=${encodeURIComponent(displayHandle)}`
+        : `/dashboard?onboarding=creator&profile=${encodeURIComponent(`https://ottougc.com${publicProfilePath}`)}&handle=${encodeURIComponent(displayHandle)}`
 
       nextStep = TOTAL_STEPS
 

@@ -21,12 +21,15 @@ import {
 import { createClient } from '@/lib/supabase'
 import {
   detectPortfolioPlatform,
+  inferPortfolioCategory,
   inferPortfolioThumbnail,
   isDirectVideoUrl,
   isRealPortfolioVideoUrl,
   MAX_PORTFOLIO_VIDEOS,
   MIN_PORTFOLIO_VIDEOS,
   MAX_VIDEO_SIZE_BYTES,
+  PORTFOLIO_CATEGORIES,
+  normalizePortfolioCategory,
 } from '@/lib/portfolio-media'
 
 const TOTAL_STEPS = 5
@@ -43,6 +46,7 @@ type PortfolioItem = {
   url: string
   platform: string
   caption: string
+  category?: string
   thumbnailUrl?: string | null
 }
 
@@ -193,6 +197,7 @@ function mergeDraft(base: OnboardingDraft, incoming?: Partial<OnboardingDraft> |
             url: String(item?.url || '').trim(),
             platform: String(item?.platform || '').trim(),
             caption: String(item?.caption || '').trim(),
+            category: normalizePortfolioCategory(String(item?.category || '')),
             thumbnailUrl: typeof item?.thumbnailUrl === 'string' ? item.thumbnailUrl : null,
           }))
           .filter((item) => item.url)
@@ -280,6 +285,7 @@ export default function OnboardingPage() {
   const [portfolioUploading, setPortfolioUploading] = useState(false)
   const [error, setError] = useState('')
   const [handleStatus, setHandleStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const [portfolioCategoryTab, setPortfolioCategoryTab] = useState<(typeof PORTFOLIO_CATEGORIES)[number]>('All')
 
   const requestedRoleRaw = useMemo(() => (searchParams.get('role') || searchParams.get('type') || '').trim().toLowerCase(), [searchParams])
   const hasExplicitRoleParam = Boolean(requestedRoleRaw)
@@ -289,9 +295,9 @@ export default function OnboardingPage() {
 
   const role = draft.role
   const creatorProfileUrl = creatorId ? `/creators/${creatorId}` : ''
-  const publicCreatorPreviewPath = draft.handle.trim()
-    ? `/${draft.handle.trim().replace(/^@+/, '')}`
-    : creatorProfileUrl
+  const normalizedHandle = draft.handle.trim().replace(/^@+/, '').toLowerCase()
+  const creatorHandle = normalizedHandle || 'your-handle'
+  const publicCreatorPreviewPath = normalizedHandle ? `/${normalizedHandle}` : creatorProfileUrl
 
   const persistLocalDraft = useCallback((nextDraft: OnboardingDraft, nextStep: number) => {
     if (typeof window === 'undefined') return
@@ -458,8 +464,6 @@ export default function OnboardingPage() {
   }, [hasExplicitRoleParam, persistLocalDraft, requestedRole, router, supabase])
 
   const creatorPreviewName = `${draft.firstName} ${draft.lastName}`.trim() || 'Your name'
-  const normalizedHandle = draft.handle.trim().replace(/^@+/, '').toLowerCase()
-  const creatorHandle = normalizedHandle || 'your-handle'
 
   useEffect(() => {
     if (role !== 'creator') {
@@ -513,6 +517,24 @@ export default function OnboardingPage() {
     () => draft.portfolioItems.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length,
     [draft.portfolioItems]
   )
+
+  const portfolioCategoryCounts = useMemo(() => {
+    return PORTFOLIO_CATEGORIES.reduce<Record<string, number>>((acc, category) => {
+      if (category === 'All') {
+        acc[category] = draft.portfolioItems.length
+      } else {
+        acc[category] = draft.portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === category).length
+      }
+      return acc
+    }, {})
+  }, [draft.portfolioItems])
+
+  const filteredPortfolioEntries = useMemo(() => {
+    return draft.portfolioItems
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => portfolioCategoryTab === 'All' || normalizePortfolioCategory(item.category) === portfolioCategoryTab)
+  }, [draft.portfolioItems, portfolioCategoryTab])
+
   const canGoNext = useMemo(() => {
     if (step === 1) return Boolean(role)
     if (step === 2) {
@@ -630,6 +652,7 @@ export default function OnboardingPage() {
                 url: item.url,
                 platform: item.platform,
                 caption: item.caption,
+                category: normalizePortfolioCategory(item.category),
               })),
               rateCards: draft.rateCards,
               funFacts: draft.funFacts,
@@ -798,12 +821,14 @@ export default function OnboardingPage() {
       }
 
       setDraft((prev) => {
+        const detectedPlatform = result.platform || detectPortfolioPlatform(uploadedVideoUrl, prev.mainPlatform)
         const next = mergeDraft(prev, {
           portfolioItems: [
             {
               url: uploadedVideoUrl,
-              platform: result.platform || detectPortfolioPlatform(uploadedVideoUrl, prev.mainPlatform),
+              platform: detectedPlatform,
               caption: '',
+              category: inferPortfolioCategory({ caption: '', platform: detectedPlatform }),
               thumbnailUrl: result.thumbnailUrl || null,
             },
             ...prev.portfolioItems,
@@ -1225,31 +1250,71 @@ export default function OnboardingPage() {
                           Add at least {MIN_PORTFOLIO_ITEMS} valid portfolio videos to continue. Right now you have {viablePortfolioCount} valid video{viablePortfolioCount === 1 ? '' : 's'} ready.
                         </div>
                       )}
-                      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                      {draft.portfolioItems.map((item, index) => (
-                        <div key={`${item.url}-${index}`} className="space-y-3 rounded-[24px] border border-[#e8e8e4] bg-white p-3 shadow-sm">
-                          <PreviewPortfolioCard item={item} />
-                          <input
-                            value={item.caption}
-                            onChange={(event) => {
-                              const nextItems = [...draft.portfolioItems]
-                              nextItems[index] = { ...item, caption: event.target.value }
-                              updateDraft({ portfolioItems: nextItems })
-                            }}
-                            placeholder="Write a one-line description for this video"
-                            className="w-full rounded-2xl border border-[#e8e8e4] px-3 py-2.5 text-sm outline-none transition focus:border-[#ccff00]"
-                          />
-                          <p className="-mt-1 text-xs text-[#8a8a86]">Tip: add what the video is about in plain language.</p>
-                          <button
-                            type="button"
-                            onClick={() => void removePortfolioItem(index)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-[#ecece7] bg-[#fafaf8] px-3 py-2 text-sm font-medium text-[#5f5f58] transition hover:border-[#d8d8d1] hover:text-[#1c1c1e]"
-                          >
-                            <Trash2 className="h-4 w-4" /> Remove video
-                          </button>
-                        </div>
-                      ))}
+                      <div className="flex flex-wrap gap-2">
+                        {PORTFOLIO_CATEGORIES.map((category) => {
+                          const active = portfolioCategoryTab === category
+                          const count = portfolioCategoryCounts[category] || 0
+                          return (
+                            <button
+                              key={category}
+                              type="button"
+                              onClick={() => setPortfolioCategoryTab(category)}
+                              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${active ? 'border-[#ccff00] bg-[#ccff00] text-[#1c1c1e]' : 'border-[#e8e8e4] bg-white text-[#1c1c1e] hover:border-[#ccff00]'}`}
+                            >
+                              <span>{category}</span>
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${active ? 'bg-[#1c1c1e] text-[#ccff00]' : 'bg-[#f0f0ec] text-[#6b6b6b]'}`}>{count}</span>
+                            </button>
+                          )
+                        })}
                       </div>
+
+                      {filteredPortfolioEntries.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-[#dbdbd5] bg-[#fcfcfa] p-4 text-sm text-[#6b6b6b]">
+                          No videos in this category yet.
+                        </div>
+                      ) : (
+                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                          {filteredPortfolioEntries.map(({ item, index }) => (
+                            <div key={`${item.url}-${index}`} className="space-y-3 rounded-[24px] border border-[#e8e8e4] bg-white p-3 shadow-sm">
+                              <PreviewPortfolioCard item={item} />
+                              <input
+                                value={item.caption}
+                                onChange={(event) => {
+                                  const nextItems = [...draft.portfolioItems]
+                                  nextItems[index] = { ...item, caption: event.target.value }
+                                  updateDraft({ portfolioItems: nextItems })
+                                }}
+                                placeholder="Write a one-line description for this video"
+                                className="w-full rounded-2xl border border-[#e8e8e4] px-3 py-2.5 text-sm outline-none transition focus:border-[#ccff00]"
+                              />
+                              <div>
+                                <label className="mb-1 block text-xs font-medium text-[#6b6b6b]">Category</label>
+                                <select
+                                  value={normalizePortfolioCategory(item.category)}
+                                  onChange={(event) => {
+                                    const nextItems = [...draft.portfolioItems]
+                                    nextItems[index] = { ...item, category: normalizePortfolioCategory(event.target.value) }
+                                    updateDraft({ portfolioItems: nextItems })
+                                  }}
+                                  className="w-full rounded-2xl border border-[#e8e8e4] bg-white px-3 py-2.5 text-sm text-[#1c1c1e] outline-none transition focus:border-[#ccff00]"
+                                >
+                                  {PORTFOLIO_CATEGORIES.filter((category) => category !== 'All').map((category) => (
+                                    <option key={category} value={category}>{category}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <p className="-mt-1 text-xs text-[#8a8a86]">Tip: add what the video is about in plain language.</p>
+                              <button
+                                type="button"
+                                onClick={() => void removePortfolioItem(index)}
+                                className="inline-flex items-center gap-2 rounded-xl border border-[#ecece7] bg-[#fafaf8] px-3 py-2 text-sm font-medium text-[#5f5f58] transition hover:border-[#d8d8d1] hover:text-[#1c1c1e]"
+                              >
+                                <Trash2 className="h-4 w-4" /> Remove video
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-[#e8e8e4] bg-[#fbfbf8] px-5 py-8 text-center text-sm text-[#6b6b6b]">
