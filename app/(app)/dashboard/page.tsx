@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { Banknote, Bookmark, BriefcaseBusiness, ClipboardList, Copy, ExternalLink, RefreshCw, Send, Sparkles, WandSparkles } from 'lucide-react'
+import { Banknote, Bookmark, BriefcaseBusiness, ClipboardList, Copy, ExternalLink, Lightbulb, RefreshCw, Send, Target } from 'lucide-react'
 import { FALLBACK_HOOK_ROULETTE_ITEMS } from '@/lib/hook-roulette'
 
 type Role = 'creator' | 'brand'
@@ -390,7 +390,7 @@ export default function DashboardPage() {
     window.setTimeout(async () => {
       await fetchHookIdea(currentHookIdea?.id || null)
       setRollingHook(false)
-      setHookFeedbackMessage('New angle loaded.')
+      setHookFeedbackMessage('Loaded a new angle.')
     }, 360)
   }
 
@@ -466,7 +466,7 @@ export default function DashboardPage() {
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.applications.count}</p>
                 </div>
                 <div className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_1px_0_rgba(28,28,30,0.04)]">
-                  <Sparkles className="mb-2 h-4 w-4 text-[#6b6b6b]" />
+                  <Target className="mb-2 h-4 w-4 text-[#6b6b6b]" />
                   <p className="text-[11px] text-[#77736d]">Suggested jobs</p>
                   <p className="mt-1 text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)' }}>{creator.opportunities.count}</p>
                 </div>
@@ -526,7 +526,7 @@ export default function DashboardPage() {
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#e6efbf] bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#69733f]">
-                  <WandSparkles className="h-3.5 w-3.5" />
+                  <Lightbulb className="h-3.5 w-3.5" />
                   Hook builder
                 </div>
                 <h2 className="text-[26px] leading-tight text-[#1c1c1e] md:text-[30px]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.8px' }}>
@@ -540,7 +540,7 @@ export default function DashboardPage() {
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={rollHookIdea} disabled={rollingHook} className="btn-primary inline-flex items-center gap-2">
                   <RefreshCw className={`h-4 w-4 ${rollingHook ? 'animate-spin' : ''}`} />
-                  {rollingHook ? 'Loading…' : 'Try another'}
+                  {rollingHook ? 'Loading...' : 'New idea'}
                 </button>
                 <button type="button" onClick={saveCurrentHookToNotes} className="btn-ghost inline-flex items-center gap-2 border border-[#e8e8e4]">
                   <Bookmark className="h-4 w-4" />
