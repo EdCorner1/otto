@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Archive, ArrowLeft, ClipboardCheck, Clock3, FileText, PenSquare, Send } from 'lucide-react'
+import { Archive, ArrowLeft, ClipboardCheck, Clock3, ExternalLink, FileText, PenSquare, Send } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 type BlogPost = {
@@ -233,8 +233,9 @@ export default function CMSPage() {
                     Edit
                   </Link>
                   {post.status === 'published' && (
-                    <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" className="btn-ghost px-3 py-1.5 text-xs">
-                      View ↗
+                    <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" className="btn-ghost inline-flex items-center gap-1.5 px-3 py-1.5 text-xs">
+                      View
+                      <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   )}
                 </div>

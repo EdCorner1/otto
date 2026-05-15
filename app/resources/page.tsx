@@ -5,7 +5,7 @@ import {
   CheckCircle2,
   ClipboardList,
   FileText,
-  Sparkles,
+  Library,
   Wrench,
 } from 'lucide-react'
 
@@ -121,7 +121,7 @@ export default function ResourcesPage() {
       <main className="mx-auto max-w-4xl px-6 pb-20 pt-32">
         <header className="mb-12">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#e8e8e4] bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#6b6b6b]">
-            <Sparkles className="h-3.5 w-3.5 text-[#8fb600]" />
+            <Library className="h-3.5 w-3.5 text-[#8fb600]" />
             Creator resources
           </div>
           <h1
@@ -194,10 +194,10 @@ export default function ResourcesPage() {
             className="mb-3 text-white"
             style={{ fontSize: 'clamp(22px, 4vw, 32px)', letterSpacing: '-0.04em', fontFamily: 'var(--font-bricolage)' }}
           >
-            Want first access to new drops?
+            Want new resources before everyone else?
           </h2>
           <p className="mb-6 text-sm text-white/65">
-            Join the Otto waitlist and get updates when new resources go live.
+            Join the waitlist and get first access when new playbooks and templates ship.
           </p>
           <Link
             href="/signup"
@@ -215,14 +215,14 @@ export default function ResourcesPage() {
               <span className="h-1.5 w-1.5 rounded-full bg-[#ccff00]" />
             </Link>
             <div className="flex items-center gap-5 text-xs text-[#9a9a9a]">
-              <Link href="/about" className="transition-colors hover:text-[#1c1c1c]">
-                About
+              <Link href="/blog" className="transition-colors hover:text-[#1c1c1c]">
+                Blog
               </Link>
-              <Link href="/privacy" className="transition-colors hover:text-[#1c1c1c]">
-                Privacy
+              <Link href="/resources" className="transition-colors hover:text-[#1c1c1c]">
+                Resources
               </Link>
-              <Link href="/terms" className="transition-colors hover:text-[#1c1c1c]">
-                Terms
+              <Link href="/signup" className="transition-colors hover:text-[#1c1c1c]">
+                Join
               </Link>
             </div>
             <p className="text-xs text-[#9a9a9a]">© 2026 Otto</p>

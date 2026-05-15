@@ -110,7 +110,7 @@ async function main() {
   const body = `# Newsletter — Pending Approval
 **Generated:** ${new Date().toLocaleString('en-GB')} (UK time)
 **Sent date:** ${sentDate}
-**Status:** ⏳ Awaiting your approval
+**Status:** Awaiting your approval
 
 ---
 

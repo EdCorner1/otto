@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 type Post = {
@@ -142,9 +143,13 @@ export default function ReviewPostPage() {
             className="btn-ghost text-red-500 hover:bg-red-50 hover:border-red-200 disabled:opacity-50">
             Request Changes
           </button>
-          <Link href={`/blog/${post.slug}`} target="_blank"
-            className="ml-auto text-sm text-[#6b6b6b] hover:text-[#363535] flex items-center gap-1">
-            Preview ↗
+          <Link
+            href={`/blog/${post.slug}`}
+            target="_blank"
+            className="ml-auto inline-flex items-center gap-1.5 text-sm text-[#6b6b6b] hover:text-[#363535]"
+          >
+            Preview
+            <ExternalLink className="h-3.5 w-3.5" />
           </Link>
         </div>
 
