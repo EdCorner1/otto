@@ -597,8 +597,7 @@ export default function HomeWaitlistLanding() {
               Creating content that{' '}
               <span className={`${accentScript.className} inline-block text-[#ccff00] text-[1.08em] align-baseline`}>gets</span>{' '}
               <span className={`${accentScript.className} inline-block text-[#ccff00] text-[1.08em] align-baseline`}>clicks</span>{' '}
-              <span className={`${accentScript.className} inline-block text-[#ccff00] text-[1.08em] align-baseline`}>isn&apos;t that</span>{' '}
-              easy
+              is hard when the workflow is broken
             </h2>
             <p className="mt-4 text-sm leading-6 text-[#6b6b6b] md:text-xl md:leading-8">
               Most creators and brand teams don&apos;t struggle because they&apos;re not trying hard enough. They struggle because the process is messy.
@@ -620,7 +619,7 @@ export default function HomeWaitlistLanding() {
                 </div>
               </div>
               <h3 className="mt-5 text-3xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
-UGC specifically for Tech, AI and Apps
+                Built for tech, AI, and app creators
               </h3>
             </article>
 
@@ -641,7 +640,7 @@ UGC specifically for Tech, AI and Apps
                 </div>
               </div>
               <h3 className="mt-5 text-3xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
-Creator and brand matching, no need to pitch
+                Better creator-brand matches with less pitching
               </h3>
             </article>
 
@@ -659,7 +658,7 @@ Creator and brand matching, no need to pitch
                 </div>
               </div>
               <h3 className="mt-5 text-3xl leading-tight text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.03em' }}>
-Get viral scripts in your dashboard so you never run out of ideas
+                Build content ideas faster with script support in your dashboard
               </h3>
             </article>
           </div>
