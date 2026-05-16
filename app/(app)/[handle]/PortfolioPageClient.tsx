@@ -490,10 +490,9 @@ export default function PortfolioPageClient({
   }, [portfolio.portfolioItems])
 
   const filteredPortfolioItems = useMemo(() => {
-    const items = activeCategory === 'All'
+    return activeCategory === 'All'
       ? portfolio.portfolioItems
       : portfolio.portfolioItems.filter((item) => normalizePortfolioCategory(item.category) === activeCategory)
-    return items.slice(0, 4)
   }, [activeCategory, portfolio.portfolioItems])
 
   const primaryContactHref = 'https://ottougc.com'

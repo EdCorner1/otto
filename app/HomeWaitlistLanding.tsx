@@ -264,11 +264,32 @@ export default function HomeWaitlistLanding() {
     }
   }
 
-  function setVote(cardId: string, value: Vote) {
-    setVotes((current) => ({
-      ...current,
-      [cardId]: current[cardId] === value ? null : value,
-    }))
+  async function setVote(cardId: string, value: Vote) {
+    let resolvedVote: Vote = null
+
+    setVotes((current) => {
+      resolvedVote = current[cardId] === value ? null : value
+      return {
+        ...current,
+        [cardId]: resolvedVote,
+      }
+    })
+
+    try {
+      await fetch('/api/feedback/roadmap-reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cardId,
+          vote: resolvedVote || 'none',
+          role,
+          email: typeof window !== 'undefined' ? window.localStorage.getItem('otto_waitlist_email') || null : null,
+          page: 'home-roadmap',
+        }),
+      })
+    } catch {
+      // Keep UI responsive even if reaction logging fails.
+    }
   }
 
   function getVoteCount(card: RoadmapCard, kind: 'up' | 'down') {

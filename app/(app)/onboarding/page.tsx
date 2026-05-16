@@ -146,6 +146,10 @@ function hasMinimumViablePortfolio(items: PortfolioItem[]) {
   return items.filter((item) => isRealPortfolioVideoUrl(item.url || '')).length >= MIN_PORTFOLIO_ITEMS
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
 function normalizeOnboardingError(message: string, fallback: string) {
   const clean = (message || '').trim()
   if (!clean) return fallback
@@ -538,11 +542,10 @@ export default function OnboardingPage() {
   const canGoNext = useMemo(() => {
     if (step === 1) return Boolean(role)
     if (step === 2) {
-      if (role === 'brand') return Boolean(draft.firstName.trim() && draft.lastName.trim() && draft.email.trim())
+      const basicIdentityValid = Boolean(draft.firstName.trim() && draft.lastName.trim() && isValidEmail(draft.email))
+      if (role === 'brand') return basicIdentityValid
       return Boolean(
-        draft.firstName.trim() &&
-        draft.lastName.trim() &&
-        draft.email.trim() &&
+        basicIdentityValid &&
         draft.handle.trim().replace(/^@+/, '') &&
         handleStatus === 'available'
       )
@@ -594,6 +597,10 @@ export default function OnboardingPage() {
 
         if (!cleanFirstName || !cleanLastName || !cleanEmail) {
           throw new Error('Add first name, last name, and email before continuing.')
+        }
+
+        if (!isValidEmail(cleanEmail)) {
+          throw new Error('Enter a valid email before continuing.')
         }
 
         if (role === 'creator' && !cleanHandle) {

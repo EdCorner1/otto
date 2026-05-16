@@ -343,3 +343,25 @@
 ### Validation
 - TypeScript: pass (`pnpm exec tsc --noEmit`)
 - Build: pass (`pnpm run build`)
+
+## 2026-05-16
+### Creator onboarding guardrail polish (step 2 quality gate)
+- Tightened onboarding step-2 progression checks so Next only unlocks when the email format is valid, not just non-empty.
+- Added matching submit-time validation with clear product-facing feedback (`Enter a valid email before continuing.`), reducing avoidable step-save failures.
+
+### Public creator profile preview parity (portfolio category tabs)
+- Removed the public profile portfolio hard cap of 4 visible videos per category.
+- Category tabs on public creator pages now show the full filtered set so brand reviewers can see all relevant work in each category without missing samples.
+
+### Homepage roadmap/feed reaction capture hardening
+- Added server-side roadmap reaction logging endpoint at `POST /api/feedback/roadmap-reactions`.
+- Wired homepage thumbs up/down interactions to persist reactions (with graceful fallback so the UI stays fast even if logging fails).
+- Added storage fallback behavior to keep reactions capturable even if the primary table path is unavailable.
+
+### Production push status
+- Attempted direct Vercel production deploy from CLI, but local Vercel credentials were not configured in this environment.
+- Prepared for production via `main` branch commit/push so connected Git-based deploy can proceed through normal pipeline.
+
+### Validation
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)
