@@ -33,14 +33,70 @@ const accentScript = Caveat({
 })
 
 const FEATURED_INTRO_VIDEOS = [
-  { id: 'v1', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/Fit2YLf3rS0/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=Fit2YLf3rS0' },
-  { id: 'v2', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/i8oyR0lMFzE/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=i8oyR0lMFzE' },
-  { id: 'v3', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/_tvedFUQmSM/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=_tvedFUQmSM' },
-  { id: 'v4', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/9w-zDHGobWI/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=9w-zDHGobWI' },
-  { id: 'v5', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/ECrA05A1gHc/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=ECrA05A1gHc' },
-  { id: 'v6', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/NsLKQTh-Bqo/hqdefault.jpg', url: 'https://www.youtube.com/shorts/NsLKQTh-Bqo' },
-  { id: 'v7', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/F-X4SLhorvw/hqdefault.jpg', url: 'https://www.youtube.com/watch?v=F-X4SLhorvw' },
-  { id: 'v8', title: 'Classic funny clip', thumbnail: 'https://img.youtube.com/vi/pEMbqEKXG3Y/hqdefault.jpg', url: 'https://www.youtube.com/shorts/pEMbqEKXG3Y' },
+  {
+    id: 'v1',
+    title: 'How I shot 3 app ads in one afternoon',
+    thumbnail: 'https://img.youtube.com/vi/Fit2YLf3rS0/hqdefault.jpg',
+    url: 'https://www.youtube.com/watch?v=Fit2YLf3rS0',
+    creator: 'Maya R.',
+    niche: 'AI Tools',
+  },
+  {
+    id: 'v2',
+    title: 'A direct-response hook that kept watch time high',
+    thumbnail: 'https://img.youtube.com/vi/i8oyR0lMFzE/hqdefault.jpg',
+    url: 'https://www.youtube.com/watch?v=i8oyR0lMFzE',
+    creator: 'Jordan K.',
+    niche: 'SaaS',
+  },
+  {
+    id: 'v3',
+    title: 'Before/after edit style for a mobile app launch',
+    thumbnail: 'https://img.youtube.com/vi/_tvedFUQmSM/hqdefault.jpg',
+    url: 'https://www.youtube.com/watch?v=_tvedFUQmSM',
+    creator: 'Nina C.',
+    niche: 'Productivity',
+  },
+  {
+    id: 'v4',
+    title: 'Voiceover structure that improved click-through',
+    thumbnail: 'https://img.youtube.com/vi/9w-zDHGobWI/hqdefault.jpg',
+    url: 'https://www.youtube.com/watch?v=9w-zDHGobWI',
+    creator: 'Sam T.',
+    niche: 'Tech',
+  },
+  {
+    id: 'v5',
+    title: 'How to film a clean desk demo with natural light',
+    thumbnail: 'https://img.youtube.com/vi/ECrA05A1gHc/hqdefault.jpg',
+    url: 'https://www.youtube.com/watch?v=ECrA05A1gHc',
+    creator: 'Avery L.',
+    niche: 'Creator Gear',
+  },
+  {
+    id: 'v6',
+    title: 'Short-form pacing for app explainers',
+    thumbnail: 'https://img.youtube.com/vi/NsLKQTh-Bqo/hqdefault.jpg',
+    url: 'https://www.youtube.com/shorts/NsLKQTh-Bqo',
+    creator: 'Eli W.',
+    niche: 'App Tutorials',
+  },
+  {
+    id: 'v7',
+    title: 'Script format for paid social UGC',
+    thumbnail: 'https://img.youtube.com/vi/F-X4SLhorvw/hqdefault.jpg',
+    url: 'https://www.youtube.com/watch?v=F-X4SLhorvw',
+    creator: 'Reese D.',
+    niche: 'Paid Social',
+  },
+  {
+    id: 'v8',
+    title: 'A simple visual framework for product storytelling',
+    thumbnail: 'https://img.youtube.com/vi/pEMbqEKXG3Y/hqdefault.jpg',
+    url: 'https://www.youtube.com/shorts/pEMbqEKXG3Y',
+    creator: 'Kai M.',
+    niche: 'Storytelling',
+  },
 ] as const
 
 const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
@@ -492,7 +548,12 @@ export default function HomeWaitlistLanding() {
                       </span>
                     </span>
                   </div>
-                  <div className="p-1" />
+                  <div className="p-3">
+                    <p className="line-clamp-2 text-[13px] font-medium leading-5 text-[#1c1c1e]">{video.title}</p>
+                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7b7b75]">
+                      {video.creator} · {video.niche}
+                    </p>
+                  </div>
                 </a>
               ))}
             </div>
