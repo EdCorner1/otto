@@ -365,3 +365,14 @@
 ### Validation
 - TypeScript: pass (`pnpm exec tsc --noEmit`)
 - Build: pass (`pnpm run build`)
+
+## 2026-05-17
+### Homepage roadmap/feed reaction integrity (live totals)
+- Added `GET /api/feedback/roadmap-reactions` to return aggregated up/down reaction counts per roadmap card for a page (default: `home-roadmap`).
+- Kept the existing `POST /api/feedback/roadmap-reactions` logging path intact with table-first + storage fallback behavior.
+- Updated homepage roadmap cards to hydrate reaction totals from server on load and maintain optimistic per-user vote toggles (`up`, `down`, unvote) without dropping aggregate accuracy.
+- This closes the gap where reaction UI counts could drift from persisted totals across sessions.
+
+### Validation
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)

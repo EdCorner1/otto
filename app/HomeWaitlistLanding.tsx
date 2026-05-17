@@ -19,6 +19,8 @@ type RoadmapCard = {
   downvotes: number
 }
 
+type RoadmapReactionCounts = Record<string, { up: number; down: number }>
+
 const AVATARS = [
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=96&q=80',
   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=96&q=80',
@@ -247,10 +249,42 @@ export default function HomeWaitlistLanding() {
   const [ideaSubmitted, setIdeaSubmitted] = useState(false)
   const [ideaSubmitting, setIdeaSubmitting] = useState(false)
   const [ideaError, setIdeaError] = useState<string | null>(null)
+  const [reactionCounts, setReactionCounts] = useState<RoadmapReactionCounts>(() =>
+    ROADMAP_CARDS.reduce<RoadmapReactionCounts>((acc, card) => {
+      acc[card.id] = { up: card.upvotes, down: card.downvotes }
+      return acc
+    }, {})
+  )
 
   const content = useMemo(() => COPY[role], [role])
 
   useEffect(() => {
+    const loadReactionCounts = async () => {
+      try {
+        const response = await fetch('/api/feedback/roadmap-reactions?page=home-roadmap', { cache: 'no-store' })
+        const data = await response.json().catch(() => null) as { counts?: RoadmapReactionCounts } | null
+
+        if (!response.ok || !data?.counts) return
+
+        setReactionCounts((current) => {
+          const next: RoadmapReactionCounts = { ...current }
+          for (const card of ROADMAP_CARDS) {
+            const incoming = data.counts?.[card.id]
+            if (!incoming) continue
+            next[card.id] = {
+              up: Number.isFinite(incoming.up) ? incoming.up : card.upvotes,
+              down: Number.isFinite(incoming.down) ? incoming.down : card.downvotes,
+            }
+          }
+          return next
+        })
+      } catch {
+        // Keep default static counts if fetch fails.
+      }
+    }
+
+    void loadReactionCounts()
+
     const observers: IntersectionObserver[] = []
 
     ROADMAP_CARDS.forEach((card) => {
@@ -321,14 +355,31 @@ export default function HomeWaitlistLanding() {
   }
 
   async function setVote(cardId: string, value: Vote) {
-    let resolvedVote: Vote = null
+    const previousVote = votes[cardId] ?? null
+    const resolvedVote: Vote = previousVote === value ? null : value
 
-    setVotes((current) => {
-      resolvedVote = current[cardId] === value ? null : value
-      return {
-        ...current,
-        [cardId]: resolvedVote,
+    setVotes((current) => ({
+      ...current,
+      [cardId]: resolvedVote,
+    }))
+
+    setReactionCounts((current) => {
+      const currentCounts = current[cardId] || { up: 0, down: 0 }
+      const next = { ...current, [cardId]: { ...currentCounts } }
+
+      if (previousVote === 'up') {
+        next[cardId].up = Math.max(0, next[cardId].up - 1)
+      } else if (previousVote === 'down') {
+        next[cardId].down = Math.max(0, next[cardId].down - 1)
       }
+
+      if (resolvedVote === 'up') {
+        next[cardId].up += 1
+      } else if (resolvedVote === 'down') {
+        next[cardId].down += 1
+      }
+
+      return next
     })
 
     try {
@@ -349,16 +400,8 @@ export default function HomeWaitlistLanding() {
   }
 
   function getVoteCount(card: RoadmapCard, kind: 'up' | 'down') {
-    const currentVote = votes[card.id] ?? null
-    const base = kind === 'up' ? card.upvotes : card.downvotes
-
-    if (kind === 'up') {
-      if (currentVote === 'up') return base + 1
-      return base
-    }
-
-    if (currentVote === 'down') return base + 1
-    return base
+    const counts = reactionCounts[card.id] || { up: card.upvotes, down: card.downvotes }
+    return kind === 'up' ? counts.up : counts.down
   }
 
   async function handleIdeaSubmit(e: React.FormEvent<HTMLFormElement>) {

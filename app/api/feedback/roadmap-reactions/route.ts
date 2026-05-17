@@ -27,6 +27,48 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url)
+    const page = sanitizeText(url.searchParams.get('page')) || 'home-roadmap'
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ ok: true, counts: {}, page })
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    const { data, error } = await supabase
+      .from('feedback_roadmap_reactions')
+      .select('card_id, vote')
+      .eq('page', page)
+      .in('vote', ['up', 'down'])
+      .limit(10000)
+
+    if (error || !data) {
+      return NextResponse.json({ ok: true, counts: {}, page })
+    }
+
+    const counts = data.reduce<Record<string, { up: number; down: number }>>((acc, row) => {
+      const cardId = sanitizeText((row as { card_id?: string }).card_id)
+      const vote = (row as { vote?: string }).vote
+
+      if (!cardId || (vote !== 'up' && vote !== 'down')) return acc
+
+      if (!acc[cardId]) {
+        acc[cardId] = { up: 0, down: 0 }
+      }
+
+      acc[cardId][vote] += 1
+      return acc
+    }, {})
+
+    return NextResponse.json({ ok: true, counts, page })
+  } catch {
+    return NextResponse.json({ ok: true, counts: {} })
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null)
