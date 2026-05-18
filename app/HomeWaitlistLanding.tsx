@@ -103,13 +103,13 @@ const FEATURED_INTRO_VIDEOS = [
 
 const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
   creator: {
-    headline: 'Get paid to make tech content for your favourite brands',
-    subheadline: 'The platform that matches you with brands you actually want to work with.',
+    headline: 'Get paid creating tech content for brands you actually use',
+    subheadline: 'Find aligned brand deals without the endless cold pitching and scattered DMs.',
     button: 'Get early access',
   },
   brand: {
-    headline: 'Get human content that connects with your audience',
-    subheadline: 'UGC that sounds like a friend recommended you, not an ad.',
+    headline: 'Work with creators who can explain your product like a real user',
+    subheadline: 'High-trust UGC with clearer briefs, smoother approvals, and better delivery quality.',
     button: 'Get early access',
   },
 }
@@ -859,13 +859,13 @@ export default function HomeWaitlistLanding() {
           <div className="rounded-[34px] border border-[#d7f28f] bg-[#ccff00] px-6 py-10 text-center shadow-[0_18px_45px_rgba(204,255,0,0.35)] sm:px-10">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#3f5200]">Creator access</p>
             <h2 className="mt-3 text-[clamp(2.2rem,5vw,4rem)] leading-[0.92] text-[#1c1c1e]" style={{ fontFamily: 'var(--font-bricolage)', letterSpacing: '-0.05em' }}>
-              Stop waiting. Start getting paid for content that brands actually want.
+              Build a profile you&apos;re proud to share, then let better deals come to you.
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-[#3f5200] md:text-base">
-              If you&apos;re serious about turning your content into real income, join the waitlist and get in early.
+              Join early access to get matched faster, present your work clearly, and run collaborations in one cleaner workflow.
             </p>
             <a href="#waitlist-form" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#1c1c1e] px-8 py-4 text-base font-semibold text-white transition hover:bg-black">
-              I want this
+              Join early access
               <ChevronRight className="h-5 w-5" />
             </a>
           </div>
