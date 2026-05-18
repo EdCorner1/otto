@@ -376,3 +376,16 @@
 ### Validation
 - TypeScript: pass (`pnpm exec tsc --noEmit`)
 - Build: pass (`pnpm run build`)
+
+## 2026-05-18
+### Public creator profile preview + creator settings parity hardening
+- Fixed the creator `View public profile` CTA in `/profile/edit` to open the normalized public handle route (`/${handle}`) instead of the internal `/creators/[id]` page.
+- This keeps the creator-side preview path aligned with the actual brand-facing/shareable public portfolio surface from inside profile management.
+- Added missing `backgroundStyle` in creator profile PATCH payload from `/profile/edit`, so selected public background themes (Plain/Grid/Dots) now persist reliably when creators save profile changes outside onboarding.
+
+### Production push status
+- Changes were validated locally and committed on `main` for Git-based production deployment.
+
+### Validation
+- TypeScript: pass (`pnpm exec tsc --noEmit`)
+- Build: pass (`pnpm run build`)

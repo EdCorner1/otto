@@ -866,6 +866,7 @@ export default function ProfileEditPage() {
         .filter(Boolean)
         .slice(0, 8),
       introVideoUrl: introVideoUrl.trim() || null,
+      backgroundStyle,
       bookingUrl: bookingUrl.trim() || null,
       rateCards,
       funFacts,
@@ -1042,7 +1043,7 @@ export default function ProfileEditPage() {
               Edit profile
             </h1>
           </div>
-          <Link href={creatorId ? `/creators/${creatorId}` : '/creators'} className="btn-ghost border border-[#e8e8e4]">View public profile</Link>
+          <Link href={handle.trim() ? `/${handle.trim().replace(/^@+/, '').toLowerCase()}` : (creatorId ? `/creators/${creatorId}` : '/creators')} className="btn-ghost border border-[#e8e8e4]">View public profile</Link>
         </div>
 
         {/* Tab row for completed-creator manager view */}
