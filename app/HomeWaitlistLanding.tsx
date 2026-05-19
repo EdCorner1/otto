@@ -103,15 +103,20 @@ const FEATURED_INTRO_VIDEOS = [
 
 const COPY: Record<Role, { headline: string; subheadline: string; button: string }> = {
   creator: {
-    headline: 'Get paid creating tech content for brands you actually use',
-    subheadline: 'Find aligned brand deals without the endless cold pitching and scattered DMs.',
+    headline: 'Get paid creating tech content for brands you already love',
+    subheadline: 'Get discovered, pitch less, and manage deals in one clean workflow.',
     button: 'Get early access',
   },
   brand: {
-    headline: 'Work with creators who can explain your product like a real user',
-    subheadline: 'High-trust UGC with clearer briefs, smoother approvals, and better delivery quality.',
+    headline: 'Find creators who can explain your product like real users',
+    subheadline: 'Source, brief, review, and approve content in one place.',
     button: 'Get early access',
   },
+}
+
+const HERO_BENEFITS: Record<Role, string[]> = {
+  creator: ['Matched tech campaigns', 'Clearer briefs', 'Fewer inbox back-and-forths'],
+  brand: ['Vetted creator applications', 'Faster approvals', 'Centralized campaign tracking'],
 }
 
 const ROADMAP_CARDS: RoadmapCard[] = [
@@ -523,6 +528,18 @@ export default function HomeWaitlistLanding() {
             <p className="mx-auto mt-6 max-w-2xl text-center text-base leading-relaxed text-[#6b6b6b] md:text-lg">
               {content.subheadline}
             </p>
+
+            <div className="mx-auto mt-6 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2.5">
+              {HERO_BENEFITS[role].map((benefit) => (
+                <span
+                  key={benefit}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#e6e6df] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#54544f] shadow-sm"
+                >
+                  <BadgeCheck className="h-3.5 w-3.5 text-[#6b8d12]" />
+                  {benefit}
+                </span>
+              ))}
+            </div>
 
             <form
               id="waitlist-form"
